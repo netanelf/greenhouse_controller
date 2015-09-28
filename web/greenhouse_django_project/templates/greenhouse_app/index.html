@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Greenhouse Controller</title>
+    </head>
+
+    <body>
+        <h1>Greenhouse Controller</h1>
+
+        {% if sensors %}
+            <ul>
+                {% for sensor in sensors %}
+                <li>{{ sensor.name }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <strong>There are no sensors present.</strong>
+        {% endif %}
+    </body>
+</html>
