@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor
+from greenhouse_app.models import Sensor, Measure
 
 
 def index(request):
@@ -12,3 +12,11 @@ def index(request):
 
     # Render the response and send it back!
     return render(request, 'greenhouse_app/index.html', context_dict)
+
+
+def measurements(request):
+    measurement_list = Measure.objects.order_by('-time')[:20]
+    context_dict = {'measurements': measurement_list}
+
+    # Render the response and send it back!
+    return render(request, 'greenhouse_app/measurements.html', context_dict)

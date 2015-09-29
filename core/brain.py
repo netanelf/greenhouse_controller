@@ -3,11 +3,16 @@ __author__ = 'netanel'
 import cfg
 import logging
 from datetime import datetime, timedelta
-from sensors.dht22_controller import DHT22Controller
+from sensors.dht22_temp_controller import DHT22TempController
+from sensors.dht22_humidity_controller import DHT22HumidityController
 import csv
 import time
 import threading
-from web.bottle_example import MyBrainApp, ApplicationThread
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
+import django
+django.setup()
+from greenhouse_app.models import Sensor, Measure
 
 
 class Brain(threading.Thread):
@@ -27,7 +32,7 @@ class Brain(threading.Thread):
         self._reading_issue_time = datetime.now()
         self._data_lock = threading.RLock()
         self._data = []
-        self._csv_writer = self.initialise_csv()
+        #self._csv_writer = self.initialise_csv()
         self._killed = False
 
     def run(self):
@@ -38,7 +43,8 @@ class Brain(threading.Thread):
 
                 time.sleep(cfg.READING_TIME)
                 self.issue_data_gathering()
-                self._write_data_to_csv()
+                #self._write_data_to_csv()
+                self._write_data_to_db()
                 # do many things
 
             time.sleep(1)
@@ -54,23 +60,17 @@ class Brain(threading.Thread):
         - DHT22_SENSORS
         - add more later
         """
-        for s in cfg.DHT22_SENSORS:
-            self._logger.debug('found sensor: ({}, {}), creating controller'.format(s['name'], s['pin']))
-            if self._validate_sensor_data(name=s['name']):
-                self._sensors.append(DHT22Controller(name=s['name'], pin_number=s['pin']))
+        #for s in cfg.DHT22_SENSORS:
+        for s in Sensor.objects.order_by():
+            self._logger.debug('found sensor: ({}), creating controller'.format(s))
 
-    def _validate_sensor_data(self, name):
-        """
-        ensure all sensors have valid names, pins etc..
-        more tests should be added here
-        :param name:
-        :return: True if parameters are valid, False if not
-        """
-        for s in self._sensors:
-            if s.get_name() == name:
-                self._logger.error('name: {} is taken, sensor not added'.format(name))
-                return False
-        return True
+            if s.kind.kind == 'dht22temp':
+                self._logger.debug('sensor: ({}) is dht22temp, creating controller'.format(s))
+                self._sensors.append(DHT22TempController(name=s.name, pin_number=s.pin, simulate=s.simulate))
+
+            elif s.kind.kind == 'dht22humidity':
+                self._logger.debug('sensor: ({}) is dht22humidity, creating controller'.format(s))
+                self._sensors.append(DHT22HumidityController(name=s.name, pin_number=s.pin, simulate=s.simulate))
 
     def issue_sensor_reading(self):
         self._logger.debug('issuing a read for all sensors')
@@ -94,6 +94,15 @@ class Brain(threading.Thread):
 
         self._logger.debug('writing line: {}'.format(csv_outpud_dictionary))
         self._csv_writer.writerow(csv_outpud_dictionary)
+
+    def _write_data_to_db(self):
+        self._logger.debug('in _write_data_to_db')
+        with self._data_lock:
+            for d in self._data:
+                self._logger.debug('looking for sensor: {} in Sensors Table'.format(d.sensor_name))
+                sensor = Sensor.objects.get(name=d.sensor_name)
+                Measure.objects.create(sensor=sensor, time=d.time, val=d.value)
+
 
     def initialise_csv(self):
         self._logger.info('opening .csv file')
@@ -128,11 +137,6 @@ if __name__ == '__main__':
     b = Brain()
     b.setDaemon(True)
     b.start()
-
-    app = MyBrainApp(b)
-    server = ApplicationThread(app=app)
-    server.setDaemon(True)
-    server.start()
 
     name = raw_input("Do you want to exit? (Y)")
     print 'user entered {}'.format(name)

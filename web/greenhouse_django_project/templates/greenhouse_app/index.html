@@ -7,11 +7,11 @@
 
     <body>
         <h1>Greenhouse Controller</h1>
-
+        <a href="/greenhouse_app/measurements/">measurements</a>
         {% if sensors %}
             <ul>
                 {% for sensor in sensors %}
-                <li>{{ sensor.name }}</li>
+                <li>{{ sensor.name }}, {{sensor.kind}}, {{sensor.simulate}}, {{sensor.pin}}, {{sensor.i2c}}</li>
                 {% endfor %}
             </ul>
         {% else %}
