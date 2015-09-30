@@ -1,22 +1,29 @@
-<!DOCTYPE html>
+{% extends 'greenhouse_app/base.html' %}
 
-<html>
-    <head>
-        <title>Greenhouse Controller</title>
-    </head>
+{% load staticfiles %}
 
-    <body>
-        <h1>Raw Measurements</h1>
-        <a href="/greenhouse_app/">Home</a>
-        <br>
-        {% if measurements %}
-            <ul>
-                {% for measure in measurements %}
-                <li>{{ measure.sensor }}, {{measure.time}}, {{measure.val}}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <strong>There are no measurements present.</strong>
-        {% endif %}
-    </body>
-</html>
+{% block title %}{{ 'Measurements page' }}{% endblock %}
+
+{% block measurement_active_class %}active{% endblock %}
+
+{% block body_block %}
+    <br>
+    <div id="data"></div>
+    <script>
+    function onload(e) {
+        console.log(e.target.response);
+        var d = document.getElementById("data");
+        d.innerHTML = e.target.response;
+    }
+    function getData(){
+        var xhr=new XMLHttpRequest();
+
+        xhr.addEventListener("load", onload);
+        xhr.open('GET', 'getData/', true);
+        xhr.send(null);
+    }
+
+    setInterval(getData, 1000);
+    </script>
+{% endblock %}
+

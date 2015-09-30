@@ -1,0 +1,10 @@
+
+{% if measurements %}
+    <ul>
+        {% for measure in measurements %}
+        <li>{{ measure.sensor }}, {{measure.time}}, {{measure.val}}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <strong>There are no measurements present.</strong>
+{% endif %}

@@ -1,21 +1,20 @@
-<!DOCTYPE html>
+{% extends 'greenhouse_app/base.html' %}
 
-<html>
-    <head>
-        <title>Greenhouse Controller</title>
-    </head>
+{% load staticfiles %}
 
-    <body>
-        <h1>Greenhouse Controller</h1>
-        <a href="/greenhouse_app/measurements/">measurements</a>
-        {% if sensors %}
-            <ul>
-                {% for sensor in sensors %}
-                <li>{{ sensor.name }}, {{sensor.kind}}, {{sensor.simulate}}, {{sensor.pin}}, {{sensor.i2c}}</li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <strong>There are no sensors present.</strong>
-        {% endif %}
-    </body>
-</html>
+{% block title %}{{ 'index page' }}{% endblock %}
+
+{% block index_active_class %} active {% endblock %}
+
+{% block body_block %}
+    {% if sensors %}
+        <ul>
+            {% for sensor in sensors %}
+            <li>{{ sensor.name }}, {{sensor.kind}}, {{sensor.simulate}}, {{sensor.pin}}, {{sensor.i2c}}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <strong>There are no sensors present.</strong>
+    {% endif %}
+{% endblock %}
+
