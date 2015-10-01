@@ -27,7 +27,7 @@ class Measure(models.Model):
     represent one value measurement
     """
     sensor = models.ForeignKey(Sensor)
-    time = models.TimeField()
+    time = models.DateTimeField()
     val = models.FloatField()
 
     def __unicode__(self):

@@ -123,7 +123,7 @@ class Brain(threading.Thread):
 def init_logging():
     logger = logging.getLogger()
     s_handler = logging.StreamHandler()
-    f_handler = logging.FileHandler(filename='logs/greenHouseCntrl_{}.log'.format(datetime.now().strftime('%d-%m-%y_%H:%M:%S.%f')))
+    f_handler = logging.FileHandler(filename='../logs/greenHouseCntrl_{}.log'.format(datetime.now().strftime('%d-%m-%y_%H-%M-%S')))
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     s_handler.setFormatter(formatter)
     f_handler.setFormatter(formatter)
