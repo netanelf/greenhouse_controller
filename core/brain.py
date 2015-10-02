@@ -126,6 +126,7 @@ class Brain(threading.Thread):
                     controller.change_state(new_state=r.wanted_state)
                     self._logger.debug('relay: {} was set to state: {}'.format(controller.get_name(), r.wanted_state))
                     r.state = r.wanted_state
+                    r.save()
                 except Exception as ex:
                     self._logger.info('some exception: {}'.format(ex))
 

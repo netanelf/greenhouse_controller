@@ -7,33 +7,92 @@
 {% block relays_active_class %} active {% endblock %}
 
 {% block body_block %}
-<table>
-    {% if relays %}
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Set State</th>
-            </tr>
-        </thead>
 
-        <tbody>
-            {% for relay in relays %}
-            <tr>
-                <td>
-                    {% if relay.state == 1 %}
-                        <font color="green">
-                    {% else %}
-                        <font color="red">
-                    {% endif %}
-                        {{relay.name}}
-                    </font>
-                </td>
-                <td align="center"><input id="{{relay.name}}_checkbox" type="checkbox"></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    {% endif %}
-</table>
+{% if relays %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Set State</th>
+                </tr>
+            </thead>
+
+            <tbody id="relaysTableBody">
+                {% for relay in relays %}
+                <tr>
+                    <td id={{relay.name}}>
+                        <div id="{{relay.name}}_color" class={% if relay.state == 1 %}"text-success"{% else %}"text-danger"{% endif %}>
+                            {{relay.name}}
+                        </div>
+                    </td>
+                    <td align="center"><input id="{{relay.name}}_checkbox" type="checkbox"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <button id="setState" onclick=sendRelaysState()>send new state</button>
+{% endif %}
 
 {% endblock %}
 
+{% block script_block %}
+
+    function createSetRelayStateJson(){
+        var relayTable = document.getElementById("relaysTableBody");
+        var relaySetStates = [];
+        for (var i=0; i<relayTable.rows.length; i++){
+            var row = relayTable.rows[i];
+            var relayName = row.cells[0].id
+            var relayState = row.cells[1].children[0].checked;
+            relaySetStates.push({name: relayName, newState: relayState});
+        }
+        return relaySetStates;
+    }
+
+    function mycallbackfunc(response){
+    }
+
+    function sendRelaysState(){
+        //$.getJSON('setRelaysState/', createSetRelayStateJson(), mycallbackfunc)
+        $.ajax({
+                url: 'setRelaysState/',
+                type: 'GET',
+                data: JSON.stringify(createSetRelayStateJson()),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: true,
+                success: function(msg){}
+        });
+    }
+
+    function onload(e) {
+        console.log(e.target.response);
+        var data = JSON.parse(e.target.response);
+        for (var i=0; i<data.length; i++){
+            var d = data[i];
+            var relayNameColorTag = d.name + '_color';
+            var state = d.state;
+            var colorCssTag;
+            if (state){
+                colorCssTag = 'text-success';
+            }
+            else{
+                colorCssTag = 'text-danger';
+            }
+
+            c = document.getElementById(relayNameColorTag);
+            c.className = colorCssTag;
+        }
+    }
+
+    function getData(){
+        var xhr=new XMLHttpRequest();
+        xhr.addEventListener('load', onload);
+        xhr.open('GET', 'getRelaysState/', true);
+        xhr.send(null);
+    }
+    getData();
+    setInterval(getData, 5000);
+
+{% endblock %}

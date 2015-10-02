@@ -10,20 +10,20 @@
     <br>
     <div id="data"></div>
     <script>
-    function onload(e) {
-        console.log(e.target.response);
-        var d = document.getElementById("data");
-        d.innerHTML = e.target.response;
-    }
-    function getData(){
-        var xhr=new XMLHttpRequest();
+        function onload(e) {
+            console.log(e.target.response);
+            var d = document.getElementById("data");
+            d.innerHTML = e.target.response;
+        }
 
-        xhr.addEventListener("load", onload);
-        xhr.open('GET', 'getData/', true);
-        xhr.send(null);
-    }
-
-    setInterval(getData, 1000);
+        function getData(){
+            var xhr=new XMLHttpRequest();
+            xhr.addEventListener("load", onload);
+            xhr.open('GET', 'getSensorsData/', true);
+            xhr.send(null);
+        }
+        getData();
+        setInterval(getData, 5000);
     </script>
 {% endblock %}
 
