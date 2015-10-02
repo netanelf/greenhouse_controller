@@ -7,6 +7,7 @@
 {% block index_active_class %} active {% endblock %}
 
 {% block body_block %}
+    <b>Sensors</b>
     {% if sensors %}
         <ul>
             {% for sensor in sensors %}
@@ -16,5 +17,17 @@
     {% else %}
         <strong>There are no sensors present.</strong>
     {% endif %}
+
+    <b>Relays</b>
+    {% if relays %}
+        <ul>
+            {% for relay in relays %}
+            <li>{{ relay.name }}, {{relay.pin}}, {{relay.simulate}}, {{relay.state}}, {{relay.wanted_state}}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <strong>There are no sensors present.</strong>
+    {% endif %}
+
 {% endblock %}
 

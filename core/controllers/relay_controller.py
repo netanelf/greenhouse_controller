@@ -18,7 +18,6 @@ class RelayController(object):
         else:
             self._logger.info('state: {} is not legal'.format(new_state))
 
-
     def get_state(self):
         return self._state
 

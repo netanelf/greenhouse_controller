@@ -1,0 +1,39 @@
+{% extends 'greenhouse_app/base.html' %}
+
+{% load staticfiles %}
+
+{% block title %}{{ 'relays page' }}{% endblock %}
+
+{% block relays_active_class %} active {% endblock %}
+
+{% block body_block %}
+<table>
+    {% if relays %}
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Set State</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for relay in relays %}
+            <tr>
+                <td>
+                    {% if relay.state == 1 %}
+                        <font color="green">
+                    {% else %}
+                        <font color="red">
+                    {% endif %}
+                        {{relay.name}}
+                    </font>
+                </td>
+                <td align="center"><input id="{{relay.name}}_checkbox" type="checkbox"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    {% endif %}
+</table>
+
+{% endblock %}
+

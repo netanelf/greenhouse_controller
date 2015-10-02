@@ -4,10 +4,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.setti
 import django
 django.setup()
 
-from greenhouse_app.models import Sensor, SensorKind
+from greenhouse_app.models import Sensor, SensorKind, Relay
 
 
-def populate():
+def populate_sensors():
 
     dht_22_temp = SensorKind.objects.get_or_create(kind='dht22temp')[0]
     dht_22_humidity = SensorKind.objects.get_or_create(kind='dht22humidity')[0]
@@ -26,6 +26,21 @@ def populate():
     Sensor.objects.get_or_create(name='thermocouple_temp_light_heatsink', kind=thermocouple, simulate=True, pin=4, i2c=False)[0]
 
 
+def populate_relays():
+    print 'creating relay: (name=light1, pin=1, state=1, wanted_state=1, simulate=1)'
+    Relay.objects.get_or_create(name='light1', pin=1, state=1, wanted_state=1, simulate=1)
+
+    print 'creating relay: (name=light2, pin=2, state=1, wanted_state=1, simulate=1)'
+    Relay.objects.get_or_create(name='light2', pin=2, state=1, wanted_state=1, simulate=1)
+
+    print 'creating relay: (name=fan, pin=3, state=1, wanted_state=1, simulate=1)'
+    Relay.objects.get_or_create(name='fan', pin=3, state=1, wanted_state=1, simulate=1)
+
+    print 'creating relay: (name=humidity, pin=4, state=1, wanted_state=1, simulate=1)'
+    Relay.objects.get_or_create(name='humidity', pin=4, state=1, wanted_state=1, simulate=1)
+
+
 if __name__ == '__main__':
-    print "Starting Rango population script..."
-    populate()
+    print "Starting population script..."
+    populate_sensors()
+    populate_relays()
