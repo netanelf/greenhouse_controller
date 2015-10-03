@@ -1,4 +1,7 @@
 from django.db import models
+from django.utils import formats
+from django.utils import timezone
+from datetime import timedelta, datetime
 
 
 class SensorKind(models.Model):
@@ -17,6 +20,16 @@ class Sensor(models.Model):
     simulate = models.BooleanField(default=True)
     pin = models.PositiveSmallIntegerField()
     i2c = models.BooleanField(default=False)
+
+    def get_last_measure(self):
+        measures = Measure.objects.filter(sensor=self)
+        if len(measures) > 0:
+            print 'measures[len(measures)-1]: {}'.format(measures[len(measures)-1])
+            return measures[len(measures)-1]
+        else:
+            return None
+
+    last_measure = property(get_last_measure)
 
     def __unicode__(self):
         return self.name
@@ -56,15 +69,12 @@ class TimeGovernor(models.Model):
         """
         return the output of this governor (should the relay be in ON or OFF state)
         """
-        from django.utils import timezone
-        from datetime import timedelta, datetime
         if self.kind == 'R':
             t = timezone.now()
             t_0 = datetime(year=t.year, month=t.month, day=t.day, hour=self.recurring_on_start_time.hour,
                            minute=self.recurring_on_start_time.minute,
                            second=self.recurring_on_start_time.second,
                            microsecond=0, tzinfo=t.tzinfo)
-
             tdelta = t - t_0
             delta_seconds = tdelta.total_seconds()
             period = self.recurring_on_period + self.recurring_off_period
@@ -85,10 +95,18 @@ class TimeGovernor(models.Model):
             else:
                 return 0
 
+    def get_nice_kind(self):
+        for k, v in self.GOVERNOR_KINDS:
+            if k == self.kind:
+                return v
+        return 'UNKNOWN'
+
     state = property(on_off_status)
+    nice_kind = property(get_nice_kind)
 
     def __unicode__(self):
         return self.name
+
 
 class Relay(models.Model):
     """

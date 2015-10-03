@@ -7,27 +7,139 @@
 {% block index_active_class %} active {% endblock %}
 
 {% block body_block %}
-    <b>Sensors</b>
-    {% if sensors %}
-        <ul>
-            {% for sensor in sensors %}
-            <li>{{ sensor.name }}, {{sensor.kind}}, {{sensor.simulate}}, {{sensor.pin}}, {{sensor.i2c}}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <strong>There are no sensors present.</strong>
-    {% endif %}
 
-    <b>Relays</b>
-    {% if relays %}
-        <ul>
-            {% for relay in relays %}
-            <li>{{ relay.name }}, {{relay.pin}}, {{relay.simulate}}, {{relay.state}}, {{relay.wanted_state}}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <strong>There are no sensors present.</strong>
-    {% endif %}
+    <div class="container">
+        <!-- Example row of columns -->
+        <div class="row">
+            <div class="col-md-4">
+                <h3 align="center">Sensors</h3>
+                <table align="center">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Value</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for s in sensors %}
+                            <tr>
+                                <td>{{s.name}}</td>
+                                <td id={{s.name}}_val>{{s.get_last_measure.val}}</td>
+                                <td id={{s.name}}_time class="small">{{s.get_last_measure.time}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-md-4">
+                <h3 align="center">Relays</h3>
+                <table align="center">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Time Governor</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="relaysTableBody">
+                        {% for relay in relays %}
+                            <tr>
+                                <td id={{relay.name}}>
+                                    <div id="{{relay.name}}_color" class={% if relay.state == 1 %}"text-success"{% else %}"text-danger"{% endif %}>
+                                        {{relay.name}}
+                                    </div>
+                                </td>
+                                <td>{{relay.time_governor}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-md-4">
+                <h3 align="center">Governors</h3>
+                <table align="center">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for g in governors %}
+                            <tr>
+                                <td>{{g.name}}</td>
+                                <td>{{g.get_nice_kind}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 
+{% block script_block %}
+
+    function onRelayStateload(e) {
+        console.log(e.target.response);
+        var data = JSON.parse(e.target.response);
+        for (var i=0; i<data.length; i++){
+            var d = data[i];
+            var relayNameColorTag = d.name + '_color';
+            var state = d.state;
+            var colorCssTag;
+            if (state){
+                colorCssTag = 'text-success';
+            }
+            else{
+                colorCssTag = 'text-danger';
+            }
+
+            c = document.getElementById(relayNameColorTag);
+            c.className = colorCssTag;
+        }
+    }
+
+    function getRelayStates(){
+        var xhr=new XMLHttpRequest();
+        xhr.addEventListener('load', onRelayStateload);
+        xhr.open('GET', 'relays/getRelaysState/', true);
+        xhr.send(null);
+    }
+    getRelayStates();
+    setInterval(getRelayStates, 3000);
+
+    function onSensorValuesload(e) {
+        console.log(e.target.response);
+        var data = JSON.parse(e.target.response);
+        for (var i=0; i<data.length; i++){
+            var d = data[i];
+            var measureValId = d.name + '_val';
+            var measureTimeId = d.name + '_time';
+            var val = d.val;
+            var time = d.time;
+
+            var c = document.getElementById(measureValId);
+            c.innerHTML = val;
+
+            var e = document.getElementById(measureTimeId);
+            e.innerHTML = time;
+        }
+    }
+
+    function getLastSensorValues(){
+        var xhr=new XMLHttpRequest();
+        xhr.addEventListener('load', onSensorValuesload);
+        xhr.open('GET', 'measurements/getLastSensorValues/', true);
+        xhr.send(null);
+    }
+
+    getLastSensorValues();
+    setInterval(getLastSensorValues, 3000);
+{% endblock %}
