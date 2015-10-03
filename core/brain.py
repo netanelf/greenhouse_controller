@@ -1,8 +1,7 @@
 __author__ = 'netanel'
 
 import logging
-from datetime import datetime, timedelta
-import csv
+from datetime import timedelta
 import time
 import threading
 import os
@@ -15,6 +14,7 @@ from controllers.relay_controller import RelayController
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
+from django.utils import timezone
 from greenhouse_app.models import Sensor, Measure, Relay
 
 
@@ -38,23 +38,22 @@ class Brain(threading.Thread):
         self._relays = []
         self._create_relay_controllers()
 
-        self._last_read_time = datetime.now()
-        self._reading_issue_time = datetime.now()
+        self._last_read_time = timezone.now()
+        self._reading_issue_time = timezone.now()
         self._data_lock = threading.RLock()
         self._data = []
-        #self._csv_writer = self.initialise_csv()
         self._killed = False
 
     def run(self):
         while not self._killed:
-            if datetime.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
-                self._reading_issue_time = self._last_read_time = datetime.now()
+            if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
+                self._reading_issue_time = self._last_read_time = timezone.now()
                 self.issue_sensor_reading()
 
                 time.sleep(cfg.READING_TIME)
                 self.issue_data_gathering()
-                #self._write_data_to_csv()
                 self._write_data_to_db()
+                self.issue_governors_relay_set()
                 self.issue_relay_set()
                 # do many things
 
@@ -115,6 +114,21 @@ class Brain(threading.Thread):
             for s in self._sensors:
                 self._data.append(s.get_read())
 
+    def issue_governors_relay_set(self):
+        """
+        read current governor state and set states for relays according to governor
+        """
+        for r in Relay.objects.order_by():
+            governor = r.time_governor
+            if governor is not None:
+                self._logger.debug('relay: {}, has governor: {}'.format(r.name, governor))
+                governer_state = governor.state
+
+                if governer_state != r.state:
+                    self._logger.debug('relay: {}, was changed by governor: {} to state: {}'.format(r.name, governor, governer_state))
+                    r.wanted_state = governer_state
+                    r.save()
+
     def issue_relay_set(self):
         """
         read wanted state from DB for every relay, and if different from current state, change.
@@ -138,30 +152,6 @@ class Brain(threading.Thread):
                 sensor = Sensor.objects.get(name=d.sensor_name)
                 Measure.objects.create(sensor=sensor, time=d.time, val=d.value)
 
-    '''
-    def _write_data_to_csv(self):
-        self._logger.debug('in _write_data_to_csv')
-        csv_outpud_dictionary = dict()
-        csv_outpud_dictionary['time'] = datetime.now()
-        with self._data_lock:
-            for d in self._data:
-                csv_outpud_dictionary.update(d)
-
-        self._logger.debug('writing line: {}'.format(csv_outpud_dictionary))
-        self._csv_writer.writerow(csv_outpud_dictionary)
-
-
-    def initialise_csv(self):
-        self._logger.info('opening .csv file')
-        f = open(name='logs/data_{}.csv'.format(datetime.now()), mode='wb', buffering=1)
-        sensor_names = [s.get_read().keys() for s in self._sensors]
-        fieldnames = ['time']
-        [fieldnames.extend(n) for n in sensor_names]
-        self._logger.info('writing to .csv file headers: {}'.format(fieldnames))
-        csv_writer = csv.DictWriter(f=f, fieldnames=fieldnames)
-        csv_writer.writeheader()
-        return csv_writer
-    '''
     def kill_brain(self):
         self._logger.info('killing brain thread')
         self._killed = True
@@ -170,7 +160,9 @@ class Brain(threading.Thread):
 def init_logging():
     logger = logging.getLogger()
     s_handler = logging.StreamHandler()
-    f_handler = logging.FileHandler(filename=os.path.join(utils.get_root_path(), 'logs', 'greenHouseCntrl_{}.log'.format(datetime.now().strftime('%d-%m-%y_%H-%M-%S'))))
+    f_handler = logging.FileHandler(filename=os.path.join(utils.get_root_path(), 'logs', 'greenHouseCntrl_{}.log'
+        .format(timezone.make_naive(value=timezone.now(), timezone=timezone.get_current_timezone()).strftime('%d-%m-%y_%H-%M-%S'))))
+
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     s_handler.setFormatter(formatter)
     f_handler.setFormatter(formatter)
@@ -189,6 +181,4 @@ if __name__ == '__main__':
     print 'user entered {}'.format(name)
     if name == 'Y':
         b.kill_brain()
-        time.sleep(2)
-
-
+        time.sleep(1)

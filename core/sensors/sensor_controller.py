@@ -20,7 +20,7 @@ class SensorController(object):
         get_read()
         :return: None
         """
-        self._logger.info('initiated a read for sensor {}'.format(self._name))
+        self._logger.debug('initiated a read for sensor {}'.format(self._name))
 
     def get_read(self):
         """

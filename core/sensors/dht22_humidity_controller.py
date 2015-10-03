@@ -2,7 +2,7 @@ __author__ = 'netanel'
 
 
 from sensor_controller import SensorController, Measurement
-from datetime import datetime
+from django.utils import timezone
 #import Adafruit_DHT as dht
 import random
 
@@ -14,7 +14,7 @@ class DHT22HumidityController(SensorController):
     def __init__(self, name, pin_number, simulate=True):
         super(DHT22HumidityController, self).__init__(name)
         self._pin_number = pin_number
-        self._last_read = Measurement(sensor_name=self._name, time=datetime.now(), value=None)
+        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate
 
     def read(self):
@@ -23,7 +23,7 @@ class DHT22HumidityController(SensorController):
             h = self.simulate_data()
         else:
             t, h = dht.read_retry(dht.DHT22, self._pin_number)
-        self._last_read = Measurement(sensor_name=self._name, time=datetime.now(), value=h)
+        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=h)
 
     def simulate_data(self):
         return random.randint(30,90)

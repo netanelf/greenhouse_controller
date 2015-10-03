@@ -86,13 +86,13 @@
         }
     }
 
-    function getData(){
+    function getRelayStates(){
         var xhr=new XMLHttpRequest();
         xhr.addEventListener('load', onload);
         xhr.open('GET', 'getRelaysState/', true);
         xhr.send(null);
     }
-    getData();
-    setInterval(getData, 5000);
+    getRelayStates();
+    setInterval(getRelayStates, 3000);
 
 {% endblock %}
