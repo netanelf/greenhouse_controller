@@ -30,7 +30,6 @@ def getSensorsData(request):
 
 
 def getLastSensorValues(request):
-    print 'in getLastSensorValues'
     sensor_list = Sensor.objects.order_by()
 
     sensor_data = []
@@ -44,6 +43,8 @@ def getLastSensorValues(request):
         else:
             val = 'unknown'
             time = 'unknown'
+        if val is not 'unknown':
+            val = '{:.2f}'.format(val)
         sensor_data.append({'name': name, 'val': val, 'time': time})
     return HttpResponse(json.dumps(sensor_data))
 
