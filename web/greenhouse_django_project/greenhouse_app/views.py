@@ -1,8 +1,9 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor
+from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configurations
 import json
 from django.http import HttpResponse
-
+from django.utils import timezone
+import csv
 
 
 def index(request):
@@ -22,6 +23,33 @@ def measurements(request):
     return render(request, 'greenhouse_app/measurements.html')
 
 
+def downloadMeasurements(request):
+    """
+    send all measurements as .csv file
+    """
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="measurements.csv"'
+
+    measures = Measure.objects.all()
+    fields = Measure._meta.fields
+    writer = csv.writer(response)
+    field_names = [f.name for f in fields]
+    writer.writerow(field_names)
+    for m in measures:
+        row = []
+        for field_name in field_names:
+            if field_name == 'time':
+                t = getattr(m, field_name)
+                t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
+                t = t.strftime('%d/%m/%y %H:%M:%S.%f')
+                row.append(t)
+            else:
+                row.append(getattr(m, field_name))
+        writer.writerow(row)
+
+    return response
+
+
 def getSensorsData(request):
     measurement_list = Measure.objects.order_by('-time')[:20]
     context_dict = {'measurements': measurement_list}
@@ -39,7 +67,9 @@ def getLastSensorValues(request):
         measures = Measure.objects.filter(sensor=s)
         if len(measures) > 0:
             val = measures[len(measures)-1].val
-            time = (measures[len(measures)-1].time).strftime('%d/%m/%y %H:%M:%S')
+            time = (measures[len(measures)-1].time)
+            time = timezone.make_naive(time, timezone=timezone.get_current_timezone())
+            time = time.strftime('%d/%m/%y %H:%M:%S')
         else:
             val = 'unknown'
             time = 'unknown'
@@ -61,6 +91,7 @@ def getRelaysState(request):
 
 # ajax callback
 def setRelaysState(request):
+    print 'in setRelaysState'
     a = request.GET.viewkeys()
 
     for k in a:
@@ -76,5 +107,26 @@ def setRelaysState(request):
 
 def relays(request):
     relay_list = Relay.objects.order_by()
-    context_dict = {'relays': relay_list}
+    manual_mode = Configurations.objects.get(name='manual_mode')
+    context_dict = {'relays': relay_list, 'manual_mode': manual_mode.value}
     return render(request, 'greenhouse_app/relays.html', context_dict)
+
+
+def setConfiguration(request):
+    """
+    change some configuration in models.Configurations
+    """
+    print 'in setConfiguration'
+    a = request.GET.viewkeys()
+
+    for k in a:
+        data = json.loads(k)
+        print 'data: {}'.format(data)
+        val = int(data['value'])
+        print 'val: {}'.format(val)
+        r = Configurations.objects.get(name=data['name'])
+        print r
+        r.value = val
+        r.save()
+
+    return HttpResponse(json.dumps({'NoData': None}))

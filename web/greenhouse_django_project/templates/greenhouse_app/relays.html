@@ -9,29 +9,33 @@
 {% block body_block %}
 
 {% if relays %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Set State</th>
-                </tr>
-            </thead>
+    <h4>Manual Mode:</h4>
+    <input id="manual_override" type="checkbox" {% if manual_mode == 1 %}checked{% endif %} data-toggle="toggle" data-size="small" data-onstyle="danger">
+    <br>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Set State</th>
+            </tr>
+        </thead>
 
-            <tbody id="relaysTableBody">
-                {% for relay in relays %}
-                <tr>
-                    <td id={{relay.name}}>
-                        <div id="{{relay.name}}_color" class={% if relay.state == 1 %}"text-success"{% else %}"text-danger"{% endif %}>
-                            {{relay.name}}
-                        </div>
-                    </td>
-                    <td align="center"><input id="{{relay.name}}_checkbox" type="checkbox"></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <br>
-        <button id="setState" onclick=sendRelaysState()>send new state</button>
+        <tbody id="relaysTableBody">
+            {% for relay in relays %}
+            <tr>
+                <td id={{relay.name}}>
+                    <div id="{{relay.name}}_color" class={% if relay.state == 1 %}"text-success"{% else %}"text-danger"{% endif %}>
+                        {{relay.name}}
+                    </div>
+                </td>
+                <td align="center"><input id="{{relay.name}}_checkbox" type="checkbox" {% if relay.state == 1 %}checked{% endif %} data-toggle="toggle" data-size="mini" data-onstyle="success" data-offstyle="danger"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <button id="setState" onclick=sendRelaysState()>send new state</button>
 {% endif %}
 
 {% endblock %}
@@ -44,7 +48,7 @@
         for (var i=0; i<relayTable.rows.length; i++){
             var row = relayTable.rows[i];
             var relayName = row.cells[0].id
-            var relayState = row.cells[1].children[0].checked;
+            var relayState = row.cells[1].children[0].firstElementChild.checked;
             relaySetStates.push({name: relayName, newState: relayState});
         }
         return relaySetStates;
@@ -95,4 +99,22 @@
     getRelayStates();
     setInterval(getRelayStates, 3000);
 
+    $(function() {
+        $('#manual_override').change(function() {
+            console.log("manual override was changed to:" + $(this).prop('checked'));
+        var val = 0;
+        if ($(this).prop('checked')){
+            val = 1;
+        }
+        $.ajax({
+                url: '../setConfiguration/',
+                type: 'GET',
+                data: JSON.stringify({name: 'manual_mode', value: val}),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: true,
+                success: function(msg){}
+        });
+        })
+    })
 {% endblock %}

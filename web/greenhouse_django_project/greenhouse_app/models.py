@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils import formats
 from django.utils import timezone
 from datetime import timedelta, datetime
 
@@ -121,3 +120,12 @@ class Relay(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class Configurations(models.Model):
+    name = models.CharField(max_length=128)
+    value = models.IntegerField()
+    explanation = models.CharField(max_length=256)
+
+    def __unicode__(self):
+        return 'name: {}, value{}, explanation {}'.format(self.name, self.value, self.explanation)

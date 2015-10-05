@@ -7,6 +7,10 @@
 {% block measurement_active_class %}active{% endblock %}
 
 {% block body_block %}
+    <form method="get" action="downloadMeasurements/">
+        <button type="submit">Download Measures as csv</button>
+    </form>
+    <br>
     <br>
     <div id="data"></div>
     <script>
@@ -25,5 +29,7 @@
         getData();
         setInterval(getData, 5000);
     </script>
-{% endblock %}
 
+{% endblock %}
+{% block script_block%}
+{% endblock %}

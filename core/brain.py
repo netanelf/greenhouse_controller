@@ -15,7 +15,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.setti
 import django
 django.setup()
 from django.utils import timezone
-from greenhouse_app.models import Sensor, Measure, Relay
+from greenhouse_app.models import Sensor, Measure, Relay, Configurations
 
 
 class Brain(threading.Thread):
@@ -42,18 +42,21 @@ class Brain(threading.Thread):
         self._reading_issue_time = timezone.now()
         self._data_lock = threading.RLock()
         self._data = []
+        self._manual_mode = 0
         self._killed = False
 
     def run(self):
         while not self._killed:
             if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
+                self.update_configurations()
                 self._reading_issue_time = self._last_read_time = timezone.now()
                 self.issue_sensor_reading()
 
                 time.sleep(cfg.READING_TIME)
                 self.issue_data_gathering()
                 self._write_data_to_db()
-                self.issue_governors_relay_set()
+                if not self._manual_mode:
+                    self.issue_governors_relay_set()
                 self.issue_relay_set()
                 # do many things
 
@@ -151,6 +154,12 @@ class Brain(threading.Thread):
                 self._logger.debug('looking for sensor: {} in Sensors Table'.format(d.sensor_name))
                 sensor = Sensor.objects.get(name=d.sensor_name)
                 Measure.objects.create(sensor=sensor, time=d.time, val=d.value)
+
+    def update_configurations(self):
+        self._logger.debug('in update_configurations')
+        for c in Configurations.objects.all():
+            if c.name == 'manual_mode':
+                self._manual_mode = c.value
 
     def kill_brain(self):
         self._logger.info('killing brain thread')
