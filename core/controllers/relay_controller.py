@@ -12,11 +12,9 @@ class RelayController(object):
         self._logger = logging.getLogger(name)
         if simulate is False:
             import RPi.GPIO as GPIO
-<<<<<<< HEAD
             GPIO.setmode(GPIO.BOARD)
-=======
->>>>>>> e6124b162fc53f78a18ac38bc9b991e0272ba21a
             GPIO.setup(self._pin, GPIO.OUT)
+
         self.change_state(new_state=state)
         self._state = state
 
