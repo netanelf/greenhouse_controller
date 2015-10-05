@@ -30,6 +30,8 @@ class SensorController(object):
         return self._last_read
 
 
+# convert between physical pi to GPIO (for Adafruit_DHT that uses GPIO numbering)
+# (Physical pin: GPIO number)
 GPIO_TO_PIN_TABLE = {
     3: 2,
     5: 3,
@@ -58,6 +60,7 @@ GPIO_TO_PIN_TABLE = {
     38: 20,
     40: 21
 }
+
 
 class Measurement(object):
     def __init__(self, time, value, sensor_name):

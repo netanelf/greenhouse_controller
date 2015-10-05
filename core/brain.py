@@ -32,18 +32,20 @@ class Brain(threading.Thread):
 
         # all sensors
         self._sensors = []
-        self._create_sensor_controllers()
+        self.create_sensor_controllers()
 
         # all relays
         self._relays = []
-        self._create_relay_controllers()
+        self.create_relay_controllers()
 
         self._last_read_time = timezone.now()
         self._reading_issue_time = timezone.now()
         self._data_lock = threading.RLock()
         self._data = []
-        self._manual_mode = 0
         self._killed = False
+
+        # configurations, updated from db
+        self._manual_mode = 0
 
     def run(self):
         while not self._killed:
@@ -54,7 +56,7 @@ class Brain(threading.Thread):
 
                 time.sleep(cfg.READING_TIME)
                 self.issue_data_gathering()
-                self._write_data_to_db()
+                self.write_data_to_db()
                 if not self._manual_mode:
                     self.issue_governors_relay_set()
                 self.issue_relay_set()
@@ -67,7 +69,7 @@ class Brain(threading.Thread):
         with self._data_lock:
             return self._data
 
-    def _create_sensor_controllers(self):
+    def create_sensor_controllers(self):
         """
         build controllers for all sensors
         - DHT22_SENSORS
@@ -85,7 +87,7 @@ class Brain(threading.Thread):
                 self._logger.debug('sensor: ({}) is dht22humidity, creating controller'.format(s))
                 self._sensors.append(DHT22HumidityController(name=s.name, pin_number=s.pin, simulate=s.simulate))
 
-    def _create_relay_controllers(self):
+    def create_relay_controllers(self):
         """
         build controllers for all relays in DB
         """
@@ -147,7 +149,7 @@ class Brain(threading.Thread):
                 except Exception as ex:
                     self._logger.info('some exception: {}'.format(ex))
 
-    def _write_data_to_db(self):
+    def write_data_to_db(self):
         self._logger.debug('in _write_data_to_db')
         with self._data_lock:
             for d in self._data:
@@ -156,6 +158,10 @@ class Brain(threading.Thread):
                 Measure.objects.create(sensor=sensor, time=d.time, val=d.value)
 
     def update_configurations(self):
+        """
+        read Configuration table from db, set local values to db values
+        :return:
+        """
         self._logger.debug('in update_configurations')
         for c in Configurations.objects.all():
             if c.name == 'manual_mode':
