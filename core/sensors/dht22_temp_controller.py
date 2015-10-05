@@ -29,7 +29,11 @@ class DHT22TempController(SensorController):
             t = self.simulate_data()
         else:
             import Adafruit_DHT as dht
+            
             h, t = dht.read_retry(dht.DHT22, self._pin_number)
+            if t is None:
+                self._logger.error('could not read data from sensor: {},'.format(self._name))
+                t = 0
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=t)
 
     def simulate_data(self):

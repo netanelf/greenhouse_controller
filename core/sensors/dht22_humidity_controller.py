@@ -29,7 +29,11 @@ class DHT22HumidityController(SensorController):
             h = self.simulate_data()
         else:
             import Adafruit_DHT as dht
+
             h, t = dht.read_retry(dht.DHT22, self._pin_number)
+            if h is None:
+                self._logger.error('could not read data from sensor: {},'.format(self._name))
+                h = 0
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=h)
 
     def simulate_data(self):
