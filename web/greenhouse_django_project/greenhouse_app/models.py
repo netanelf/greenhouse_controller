@@ -112,7 +112,7 @@ class Relay(models.Model):
     represent one relay, its name, state and wanted state
     """
     name = models.CharField(max_length=128, unique=True)
-    pin = models.PositiveSmallIntegerField(unique=True)
+    pin = models.PositiveSmallIntegerField(null=True)
     state = models.BooleanField(default=False)
     wanted_state = models.BooleanField(default=False)
     simulate = models.BooleanField(default=True)

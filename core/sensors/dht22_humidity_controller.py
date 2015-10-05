@@ -15,7 +15,7 @@ class DHT22HumidityController(SensorController):
     def __init__(self, name, pin_number, simulate=True):
         super(DHT22HumidityController, self).__init__(name)
         try:
-            self._pin_number = GPIO_TO_PIN_TABLE(pin_number)
+            self._pin_number = GPIO_TO_PIN_TABLE[pin_number]
         except Exception as ex:
             self._logger.info('got ex: {}'.format(ex))
             self._logger.error('pin {} is not in GPIO table'.format(pin_number))
