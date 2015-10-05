@@ -3,6 +3,7 @@ __author__ = 'netanel'
 
 from sensor_controller import SensorController, Measurement
 from django.utils import timezone
+from sensor_controller import GPIO_TO_PIN_TABLE
 #import Adafruit_DHT as dht
 import random
 
@@ -13,7 +14,12 @@ class DHT22TempController(SensorController):
     """
     def __init__(self, name, pin_number, simulate=True):
         super(DHT22TempController, self).__init__(name)
-        self._pin_number = pin_number
+        try:
+            self._pin_number = GPIO_TO_PIN_TABLE(pin_number)
+        except Exception as ex:
+            self._logger.info('got ex: {}'.format(ex))
+            self._logger.error('pin {} is not in GPIO table'.format(pin_number))
+            raise ex
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate
 
