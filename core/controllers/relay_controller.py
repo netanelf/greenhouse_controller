@@ -12,7 +12,8 @@ class RelayController(object):
         self._logger = logging.getLogger(name)
         if simulate is False:
             import RPi.GPIO as GPIO
-            GPIO.setup(18, GPIO.OUT)
+            GPIO.setmode(GPIO.BOARD)
+            GPIO.setup(self._pin, GPIO.OUT)
         self.change_state(new_state=state)
         self._state = state
 
@@ -46,7 +47,9 @@ if __name__ == '__main__':
     r = RelayController(name='demo', pin=8, state=0, simulate=False)
     import time
     for i in range(10):
+        print 'setting pin 8 to HIGH'
         r.change_state(new_state=1)
         time.sleep(5)
+        print 'setting pin 8 to LOW'
         r.change_state(new_state=0)
         time.sleep(5)
