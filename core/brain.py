@@ -11,6 +11,7 @@ import utils
 from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
 from controllers.relay_controller import RelayController
+from drivers import lcd2004_driver
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
@@ -37,6 +38,9 @@ class Brain(threading.Thread):
         # all relays
         self._relays = []
         self.create_relay_controllers()
+
+        # lcd controller
+        self.lcd = lcd2004_driver.Lcd()
 
         self._last_read_time = timezone.now()
         self._reading_issue_time = timezone.now()

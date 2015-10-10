@@ -1,7 +1,8 @@
 __author__ = 'netanel'
 import time
 
-class SRController(object):
+
+class SRDriver(object):
     """
     control a SN74HC595 Shift register
     OE - output enable, not used hold at GROUND
@@ -84,7 +85,7 @@ class SRController(object):
 
 
 if __name__ == '__main__':
-    sr = SRController(SER=5, RCLK=6, SRCLK=7, simulate=False)
+    sr = SRDriver(SER=40, RCLK=38, SRCLK=36, simulate=False)
     for i in range(8):
         sr.change_bit(pin=i, new_state=1)
         time.sleep(1)
