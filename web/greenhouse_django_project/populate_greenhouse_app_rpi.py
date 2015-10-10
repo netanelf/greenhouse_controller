@@ -36,37 +36,33 @@ def populate_relays():
 
     t = TimeGovernor.objects.get_or_create(name='light1', kind='R', on_start_time='08:00:00', on_end_time='08:00:00', recurring_on_start_time='08:00:00', recurring_on_period=60, recurring_off_period=30)[0]
 
-    print 'creating relay: (name=light1, pin=11, state=1, wanted_state=1, simulate=0)'
+    print 'creating relay: (name=light1, pin=1, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='light1')[0]
     r.pin = 11
     r.state = 1
     r.wanted_state = 1
-    r.simulate = 0
     r.time_governor = t
     r.save()
 
-    print 'creating relay: (name=light2, pin=13, state=1, wanted_state=1, simulate=0)'
+    print 'creating relay: (name=light2, pin=2, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='light2')[0]
     r.pin = 13
     r.state = 1
     r.wanted_state = 1
-    r.simulate = 0
     r.save()
 
-    print 'creating relay: (name=fan, pin=3, state=1, wanted_state=1, simulate=1)'
+    print 'creating relay: (name=fan, pin=3, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='fan')[0]
     r.pin = 3
     r.state = 1
     r.wanted_state = 1
-    r.simulate = 1
     r.save()
 
-    print 'creating relay: (name=humidity, pin=4, state=1, wanted_state=1, simulate=1)'
+    print 'creating relay: (name=humidity, pin=4, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='humidity')[0]
     r.pin = 4
     r.state = 1
     r.wanted_state = 1
-    r.simulate = 1
     r.save()
 
 def populate_configurations():

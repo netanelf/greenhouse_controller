@@ -4,14 +4,14 @@ import logging
 from datetime import timedelta
 import time
 import threading
-import os
+import os, sys
 
 import cfg
 import utils
 from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
 from controllers.relay_controller import RelayController
-from drivers import lcd2004_driver
+from drivers import sr_driver
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
@@ -27,20 +27,24 @@ class Brain(threading.Thread):
      - makes decisions according to time, sensors, cfg file
     """
 
-    def __init__(self):
+    def __init__(self, simulation_mode):
         threading.Thread.__init__(self)
         self._logger = logging.getLogger(__name__)
+        self._simulate_hw = simulation_mode
 
         # all sensors
         self._sensors = []
         self.create_sensor_controllers()
 
         # all relays
+        self._sr = None
         self._relays = []
         self.create_relay_controllers()
 
         # lcd controller
-        self.lcd = lcd2004_driver.Lcd()
+        if not self._simulate_hw:
+            from drivers import lcd2004_driver
+            self.lcd = lcd2004_driver.Lcd()
 
         self._last_read_time = timezone.now()
         self._reading_issue_time = timezone.now()
@@ -95,9 +99,11 @@ class Brain(threading.Thread):
         """
         build controllers for all relays in DB
         """
+        self._logger.debug('creating a Shift Register controller to control all relays')
+        self._sr = sr_driver.SRDriver(SER=40, RCLK=38, SRCLK=36, register_size=8, simulate=True)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
-            self._relays.append(RelayController(name=r.name, pin=r.pin, state=r.state, simulate=r.simulate))
+            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.state))
 
     def get_relay_by_name(self, name):
         """
@@ -192,7 +198,12 @@ def init_logging():
 
 if __name__ == '__main__':
     init_logging()
-    b = Brain()
+    if str(sys.argv[1]) == 'simulate':
+        print 'running in simulate HW mode'
+        b = Brain(simulation_mode=True)
+    else:
+        print 'running in real HW mode'
+        b = Brain(simulation_mode=False)
     b.setDaemon(True)
     b.start()
 

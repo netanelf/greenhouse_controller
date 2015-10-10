@@ -1,6 +1,5 @@
 __author__ = 'netanel'
 import time
-import RPi.GPIO as GPIO
 
 
 class SRDriver(object):
@@ -22,6 +21,7 @@ class SRDriver(object):
         self.simulate = simulate
 
         if not simulate:
+            import RPi.GPIO as GPIO
             GPIO.setmode(GPIO.BOARD)
             GPIO.setup(self.ser, GPIO.OUT)
             GPIO.setup(self.rclk, GPIO.OUT)
@@ -92,4 +92,4 @@ if __name__ == '__main__':
         for i in range(8):
             sr.change_bit(pin=i, new_state=1)
             time.sleep(0.1)
-    
+
