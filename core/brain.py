@@ -100,7 +100,7 @@ class Brain(threading.Thread):
         build controllers for all relays in DB
         """
         self._logger.debug('creating a Shift Register controller to control all relays')
-        self._sr = sr_driver.SRDriver(SER=40, RCLK=38, SRCLK=36, register_size=8, simulate=True)
+        self._sr = sr_driver.SRDriver(SER=40, RCLK=38, SRCLK=36, register_size=8, simulate=self._simulate_hw)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
             self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.state))
@@ -198,9 +198,10 @@ def init_logging():
 
 if __name__ == '__main__':
     init_logging()
-    if str(sys.argv[1]) == 'simulate':
-        print 'running in simulate HW mode'
-        b = Brain(simulation_mode=True)
+    if len(sys.argv) > 1:
+        if str(sys.argv[1]) == 'simulate':
+            print 'running in simulate HW mode'
+            b = Brain(simulation_mode=True)
     else:
         print 'running in real HW mode'
         b = Brain(simulation_mode=False)

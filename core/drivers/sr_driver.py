@@ -53,6 +53,7 @@ class SRDriver(object):
         if self.simulate:
             return
         else:
+            import RPi.GPIO as GPIO
             GPIO.output(self.ser, data)
             GPIO.output(self.srclk, 1)
             GPIO.output(self.srclk, 0)
@@ -65,6 +66,7 @@ class SRDriver(object):
         if self.simulate:
             return
         else:
+            import RPi.GPIO as GPIO
             GPIO.output(self.rclk, 1)
             GPIO.output(self.rclk, 0)
 

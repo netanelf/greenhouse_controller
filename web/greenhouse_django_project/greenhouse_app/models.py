@@ -123,9 +123,9 @@ class Relay(models.Model):
 
 
 class Configurations(models.Model):
-    name = models.CharField(max_length=128)
-    value = models.IntegerField()
-    explanation = models.CharField(max_length=256)
+    name = models.CharField(max_length=128, unique=True)
+    value = models.IntegerField(default=0)
+    explanation = models.CharField(max_length=256, default='')
 
     def __unicode__(self):
         return 'name: {}, value{}, explanation {}'.format(self.name, self.value, self.explanation)

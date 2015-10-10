@@ -38,7 +38,7 @@ def populate_relays():
 
     print 'creating relay: (name=light1, pin=1, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='light1')[0]
-    r.pin = 11
+    r.pin = 0
     r.state = 1
     r.wanted_state = 1
     r.time_governor = t
@@ -46,27 +46,30 @@ def populate_relays():
 
     print 'creating relay: (name=light2, pin=2, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='light2')[0]
-    r.pin = 13
+    r.pin = 1
     r.state = 1
     r.wanted_state = 1
     r.save()
 
     print 'creating relay: (name=fan, pin=3, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='fan')[0]
-    r.pin = 3
+    r.pin = 2
     r.state = 1
     r.wanted_state = 1
     r.save()
 
     print 'creating relay: (name=humidity, pin=4, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='humidity')[0]
-    r.pin = 4
+    r.pin = 3
     r.state = 1
     r.wanted_state = 1
     r.save()
 
 def populate_configurations():
-    Configurations.objects.get_or_create(name='manual_mode', value=0, explanation='if set to 1, governors do not change relay states, only manual user changes')
+    c = Configurations.objects.get_or_create(name='manual_mode')[0]
+    c.value=0
+    c.explanation='if set to 1, governors do not change relay states, only manual user changes'
+    c.save()
 
 
 if __name__ == '__main__':
