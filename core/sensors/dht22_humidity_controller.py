@@ -35,6 +35,7 @@ class DHT22HumidityController(SensorController):
                 self._logger.error('could not read data from sensor: {},'.format(self._name))
                 h = 0
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=h)
+        return self._last_read
 
     def simulate_data(self):
         return random.randint(30,90)

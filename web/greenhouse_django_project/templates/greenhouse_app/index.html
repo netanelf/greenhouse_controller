@@ -87,7 +87,7 @@
 {% block script_block %}
 
     function onRelayStateload(e) {
-        console.log(e.target.response);
+        //console.log(e.target.response);
         var data = JSON.parse(e.target.response);
         for (var i=0; i<data.length; i++){
             var d = data[i];
@@ -113,10 +113,10 @@
         xhr.send(null);
     }
     getRelayStates();
-    setInterval(getRelayStates, 3000);
+    setInterval(getRelayStates, 5000);
 
     function onSensorValuesload(e) {
-        console.log(e.target.response);
+        //console.log(e.target.response);
         var data = JSON.parse(e.target.response);
         for (var i=0; i<data.length; i++){
             var d = data[i];
@@ -141,5 +141,5 @@
     }
 
     getLastSensorValues();
-    setInterval(getLastSensorValues, 3000);
+    setInterval(getLastSensorValues, 5000);
 {% endblock %}

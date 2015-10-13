@@ -65,10 +65,11 @@ def populate_relays():
     r.wanted_state = 1
     r.save()
 
+
 def populate_configurations():
     c = Configurations.objects.get_or_create(name='manual_mode')[0]
-    c.value=0
-    c.explanation='if set to 1, governors do not change relay states, only manual user changes'
+    c.value = 0
+    c.explanation = 'if set to 1, governors do not change relay states, only manual user changes'
     c.save()
 
 

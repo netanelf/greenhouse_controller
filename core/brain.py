@@ -4,7 +4,8 @@ import logging
 from datetime import timedelta
 import time
 import threading
-import os, sys
+import os
+import sys
 
 import cfg
 import utils
@@ -47,7 +48,6 @@ class Brain(threading.Thread):
             self.lcd = lcd2004_driver.Lcd()
 
         self._last_read_time = timezone.now()
-        self._reading_issue_time = timezone.now()
         self._data_lock = threading.RLock()
         self._data = []
         self._killed = False
@@ -59,16 +59,14 @@ class Brain(threading.Thread):
         while not self._killed:
             if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
                 self.update_configurations()
-                self._reading_issue_time = self._last_read_time = timezone.now()
+                self._last_read_time = timezone.now()
                 self.issue_sensor_reading()
 
-                time.sleep(cfg.READING_TIME)
-                self.issue_data_gathering()
                 self.write_data_to_db()
                 if not self._manual_mode:
                     self.issue_governors_relay_set()
                 self.issue_relay_set()
-                # do many things
+                self.lcd_update()
 
             time.sleep(1)
         self._logger.info('brain killed')
@@ -119,15 +117,23 @@ class Brain(threading.Thread):
 
     def issue_sensor_reading(self):
         self._logger.debug('issuing a read for all sensors')
-        for s in self._sensors:
-            s.read()
-
-    def issue_data_gathering(self):
-        self._logger.debug('issuing a data gather for all sensors')
         with self._data_lock:
             self._data = []
             for s in self._sensors:
-                self._data.append(s.get_read())
+                self._data.append(s.read())
+
+    def lcd_update(self):
+        """
+        write some data to LCD
+        :return:
+        """
+        if not self._simulate_hw:
+            for i, d in enumerate(self._data):
+                if i < 4:  # write only first four readings
+                    name = str(d.sensor_name).replace('humidity', 'H')
+                    name = name.replace('temp', 'T')
+                    lcd_sensor_string = '{}, {:.1f}'.format(name, d.value)
+                    self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
 
     def issue_governors_relay_set(self):
         """
@@ -137,11 +143,11 @@ class Brain(threading.Thread):
             governor = r.time_governor
             if governor is not None:
                 self._logger.debug('relay: {}, has governor: {}'.format(r.name, governor))
-                governer_state = governor.state
+                governor_state = governor.state
 
-                if governer_state != r.state:
-                    self._logger.debug('relay: {}, was changed by governor: {} to state: {}'.format(r.name, governor, governer_state))
-                    r.wanted_state = governer_state
+                if governor_state != r.state:
+                    self._logger.debug('relay: {}, was changed by governor: {} to state: {}'.format(r.name, governor, governor_state))
+                    r.wanted_state = governor_state
                     r.save()
 
     def issue_relay_set(self):
