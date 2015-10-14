@@ -46,8 +46,10 @@ class Brain(threading.Thread):
         if not self._simulate_hw:
             from drivers import lcd2004_driver
             self.lcd = lcd2004_driver.Lcd()
+            self.lcd_alive = 'x'
 
         self._last_read_time = timezone.now()
+        #self._reading_issue_time = timezone.now()
         self._data_lock = threading.RLock()
         self._data = []
         self._killed = False
@@ -59,14 +61,18 @@ class Brain(threading.Thread):
         while not self._killed:
             if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
                 self.update_configurations()
+                #self._reading_issue_time = self._last_read_time = timezone.now()
                 self._last_read_time = timezone.now()
                 self.issue_sensor_reading()
 
+                #time.sleep(cfg.READING_TIME)
+                #self.issue_data_gathering()
                 self.write_data_to_db()
                 if not self._manual_mode:
                     self.issue_governors_relay_set()
                 self.issue_relay_set()
                 self.lcd_update()
+                # do many things
 
             time.sleep(1)
         self._logger.info('brain killed')
@@ -133,7 +139,17 @@ class Brain(threading.Thread):
                     name = str(d.sensor_name).replace('humidity', 'H')
                     name = name.replace('temp', 'T')
                     lcd_sensor_string = '{}, {:.1f}'.format(name, d.value)
+                    if i == 0:
+                        lcd_sensor_string = lcd_sensor_string.ljust(20)
+                        if self.lcd_alive == 'x':
+                            lcd_sensor_string = lcd_sensor_string[:19] + '+'
+                            self.lcd_alive = '+'
+                        else:
+                            lcd_sensor_string = lcd_sensor_string[:19] + 'x'
+                            self.lcd_alive = 'x'
                     self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
+
+
 
     def issue_governors_relay_set(self):
         """

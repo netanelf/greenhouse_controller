@@ -26,8 +26,8 @@
                         {% for s in sensors %}
                             <tr>
                                 <td>{{s.name}}</td>
-                                <td id={{s.name}}_val>{{s.get_last_measure.val}}</td>
-                                <td id={{s.name}}_time class="small">{{s.get_last_measure.time}}</td>
+                                <td id={{s.name}}_val></td>
+                                <td id={{s.name}}_time class="small"></td>
                             </tr>
                         {% endfor %}
                     </tbody>
