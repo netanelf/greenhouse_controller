@@ -8,14 +8,18 @@ from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Confi
 
 
 def populate_sensors():
+    print 'deleting data in SensorKind'
+    SensorKind.objects.all().delete()
+    print 'deleting data in Sensor'
+    Sensor.objects.all().delete()
 
     dht_22_temp = SensorKind.objects.get_or_create(kind='dht22temp')[0]
     dht_22_humidity = SensorKind.objects.get_or_create(kind='dht22humidity')[0]
-    thermocouple = SensorKind.objects.get_or_create(kind='thermocouple')[0]
     ds18b20 = SensorKind.objects.get_or_create(kind='ds18b20')[0]
 
     print 'creating sensor: {}'.format('dht22_temp_door')
     s = Sensor.objects.get_or_create(name='dht22_temp_door')[0]
+
     s.kind = dht_22_temp
     s.simulate = False
     s.pin = 8
@@ -35,12 +39,6 @@ def populate_sensors():
 
     print 'creating sensor: {}'.format('dht22_humidity_window')
     Sensor.objects.get_or_create(name='dht22_humidity_window', kind=dht_22_humidity, simulate=False, pin=15, i2c=False)[0]
-
-    print 'creating sensor: {}'.format('thermocouple_temp_water')
-    Sensor.objects.get_or_create(name='thermocouple_temp_water', kind=thermocouple, simulate=True, pin=3, i2c=False)[0]
-
-    print 'creating sensor: {}'.format('thermocouple_temp_light_heatsink')
-    Sensor.objects.get_or_create(name='thermocouple_temp_light_heatsink', kind=thermocouple, simulate=True, pin=5, i2c=False)[0]
 
     print 'creating sensor: {}'.format('DS18B20_water')
     Sensor.objects.get_or_create(name='DS18B20_water', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467d282ff')[0]

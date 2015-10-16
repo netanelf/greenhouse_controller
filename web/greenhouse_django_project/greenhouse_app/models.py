@@ -4,7 +4,13 @@ from datetime import timedelta, datetime
 
 
 class SensorKind(models.Model):
-    kind = models.CharField(max_length=128, unique=True)
+    SENSOR_KINDS = (
+                    ('dht22temp', 'dht22temp'),
+                    ('dht22humidity', 'dht22humidity'),
+                    ('ds18b20', 'ds18b20'),
+                    ('other', 'other')
+    )
+    kind = models.CharField(max_length=128, choices=SENSOR_KINDS, unique=True, default='other')
 
     def __unicode__(self):
         return self.kind
@@ -15,9 +21,9 @@ class Sensor(models.Model):
     represent one sensor
     """
     name = models.CharField(max_length=128, unique=True)
-    kind = models.ForeignKey(SensorKind)
+    kind = models.ForeignKey(SensorKind, blank=True, null=True)
     simulate = models.BooleanField(default=True)
-    pin = models.PositiveSmallIntegerField()
+    pin = models.PositiveSmallIntegerField(default=99)
     i2c = models.BooleanField(default=False)
     device_id = models.CharField(max_length=32, default='')
     
@@ -119,4 +125,4 @@ class Configurations(models.Model):
     explanation = models.CharField(max_length=256, default='')
 
     def __unicode__(self):
-        return 'name: {}, value{}, explanation {}'.format(self.name, self.value, self.explanation)
+        return self.name

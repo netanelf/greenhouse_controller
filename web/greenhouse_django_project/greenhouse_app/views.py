@@ -32,7 +32,7 @@ def downloadMeasurements(request):
     measures = Measure.objects.all()
     fields = Measure._meta.fields
     field_names = [f.name for f in fields]
-
+    field_names.remove('id')
     csvfile = StringIO.StringIO()
     csvwriter = csv.writer(csvfile)
 
