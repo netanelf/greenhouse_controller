@@ -15,18 +15,18 @@ def populate_sensors():
 
     print 'creating sensor: {}'.format('dht22_temp_door')
     s = Sensor.objects.get_or_create(name='dht22_temp_door')[0]
-    s.kind=dht_22_temp 
-    s.simulate=False
-    s.pin=8
-    s.i2c=False
+    s.kind = dht_22_temp
+    s.simulate = False
+    s.pin = 8
+    s.i2c = False
     s.save()
 
     print 'creating sensor: {}'.format('dht22_humidity_door')
     s = Sensor.objects.get_or_create(name='dht22_humidity_door')[0]
-    s.kind=dht_22_humidity
-    s.simulate=False
-    s.pin=8
-    s.i2c=False
+    s.kind = dht_22_humidity
+    s.simulate = False
+    s.pin = 8
+    s.i2c = False
     s.save()
 
     print 'creating sensor: {}'.format('dht22_temp_window')

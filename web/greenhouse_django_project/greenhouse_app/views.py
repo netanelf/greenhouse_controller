@@ -63,7 +63,6 @@ def downloadMeasurements(request):
                 yield data
                 i = 0
 
-    #response = HttpResponse(data(), content_type='text/csv')
     response = FileResponse(data(), content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="measurements.csv"'
     return response

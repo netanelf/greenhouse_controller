@@ -4,6 +4,14 @@ import logging
 
 class RelayController(object):
     def __init__(self, name, pin, shift_register, state=0):
+        """
+        controll one relay through a shift register
+        :param name:
+        :param pin: pin on shift register (0-8)
+        :param shift_register: shift register controller object
+        :param state: initial state
+        :return:
+        """
         self.name = name
         self.pin = pin
         self.sr = shift_register
