@@ -7,6 +7,18 @@ from sensor_controller import GPIO_TO_PIN_TABLE
 #import Adafruit_DHT as dht
 import random
 
+'''
+def read_retry(sensor, pin, retries=15, delay_seconds=2, platform=None):
+    """Read DHT sensor of specified sensor type (DHT11, DHT22, or AM2302) on
+    specified pin and return a tuple of humidity (as a floating point value
+    in percent) and temperature (as a floating point value in Celsius).
+    Unlike the read function, this read_retry function will attempt to read
+    multiple times (up to the specified max retries) until a good reading can be
+    found. If a good reading cannot be found after the amount of retries, a tuple
+    of (None, None) is returned. The delay between retries is by default 2
+    seconds, but can be overridden.
+'''
+
 
 class DHT22HumidityController(SensorController):
     """
@@ -30,7 +42,7 @@ class DHT22HumidityController(SensorController):
         else:
             import Adafruit_DHT as dht
 
-            h, t = dht.read_retry(dht.DHT22, self._pin_number)
+            h, t = dht.read_retry(sensor=dht.DHT22, pin=self._pin_number, retries=3, delay_seconds=0.5)
             if h is None:
                 self._logger.error('could not read data from sensor: {},'.format(self._name))
                 h = 0
