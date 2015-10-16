@@ -19,6 +19,7 @@ class Sensor(models.Model):
     simulate = models.BooleanField(default=True)
     pin = models.PositiveSmallIntegerField()
     i2c = models.BooleanField(default=False)
+    device_id = models.CharField(max_length=32, default='')
     
     def __unicode__(self):
         return self.name

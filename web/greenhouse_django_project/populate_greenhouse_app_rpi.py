@@ -12,6 +12,7 @@ def populate_sensors():
     dht_22_temp = SensorKind.objects.get_or_create(kind='dht22temp')[0]
     dht_22_humidity = SensorKind.objects.get_or_create(kind='dht22humidity')[0]
     thermocouple = SensorKind.objects.get_or_create(kind='thermocouple')[0]
+    ds18b20 = SensorKind.objects.get_or_create(kind='ds18b20')[0]
 
     print 'creating sensor: {}'.format('dht22_temp_door')
     s = Sensor.objects.get_or_create(name='dht22_temp_door')[0]
@@ -40,6 +41,12 @@ def populate_sensors():
 
     print 'creating sensor: {}'.format('thermocouple_temp_light_heatsink')
     Sensor.objects.get_or_create(name='thermocouple_temp_light_heatsink', kind=thermocouple, simulate=True, pin=5, i2c=False)[0]
+
+    print 'creating sensor: {}'.format('DS18B20_water')
+    Sensor.objects.get_or_create(name='DS18B20_water', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467d282ff')[0]
+
+    print 'creating sensor: {}'.format('DS18B20_indoor')
+    Sensor.objects.get_or_create(name='DS18B20_indoor', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467eefbff')[0]
 
 
 def populate_relays():
