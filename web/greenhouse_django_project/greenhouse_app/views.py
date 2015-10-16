@@ -1,9 +1,10 @@
 from django.shortcuts import render
 from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configurations
 import json
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from django.utils import timezone
 import csv
+import cStringIO as StringIO
 
 
 def index(request):
@@ -27,26 +28,44 @@ def downloadMeasurements(request):
     """
     send all measurements as .csv file
     """
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="measurements.csv"'
-
+    CHUNK = 128
     measures = Measure.objects.all()
     fields = Measure._meta.fields
-    writer = csv.writer(response)
     field_names = [f.name for f in fields]
-    writer.writerow(field_names)
-    for m in measures:
-        row = []
-        for field_name in field_names:
-            if field_name == 'time':
-                t = getattr(m, field_name)
-                t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
-                t = t.strftime('%d/%m/%y %H:%M:%S.%f')
-                row.append(t)
-            else:
-                row.append(getattr(m, field_name))
-        writer.writerow(row)
 
+    csvfile = StringIO.StringIO()
+    csvwriter = csv.writer(csvfile)
+
+    def read_and_flush():
+        csvfile.seek(0)
+        data = csvfile.read()
+        csvfile.seek(0)
+        csvfile.truncate()
+        return data
+
+    def data():
+        csvwriter.writerow(field_names)
+        i = 0
+        for m in measures:
+            i += 1
+            row = []
+            for field_name in field_names:
+                if field_name == 'time':
+                    t = getattr(m, field_name)
+                    t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
+                    t = t.strftime('%d/%m/%y %H:%M:%S.%f')
+                    row.append(t)
+                else:
+                    row.append(getattr(m, field_name))
+            csvwriter.writerow(row)
+            if i > CHUNK:
+                data = read_and_flush()
+                yield data
+                i = 0
+
+    #response = HttpResponse(data(), content_type='text/csv')
+    response = FileResponse(data(), content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="measurements.csv"'
     return response
 
 
@@ -63,18 +82,18 @@ def getLastSensorValues(request):
     sensor_data = []
     for s in sensor_list:
         name = s.name
-
-        measures = Measure.objects.filter(sensor=s)
-        if len(measures) > 0:
-            val = measures[len(measures)-1].val
-            time = (measures[len(measures)-1].time)
+        t0 = timezone.now()
+        try:
+            measure = Measure.objects.filter(sensor=s).latest('time')
+            val = measure.val
+            val = '{:.2f}'.format(val)
+            time = measure.time
             time = timezone.make_naive(time, timezone=timezone.get_current_timezone())
             time = time.strftime('%d/%m/%y %H:%M:%S')
-        else:
+        except Exception:
             val = 'unknown'
             time = 'unknown'
-        if val is not 'unknown':
-            val = '{:.2f}'.format(val)
+        t1 = timezone.now()
         sensor_data.append({'name': name, 'val': val, 'time': time})
     return HttpResponse(json.dumps(sensor_data))
 

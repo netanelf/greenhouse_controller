@@ -16,12 +16,12 @@ class SensorController(object):
 
     def read(self):
         """
-        issue a reading of the sensor, this is an asynchronous read, the actual reading should be retrieved by using
-        get_read()
+        issue a reading of the sensor
         :return: None
         """
         self._logger.debug('initiated a read for sensor {}'.format(self._name))
 
+    '''
     def get_read(self):
         """
         get the last reading from the sensor
@@ -29,7 +29,7 @@ class SensorController(object):
         """
         return self._last_read
 
-
+    '''
 # convert between physical pi to GPIO (for Adafruit_DHT that uses GPIO numbering)
 # (Physical pin: GPIO number)
 GPIO_TO_PIN_TABLE = {

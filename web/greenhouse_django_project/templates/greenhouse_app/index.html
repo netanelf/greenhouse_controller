@@ -26,8 +26,8 @@
                         {% for s in sensors %}
                             <tr>
                                 <td>{{s.name}}</td>
-                                <td id={{s.name}}_val>{{s.get_last_measure.val}}</td>
-                                <td id={{s.name}}_time class="small">{{s.get_last_measure.time}}</td>
+                                <td id={{s.name}}_val></td>
+                                <td id={{s.name}}_time class="small"></td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -87,7 +87,7 @@
 {% block script_block %}
 
     function onRelayStateload(e) {
-        console.log(e.target.response);
+        //console.log(e.target.response);
         var data = JSON.parse(e.target.response);
         for (var i=0; i<data.length; i++){
             var d = data[i];
@@ -113,10 +113,10 @@
         xhr.send(null);
     }
     getRelayStates();
-    setInterval(getRelayStates, 3000);
+    setInterval(getRelayStates, 5000);
 
     function onSensorValuesload(e) {
-        console.log(e.target.response);
+        //console.log(e.target.response);
         var data = JSON.parse(e.target.response);
         for (var i=0; i<data.length; i++){
             var d = data[i];
@@ -141,5 +141,5 @@
     }
 
     getLastSensorValues();
-    setInterval(getLastSensorValues, 3000);
+    setInterval(getLastSensorValues, 5000);
 {% endblock %}

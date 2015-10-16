@@ -19,17 +19,7 @@ class Sensor(models.Model):
     simulate = models.BooleanField(default=True)
     pin = models.PositiveSmallIntegerField()
     i2c = models.BooleanField(default=False)
-
-    def get_last_measure(self):
-        measures = Measure.objects.filter(sensor=self)
-        if len(measures) > 0:
-            print 'measures[len(measures)-1]: {}'.format(measures[len(measures)-1])
-            return measures[len(measures)-1]
-        else:
-            return None
-
-    last_measure = property(get_last_measure)
-
+    
     def __unicode__(self):
         return self.name
 
