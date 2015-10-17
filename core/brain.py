@@ -13,7 +13,7 @@ from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
 from sensors.ds18b20_temp_controller import DS18B20TempController
 from controllers.relay_controller import RelayController
-from drivers import sr_driver
+from drivers import sr_driver, dht22_driver
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
@@ -35,6 +35,7 @@ class Brain(threading.Thread):
         self._simulate_hw = simulation_mode
 
         # all sensors
+        self._dht_22_drivers = []
         self._sensors = []
         self.create_sensor_controllers()
 
@@ -62,18 +63,14 @@ class Brain(threading.Thread):
         while not self._killed:
             if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
                 self.update_configurations()
-                #self._reading_issue_time = self._last_read_time = timezone.now()
                 self._last_read_time = timezone.now()
                 self.issue_sensor_reading()
 
-                #time.sleep(cfg.READING_TIME)
-                #self.issue_data_gathering()
                 self.write_data_to_db()
                 if not self._manual_mode:
                     self.issue_governors_relay_set()
                 self.issue_relay_set()
                 self.lcd_update()
-                # do many things
 
             time.sleep(1)
         self._logger.info('brain killed')
@@ -85,20 +82,21 @@ class Brain(threading.Thread):
     def create_sensor_controllers(self):
         """
         build controllers for all sensors
-        - DHT22_SENSORS
-        - add more later
+        - DHT22 sensors
+        - DS18B20 sensors
         """
-        #for s in cfg.DHT22_SENSORS:
         for s in Sensor.objects.order_by():
             self._logger.debug('found sensor: ({}), creating controller'.format(s))
 
             if s.kind.kind == 'dht22temp':
+                dht_22_driver = self.get_dht22_controller(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22temp, creating controller'.format(s))
-                self._sensors.append(DHT22TempController(name=s.name, pin_number=s.pin, simulate=s.simulate))
+                self._sensors.append(DHT22TempController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
             elif s.kind.kind == 'dht22humidity':
+                dht_22_driver = self.get_dht22_controller(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22humidity, creating controller'.format(s))
-                self._sensors.append(DHT22HumidityController(name=s.name, pin_number=s.pin, simulate=s.simulate))
+                self._sensors.append(DHT22HumidityController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
             elif s.kind.kind == 'ds18b20':
                 self._logger.debug('sensor: ({}) is ds18b20, creating controller'.format(s))
@@ -154,7 +152,18 @@ class Brain(threading.Thread):
                             self.lcd_alive = 'x'
                     self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
 
-
+    def get_dht22_controller(self, pin):
+        """
+        ensure one driver is created for temp + humidity sensor in the same pin
+        :param pin:
+        :return:
+        """
+        for d in self._dht_22_drivers:
+            if d.pin == pin:
+                return d
+        d = dht22_driver.DHT22Driver(pin=pin)
+        self._dht_22_drivers.append(d)
+        return d
 
     def issue_governors_relay_set(self):
         """
