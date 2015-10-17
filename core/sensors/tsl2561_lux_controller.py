@@ -49,7 +49,7 @@ class TSL2561LuxController(SensorController):
                 self.i2c.write8(0x81, 0x12)     # set gain = 16X and timing = 402 mSec
                 if self.debug:
                     print "Setting high gain"
-            self.gain = gain;                     # safe gain for calculation
+            self.gain = gain                     # safe gain for calculation
             time.sleep(self.pause)              # pause for integration (self.pause must be bigger than integration time)
 
     def read_word(self, reg):
@@ -57,8 +57,8 @@ class TSL2561LuxController(SensorController):
         try:
             wordval = self.i2c.readU16(reg)
             #newval = self.i2c.reverseByteOrder(wordval)
-            newval = wordval #self.i2c.reverseByteOrder(wordval)
-            if (self.debug):
+            newval = wordval  # no need to reverse order (at list in raspberry pi)
+            if self.debug:
                 print("I2C: Device 0x%02X returned 0x%04X from reg 0x%02X interperted as 0x%04X" % (self.address, wordval & 0xFFFF, reg, newval & 0xFFFF))
             return newval
         except IOError:
@@ -67,20 +67,20 @@ class TSL2561LuxController(SensorController):
 
     def read_full(self, reg=0x8C):
         """Reads visible+IR diode from the I2C device"""
-        return self.read_word(reg);
+        return self.read_word(reg)
 
     def read_ir(self, reg=0x8E):
         """Reads IR only diode from the I2C device"""
-        return self.read_word(reg);
+        return self.read_word(reg)
 
     def read_lux(self, gain=0):
         """Grabs a lux reading either with autoranging (gain=0) or with a specified gain (1, 16)"""
         if gain == 1 or gain == 16:
-            self.set_gain(gain) # low/highGain
+            self.set_gain(gain)  # low/highGain
             ambient = self.read_full()
             IR = self.read_ir()
-        elif gain == 0: # auto gain
-            self.set_gain(16) # first try highGain
+        elif gain == 0:  # auto gain
+            self.set_gain(16)  # first try highGain
             ambient = self.read_full()
             if ambient < 65535:
                 IR = self.read_ir()

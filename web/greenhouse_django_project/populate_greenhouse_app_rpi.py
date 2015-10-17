@@ -3,7 +3,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.setti
 
 import django
 django.setup()
-
 from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Configurations
 
 
@@ -20,7 +19,6 @@ def populate_sensors():
 
     print 'creating sensor: {}'.format('dht22_temp_door')
     s = Sensor.objects.get_or_create(name='dht22_temp_door')[0]
-
     s.kind = dht_22_temp
     s.simulate = False
     s.pin = 8

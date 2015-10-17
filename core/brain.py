@@ -55,7 +55,6 @@ class Brain(threading.Thread):
                 self._logger.error('could not initialize lcd, ex: {}'.format(ex))
 
         self._last_read_time = timezone.now()
-        #self._reading_issue_time = timezone.now()
         self._data_lock = threading.RLock()
         self._data = []
         self._killed = False
@@ -86,8 +85,9 @@ class Brain(threading.Thread):
     def create_sensor_controllers(self):
         """
         build controllers for all sensors
-        - DHT22 sensors
-        - DS18B20 sensors
+        - DHT22 (temp + humidity) sensors
+        - DS18B20 (temp) sensors
+        - TSL2561 (lux) sensors
         """
         for s in Sensor.objects.order_by():
             self._logger.debug('found sensor: ({}), creating controller'.format(s))
@@ -108,7 +108,7 @@ class Brain(threading.Thread):
 
             elif s.kind.kind == 'tsl2561':
                 self._logger.debug('sensor: ({}) is tsl2561, creating controller'.format(s))
-                self._sensors.append(TSL2561LuxController(name=s.name, address=int(s.device_id, 16), debug=True, simulate=s.simulate))
+                self._sensors.append(TSL2561LuxController(name=s.name, address=int(s.device_id, 16), debug=False, simulate=s.simulate))
 
     def create_relay_controllers(self):
         """
