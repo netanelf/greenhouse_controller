@@ -107,7 +107,7 @@ class Brain(threading.Thread):
         build controllers for all relays in DB
         """
         self._logger.debug('creating a Shift Register controller to control all relays')
-        self._sr = sr_driver.SRDriver(SER=40, RCLK=38, SRCLK=36, register_size=8, simulate=self._simulate_hw)
+        self._sr = sr_driver.SRDriver(SER=cfg.SER, RCLK=cfg.RCLK, SRCLK=cfg.SRCLK, register_size=cfg.REGISTER_SIZE, simulate=self._simulate_hw)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
             self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.state))
