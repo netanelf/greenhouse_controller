@@ -12,8 +12,8 @@ from sensor_controller import SensorController, Measurement
 class TSL2561LuxController(SensorController):
     i2c = None
 
-    def __init__(self, name, address=0x39, debug=0, pause=0.8, simulate=True):
-        super(TSL2561, self).__init__(name)
+    def __init__(self, name, address=0x39, debug=False, pause=0.8, simulate=True):
+        super(TSL2561LuxController, self).__init__(name)
         self.i2c = Adafruit_I2C(address)
         self.address = address
         self.pause = pause
@@ -24,7 +24,7 @@ class TSL2561LuxController(SensorController):
         self.last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
 
     def read(self):
-        super(TSL2561, self).read()
+        super(TSL2561LuxController, self).read()
         if self.simulate:
             l = self.simulate_data()
         else:
@@ -36,7 +36,7 @@ class TSL2561LuxController(SensorController):
         return self.last_read
 
     def simulate_data(self):
-        return random.randrange(200, 600)
+        return random.randrange(0, 17000)
 
     def set_gain(self, gain=1):
         """ Set the gain """
@@ -56,9 +56,10 @@ class TSL2561LuxController(SensorController):
         """Reads a word from the I2C device"""
         try:
             wordval = self.i2c.readU16(reg)
-            newval = self.i2c.reverseByteOrder(wordval)
+            #newval = self.i2c.reverseByteOrder(wordval)
+            newval = wordval #self.i2c.reverseByteOrder(wordval)
             if (self.debug):
-                print("I2C: Device 0x%02X returned 0x%04X from reg 0x%02X" % (self.address, wordval & 0xFFFF, reg))
+                print("I2C: Device 0x%02X returned 0x%04X from reg 0x%02X interperted as 0x%04X" % (self.address, wordval & 0xFFFF, reg, newval & 0xFFFF))
             return newval
         except IOError:
             print("Error accessing 0x%02X: Check your I2C address" % self.address)
@@ -94,10 +95,8 @@ class TSL2561LuxController(SensorController):
 
         ratio = (IR / float(ambient))  # changed to make it run under python 2
 
-        if self.debug:
-            print "IR Result", IR
-            print "Ambient Result", ambient
-
+        '''
+        # for CS package
         if (ratio >= 0) and (ratio <= 0.52):
             lux = (0.0315 * ambient) - (0.0593 * ambient * (ratio**1.4))
         elif ratio <= 0.65:
@@ -108,6 +107,26 @@ class TSL2561LuxController(SensorController):
             lux = (0.00338 * ambient) - (0.0026 * IR)
         elif ratio > 1.3:
             lux = 0
+        '''    
+        
+        # for T, FN, CL packages    
+        if (ratio >= 0) and (ratio <= 0.50):
+            lux = (0.0304 * ambient) - (0.062 * ambient * (ratio**1.4))
+        elif ratio <= 0.61:
+            lux = (0.0224 * ambient) - (0.031 * IR)
+        elif ratio <= 0.80:
+            lux = (0.0128 * ambient) - (0.0153 * IR)
+        elif ratio <= 1.3:
+            lux = (0.00146 * ambient) - (0.00112 * IR)
+        elif ratio > 1.3:
+            lux = 0
 
+        if self.debug:
+            print "IR Result", IR
+            print "Ambient Result", ambient
+            print "gain", self.gain
+            print "ratio", ratio
+            print "lux", lux
+            
         return lux
 

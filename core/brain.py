@@ -108,7 +108,7 @@ class Brain(threading.Thread):
 
             elif s.kind.kind == 'tsl2561':
                 self._logger.debug('sensor: ({}) is tsl2561, creating controller'.format(s))
-                self._sensors.append(TSL2561LuxController(name=s.name, address=int(s.device_id), debug=0, pause=0.8, simulate=s.simulate))
+                self._sensors.append(TSL2561LuxController(name=s.name, address=int(s.device_id, 16), debug=True, simulate=s.simulate))
 
     def create_relay_controllers(self):
         """
