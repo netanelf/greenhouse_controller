@@ -46,9 +46,12 @@ class Brain(threading.Thread):
 
         # lcd controller
         if not self._simulate_hw:
-            from drivers import lcd2004_driver
-            self.lcd = lcd2004_driver.Lcd()
-            self.lcd_alive = 'x'
+            try:
+                from drivers import lcd2004_driver
+                self.lcd = lcd2004_driver.Lcd()
+                self.lcd_alive = 'x'
+            except Exception as ex:
+                self._logger.error('could not initialize lcd, ex: {}'.format(ex))
 
         self._last_read_time = timezone.now()
         #self._reading_issue_time = timezone.now()
@@ -137,20 +140,23 @@ class Brain(threading.Thread):
         :return:
         """
         if not self._simulate_hw:
-            for i, d in enumerate(self._data):
-                if i < 4:  # write only first four readings
-                    name = str(d.sensor_name).replace('humidity', 'H')
-                    name = name.replace('temp', 'T')
-                    lcd_sensor_string = '{}, {:.1f}'.format(name, d.value)
-                    if i == 0:
-                        lcd_sensor_string = lcd_sensor_string.ljust(20)
-                        if self.lcd_alive == 'x':
-                            lcd_sensor_string = lcd_sensor_string[:19] + '+'
-                            self.lcd_alive = '+'
-                        else:
-                            lcd_sensor_string = lcd_sensor_string[:19] + 'x'
-                            self.lcd_alive = 'x'
-                    self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
+            try:
+                for i, d in enumerate(self._data):
+                    if i < 4:  # write only first four readings
+                        name = str(d.sensor_name).replace('humidity', 'H')
+                        name = name.replace('temp', 'T')
+                        lcd_sensor_string = '{}, {:.1f}'.format(name, d.value)
+                        if i == 0:
+                            lcd_sensor_string = lcd_sensor_string.ljust(20)
+                            if self.lcd_alive == 'x':
+                                lcd_sensor_string = lcd_sensor_string[:19] + '+'
+                                self.lcd_alive = '+'
+                            else:
+                                lcd_sensor_string = lcd_sensor_string[:19] + 'x'
+                                self.lcd_alive = 'x'
+                        self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
+            except Exception as ex:
+                self._logger.error('could not write to lcd, ex: {}'.format(ex))
 
     def get_dht22_controller(self, pin):
         """
