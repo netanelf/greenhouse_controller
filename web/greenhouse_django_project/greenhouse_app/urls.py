@@ -9,6 +9,8 @@ urlpatterns = patterns('',
                        url(r'^relays/getRelaysState/', views.getRelaysState, name='getRelaysState'),
                        url(r'^relays/setRelaysState/', views.setRelaysState, name='setRelaysState'),
                        url(r'^relays/', views.relays, name='relays'),
+                       url(r'^graphs/getGraphData', views.getGraphData, name='getGraphData'),
+                       url(r'^graphs/', views.graphs, name='graphs'),
                        url(r'^setConfiguration/', views.setConfiguration, name='setConfiguration'),
                        )
 

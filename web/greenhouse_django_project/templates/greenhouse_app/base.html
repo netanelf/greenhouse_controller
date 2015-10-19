@@ -24,6 +24,7 @@
             <li class="{% block index_active_class %}{% endblock %}"><a href="{% url 'index' %}">Home</a></li>
             <li class="{% block measurement_active_class %}{% endblock %}"><a href="{% url 'measurements' %}">Measurements</a></li>
             <li class="{% block relays_active_class %}{% endblock %}"><a href="{% url 'relays' %}">Relays</a></li>
+            <li class="{% block graphs_active_class %}{% endblock %}"><a href="{% url 'graphs' %}">Graphs</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -48,6 +49,7 @@
     <script src="{% static 'js/bootstrap-toggle.js' %}"></script>
     <script src="{% static 'js/bootstrap.js' %}"></script>
 
+    {% block footer_block %}{% endblock %}
     <script>
         {% block script_block %}{% endblock %}
     </script>

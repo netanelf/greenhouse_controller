@@ -5,6 +5,8 @@ from django.http import HttpResponse, FileResponse
 from django.utils import timezone
 import csv
 import cStringIO as StringIO
+import time
+from datetime import datetime
 
 
 def index(request):
@@ -81,19 +83,17 @@ def getLastSensorValues(request):
     sensor_data = []
     for s in sensor_list:
         name = s.name
-        t0 = timezone.now()
         try:
             measure = Measure.objects.filter(sensor=s).latest('time')
             val = measure.val
             val = '{:.2f}'.format(val)
-            time = measure.time
-            time = timezone.make_naive(time, timezone=timezone.get_current_timezone())
-            time = time.strftime('%d/%m/%y %H:%M:%S')
+            t = measure.time
+            t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
+            t = t.strftime('%d/%m/%y %H:%M:%S')
         except Exception:
             val = 'unknown'
-            time = 'unknown'
-        t1 = timezone.now()
-        sensor_data.append({'name': name, 'val': val, 'time': time})
+            t = 'unknown'
+        sensor_data.append({'name': name, 'val': val, 'time': t})
     return HttpResponse(json.dumps(sensor_data))
 
 
@@ -130,6 +130,17 @@ def relays(request):
     return render(request, 'greenhouse_app/relays.html', context_dict)
 
 
+def graphs(request):
+    sensors = Sensor.objects.all()
+    sensors_names = []
+    for s in sensors:
+        sensors_names.append(s.name)
+    context_dict = {'sensors': sensors_names}
+
+    print context_dict
+    return render(request, 'greenhouse_app/graphs.html', context_dict)
+
+
 def setConfiguration(request):
     """
     change some configuration in models.Configurations
@@ -148,3 +159,38 @@ def setConfiguration(request):
         r.save()
 
     return HttpResponse(json.dumps({'NoData': None}))
+
+
+def getGraphData(request):
+    """
+    {
+    "label": "Europe (EU27)",
+    "data": [[1999, 3.0], [2000, 3.9], [2001, 2.0], [2002, 1.2], [2003, 1.3], [2004, 2.5], [2005, 2.0], [2006, 3.1], [2007, 2.9], [2008, 0.9]]
+    }
+    :param request:
+    :return:
+    """
+    print 'in getGraphData'
+    for k in request.GET.viewkeys():
+        wanted_sensor = k
+
+    s = Sensor.objects.get(name=wanted_sensor)
+    last_measure = Measure.objects.filter(sensor=s).latest('time')
+    day_start = (last_measure.time).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    data = []
+    name = s.name
+    measures = Measure.objects.filter(sensor=s, time__gt=day_start)
+    for measure in measures:
+        val = measure.val
+        val = '{:.2f}'.format(val)
+        t = measure.time
+        t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
+        t = time.mktime(t.timetuple())*1000
+
+        data.append([t, val])
+
+    sensor_data = {'data': data, 'label': name}
+
+    return HttpResponse(json.dumps(sensor_data))
+
