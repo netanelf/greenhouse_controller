@@ -64,7 +64,8 @@ function createFlot(){
             symbol: 'diamond'
         },
         xaxis: {
-            mode: 'time'
+            mode: 'time',
+            timezone: 'browser'
         },
         crosshair: {
             mode: 'xy'
@@ -77,46 +78,3 @@ function createFlot(){
     // Push the new data onto our existing data array
     $.plot('#placeholder', series_data, options);
 }
-
-/*
-$(function() {
-
-    var options = {
-        lines: {
-            show: true
-        },
-        points: {
-            show: true,
-            symbol: 'diamond'
-        },
-        xaxis: {
-            timezone: 'browser',
-            mode: 'time',
-        },
-        crosshair: {
-            mode: 'xy'
-        },
-        legend:{
-            container:$('#legend-container'),
-        }
-    };
-
-    $('button.fetchSeries').click(function () {
-
-        function onDataReceived(series) {
-
-            // Push the new data onto our existing data array
-            $.plot('#placeholder', series, options);
-        }
-
-        $.ajax({
-            url: 'getGraphData/',
-            type: 'GET',
-            dataType: 'json',
-            success: onDataReceived
-        });
-    });
-});
-
-*/
-
