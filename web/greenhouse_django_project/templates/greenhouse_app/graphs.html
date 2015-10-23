@@ -26,7 +26,8 @@
         </tr>
     </table>
     <p>
-        <button id="show_graphs" onclick="MyGraph" >Show Graphs</button>
+        <button id="add_data" disabled="true" ><</button>
+        <button id="show_graphs">Show Graphs</button>
         <span></span>
     </p>
 {% endblock %}
@@ -37,7 +38,8 @@
     <script src="{% static 'js/jquery.flot.time.js' %}"></script>
     <script src="{% static 'js/jquery.flot.symbol.js' %}"></script>
     <script src="{% static 'js/jquery.flot.crosshair.js' %}"></script>
-    <script src="{% static 'js/date.js' %}"></script>
+    <script src="{% static 'js/jquery.flot.tooltip.js' %}"></script>
+    <!--<script src="{% static 'js/date.js' %}"></script> -->
     <script src="{% static 'js/graphs.js' %}"></script>
 {% endblock %}
 

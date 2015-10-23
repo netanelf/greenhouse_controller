@@ -171,16 +171,26 @@ def getGraphData(request):
     :return:
     """
     print 'in getGraphData'
-    for k in request.GET.viewkeys():
-        wanted_sensor = k
+    print request.GET.viewkeys()
+    k = list(request.GET.viewkeys())
+    data = json.loads(k[0])
+    wanted_sensor = data[0]
+    wanted_time = data[1]
 
+    d_start = datetime(year=int(wanted_time[:4]), month=int(wanted_time[5:7]), day=int(wanted_time[8:10]), hour=0, minute=0, second=0, microsecond=0)
+    d_start = timezone.make_aware(value=d_start, timezone=timezone.get_current_timezone())
+    d_end = datetime(year=int(wanted_time[:4]), month=int(wanted_time[5:7]), day=int(wanted_time[8:10]), hour=23, minute=59, second=59, microsecond=0)
+    d_end = timezone.make_aware(value=d_end, timezone=timezone.get_current_timezone())
+
+    print 'wanted time between {} and {}'.format(d_start, d_end)
     s = Sensor.objects.get(name=wanted_sensor)
-    last_measure = Measure.objects.filter(sensor=s).latest('time')
-    day_start = (last_measure.time).replace(hour=0, minute=0, second=0, microsecond=0)
+    #last_measure = Measure.objects.filter(sensor=s).latest('time')
+    #day_start = (last_measure.time).replace(hour=0, minute=0, second=0, microsecond=0)
 
     data = []
     name = s.name
-    measures = Measure.objects.filter(sensor=s, time__gt=day_start)
+    measures = Measure.objects.filter(sensor=s, time__gt=d_start, time__lt=d_end)
+    print 'measures: {}'.format(measures)
     for measure in measures:
         val = measure.val
         val = '{:.2f}'.format(val)
