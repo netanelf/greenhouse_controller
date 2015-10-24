@@ -195,9 +195,7 @@ def getGraphData(request):
         t_python = measure.time
         t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
         t = int(time.mktime(t_python.timetuple())*1000)
-
         data.append([t, val])
-        print 't: {}, t_python: {}, val: {}'.format(t, t_python.__str__(),  val)
 
     data.reverse()
     sensor_data = {'data': data, 'label': name}
