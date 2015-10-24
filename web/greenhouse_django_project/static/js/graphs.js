@@ -21,8 +21,13 @@ function retrieveSensorData(event, date){
     var add_data = document.getElementById('add_data');
     add_data.disabled = false;
     if(date == null){
-        var date = new Date();
-        min_data_date = date;
+        if(min_data_date == null){
+            var date = new Date();
+            min_data_date = date;
+        }
+        else{
+            date = min_data_date;
+        }
     }
 
     function onDataReceived(series){
