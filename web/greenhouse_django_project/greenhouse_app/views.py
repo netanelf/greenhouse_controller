@@ -171,7 +171,6 @@ def getGraphData(request):
     :return:
     """
     print 'in getGraphData'
-    print request.GET.viewkeys()
     k = list(request.GET.viewkeys())
     data = json.loads(k[0])
     wanted_sensor = data[0]
@@ -190,16 +189,17 @@ def getGraphData(request):
     data = []
     name = s.name
     measures = Measure.objects.filter(sensor=s, time__gt=d_start, time__lt=d_end)
-    print 'measures: {}'.format(measures)
     for measure in measures:
         val = measure.val
         val = '{:.2f}'.format(val)
-        t = measure.time
-        t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
-        t = time.mktime(t.timetuple())*1000
+        t_python = measure.time
+        t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
+        t = int(time.mktime(t_python.timetuple())*1000)
 
         data.append([t, val])
+        print 't: {}, t_python: {}, val: {}'.format(t, t_python.__str__(),  val)
 
+    data.reverse()
     sensor_data = {'data': data, 'label': name}
 
     return HttpResponse(json.dumps(sensor_data))
