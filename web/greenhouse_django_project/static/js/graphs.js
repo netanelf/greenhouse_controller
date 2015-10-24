@@ -104,8 +104,8 @@ function hasData(sensorId, date){
         if (s.label == sensorId){
             for(var j=0; j<s.data.length; j++){
                 try{
-                    var d = Date(s.data[i][0]);
-                    if(d.getFullYear() == date.getFullYear() & d.getMonth() == date.getMonth() & d.getDate == date.getDate()){
+                    var d = new Date(s.data[i][0]);
+                    if(d.getFullYear() == date.getFullYear() & d.getMonth() == date.getMonth() & d.getDate() == date.getDate()){
                         return true;
                     }
                 }
