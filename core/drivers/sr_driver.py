@@ -47,7 +47,6 @@ class SRDriver(object):
     def shift_data(self, data):
         """
         shift data into register, data should be 0, 1
-        invert data!!!!, currently relays are OFF when data = 1
         :param data:
         :return:
         """
@@ -56,9 +55,9 @@ class SRDriver(object):
         else:
             import RPi.GPIO as GPIO
             if data == 1:
-                GPIO.output(self.ser, 0)
-            else:
                 GPIO.output(self.ser, 1)
+            else:
+                GPIO.output(self.ser, 0)
             GPIO.output(self.srclk, 1)
             GPIO.output(self.srclk, 0)
 
