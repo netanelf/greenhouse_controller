@@ -21,6 +21,7 @@ class RelayController(object):
         self.state = state
 
     def change_state(self, new_state):
+        self.logger.debug('relay: {}, old state: {}, new state: {}'.format(self.name, self.state, new_state))
         if self.check_state(new_state):
             self.sr.change_bit(pin=self.pin, new_state=new_state)
             self.state = new_state

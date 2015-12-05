@@ -1,5 +1,6 @@
 __author__ = 'netanel'
 import time
+import logging
 
 
 class SRDriver(object):
@@ -19,6 +20,7 @@ class SRDriver(object):
         self.size = register_size
         self.state = [1] * self.size
         self.simulate = simulate
+        self.logger = logging.getLogger('SRDriver')
 
         if not simulate:
             import RPi.GPIO as GPIO
@@ -81,7 +83,9 @@ class SRDriver(object):
         """
         if not self.simulate:
             new_full_state = list(self.state)
+            self.logger.debug('old_SR_state: {}'.format(new_full_state))
             new_full_state[pin] = new_state
+            self.logger.debug('new_SR_state: {}'.format(new_full_state))
             new_full_state.reverse()
             for i in new_full_state:
                 self.shift_data(i)
