@@ -3,7 +3,7 @@ __author__ = 'netanel'
 import logging
 
 
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 
 
 READING_RESOLUTION = 20  # [S] gather sensors reading every READING_RESOLUTION time
