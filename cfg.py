@@ -6,7 +6,7 @@ import logging
 LOG_LEVEL = logging.DEBUG
 
 
-READING_RESOLUTION = 20  # [S] gather sensors reading every READING_RESOLUTION time
+READING_RESOLUTION = 10  # [S] gather sensors reading every READING_RESOLUTION time
 
 # shift register controls
 SER = 40

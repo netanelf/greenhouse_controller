@@ -1,7 +1,7 @@
 __author__ = 'netanel'
 import time
 import logging
-
+import RPi.GPIO as GPIO
 
 class SRDriver(object):
     """
@@ -23,7 +23,7 @@ class SRDriver(object):
         self.logger = logging.getLogger('SRDriver')
 
         if not simulate:
-            import RPi.GPIO as GPIO
+            #import RPi.GPIO as GPIO
             GPIO.setmode(GPIO.BOARD)
             GPIO.setup(self.ser, GPIO.OUT)
             GPIO.setup(self.rclk, GPIO.OUT)
@@ -55,13 +55,15 @@ class SRDriver(object):
         if self.simulate:
             return
         else:
-            import RPi.GPIO as GPIO
+            #import RPi.GPIO as GPIO
             if data == 1:
                 GPIO.output(self.ser, 1)
             else:
                 GPIO.output(self.ser, 0)
             GPIO.output(self.srclk, 1)
             GPIO.output(self.srclk, 0)
+            # return ser to 0, if the clocks togle, 0 will be inserted
+            GPIO.output(self.ser, 0)
 
     def load_output(self):
         """
@@ -71,7 +73,7 @@ class SRDriver(object):
         if self.simulate:
             return
         else:
-            import RPi.GPIO as GPIO
+            #import RPi.GPIO as GPIO
             GPIO.output(self.rclk, 1)
             GPIO.output(self.rclk, 0)
 
