@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configurations
+from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configurations, ControllerOBject
 import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
@@ -131,7 +131,8 @@ def relays(request):
 
 
 def graphs(request):
-    sensors = Sensor.objects.all()
+    #sensors = Sensor.objects.all()
+    sensors = ControllerOBject.objects.all()
     sensors_names = []
     for s in sensors:
         sensors_names.append(s.name)
@@ -182,7 +183,8 @@ def getGraphData(request):
     d_end = timezone.make_aware(value=d_end, timezone=timezone.get_current_timezone())
 
     print 'wanted time between {} and {}'.format(d_start, d_end)
-    s = Sensor.objects.get(name=wanted_sensor)
+    #s = Sensor.objects.get(name=wanted_sensor)
+    s = ControllerOBject.objects.get(name=wanted_sensor)
     #last_measure = Measure.objects.filter(sensor=s).latest('time')
     #day_start = (last_measure.time).replace(hour=0, minute=0, second=0, microsecond=0)
 

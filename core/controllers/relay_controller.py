@@ -1,10 +1,9 @@
 __author__ = 'netanel'
 import logging
-import RPi.GPIO as GPIO
 
 
 class RelayController(object):
-    def __init__(self, name, pin, shift_register, state=0):
+    def __init__(self, name, pin, shift_register, state=0, simulate=True):
         """
         controll one relay through a shift register
         :param name:
@@ -15,6 +14,12 @@ class RelayController(object):
         """
         self.name = name
         self.pin = pin
+        self.simulate = simulate
+
+        if not self.simulate:
+            global GPIO
+            import RPi.GPIO as GPIO
+
         if shift_register is not None:
             self.sr = shift_register
             self.direct = False
@@ -38,16 +43,19 @@ class RelayController(object):
             if not self.direct:
                 self.sr.change_bit(pin=self.pin, new_state=new_state)
             else:
-                self.derect_change(new_state)
+                self.direct_change(new_state)
             self.state = new_state
         else:
             self.logger.info('state: {} is not legal'.format(new_state))
 
     def direct_change(self, new_state):
-        if new_state == 1:
-            GPIO.output(self.pin, 1)
+        if not self.simulate:
+            if new_state == 1:
+                GPIO.output(self.pin, 1)
+            else:
+                GPIO.output(self.pin, 0)
         else:
-            GPIO.output(self.pin, 0)
+            pass
 
     def get_state(self):
         return self.state

@@ -1,7 +1,6 @@
 __author__ = 'netanel'
 
 import logging
-import i2c_driver
 
 
 class PCF8574Driver(object):
@@ -18,6 +17,7 @@ class PCF8574Driver(object):
         self.logger = logging.getLogger('PVF8574Driver')
 
         if not simulate:
+            import i2c_driver
             self.conn = i2c_driver.I2CDevice(addr=self.address)
 
         self.clear_register()

@@ -9,17 +9,18 @@ import sys
 
 import cfg
 import utils
+from sensors.sensor_controller import Measurement
 from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
 from sensors.ds18b20_temp_controller import DS18B20TempController
 from sensors.tsl2561_lux_controller import TSL2561LuxController
 from controllers.relay_controller import RelayController
-from drivers import sr_driver, dht22_driver
+from drivers import sr_driver, dht22_driver, pcf8574_driver
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
 from django.utils import timezone
-from greenhouse_app.models import Sensor, Measure, Relay, Configurations
+from greenhouse_app.models import Sensor, Measure, Relay, Configurations, ControllerOBject
 
 
 class Brain(threading.Thread):
@@ -69,11 +70,11 @@ class Brain(threading.Thread):
                 self._last_read_time = timezone.now()
                 self.issue_sensor_reading()
 
-                self.write_data_to_db()
                 if not self._manual_mode:
                     self.issue_governors_relay_set()
                 self.issue_relay_set()
                 self.lcd_update()
+                self.write_data_to_db()
 
             time.sleep(1)
         self._logger.info('brain killed')
@@ -115,8 +116,8 @@ class Brain(threading.Thread):
         build controllers for all relays in DB
         """
         self._logger.debug('creating a Shift Register controller to control all relays')
-        #self._sr = sr_driver.SRDriver(SER=cfg.SER, RCLK=cfg.RCLK, SRCLK=cfg.SRCLK, register_size=cfg.REGISTER_SIZE, simulate=self._simulate_hw)
-        self._sr = None
+        self._sr = sr_driver.SRDriver(SER=cfg.SER, RCLK=cfg.RCLK, SRCLK=cfg.SRCLK, register_size=cfg.REGISTER_SIZE, simulate=self._simulate_hw)
+        #self._sr = pcf8574_driver.PCF8574Driver(address=0x20, simulate=self._simulate_hw)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
             self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.state))
@@ -179,7 +180,7 @@ class Brain(threading.Thread):
 
     def issue_governors_relay_set(self):
         """
-        read current governor state and set states for relays according to governor
+        read current governor state and set wanted states for relays according to governor
         """
         for r in Relay.objects.order_by():
             governor = r.time_governor
@@ -198,12 +199,20 @@ class Brain(threading.Thread):
         """
         for r in Relay.objects.order_by():
             if r.wanted_state != r.state:
+                old_state = r.state
+                new_state = r.wanted_state
                 controller = self.get_relay_by_name(name=r.name)
                 try:
                     controller.change_state(new_state=r.wanted_state)
                     self._logger.debug('relay: {} was set to state: {}'.format(controller.get_name(), r.wanted_state))
                     r.state = r.wanted_state
                     r.save()
+                    t = timezone.now()
+                    m0 = Measurement(sensor_name=r.name, time=t - timedelta(milliseconds=cfg.RELAY_DELTA_MEASURE_MS), value=old_state)
+                    self._data.append(m0)
+                    m1 = Measurement(sensor_name=r.name, time=t + timedelta(milliseconds=cfg.RELAY_DELTA_MEASURE_MS), value=new_state)
+                    self._data.append(m1)
+
                 except Exception as ex:
                     self._logger.info('some exception: {}'.format(ex))
 
@@ -211,9 +220,10 @@ class Brain(threading.Thread):
         self._logger.debug('in _write_data_to_db')
         with self._data_lock:
             for d in self._data:
-                self._logger.debug('looking for sensor: {} in Sensors Table'.format(d.sensor_name))
-                sensor = Sensor.objects.get(name=d.sensor_name)
-                Measure.objects.create(sensor=sensor, time=d.time, val=d.value)
+                self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
+                #sensor = Sensor.objects.get(name=d.sensor_name)
+                controller = ControllerOBject.objects.get(name=d.sensor_name)
+                Measure.objects.create(sensor=controller, time=d.time, val=d.value)
 
     def update_configurations(self):
         """

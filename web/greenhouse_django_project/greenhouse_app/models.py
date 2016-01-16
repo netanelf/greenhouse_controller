@@ -17,26 +17,35 @@ class SensorKind(models.Model):
         return self.kind
 
 
-class Sensor(models.Model):
+class ControllerOBject(models.Model):
+    """
+    represent a controller object ie. sensor or relay
+    this way we can connect a measure to a relay or a sensor
+    """
+    name = models.CharField(max_length=128, unique=True)
+
+    def __unicode__(self):
+        return self.name
+
+class Sensor(ControllerOBject):
     """
     represent one sensor
     """
-    name = models.CharField(max_length=128, unique=True)
     kind = models.ForeignKey(SensorKind, blank=True, null=True)
     simulate = models.BooleanField(default=True)
     pin = models.PositiveSmallIntegerField(default=99)
     i2c = models.BooleanField(default=False)
     device_id = models.CharField(max_length=32, default='')
     
-    def __unicode__(self):
-        return self.name
+    #def __unicode__(self):
+    #    return self.name
 
 
 class Measure(models.Model):
     """
     represent one value measurement
     """
-    sensor = models.ForeignKey(Sensor)
+    sensor = models.ForeignKey(ControllerOBject)
     time = models.DateTimeField()
     val = models.FloatField()
 
@@ -105,11 +114,11 @@ class TimeGovernor(models.Model):
         return self.name
 
 
-class Relay(models.Model):
+class Relay(ControllerOBject):
     """
     represent one relay, its name, state and wanted state
     """
-    name = models.CharField(max_length=128, unique=True)
+    #name = models.CharField(max_length=128, unique=True)
     pin = models.PositiveSmallIntegerField(null=True)
     state = models.BooleanField(default=False)
     wanted_state = models.BooleanField(default=False)
