@@ -15,6 +15,18 @@
                     {% for s in sensors %}
                         <input type="checkbox" id={{s}}>{{s}}<br>
                     {% endfor %}
+                    <br>
+                    <b> start</b>
+                    <input id="start_date" name="date" type="date" value="" />
+                    <input id="start_time" name="time" type="time" value="" />
+                    <br>
+                    <br>
+                    <b> end</b>
+                    <input id="end_date" name="date" type="date" value="" />
+                    <input id="end_time" name="time" type="time" value="" />
+                    <br>
+                    <br>
+                    <button id="show_graphs">Show Graphs</button>
                 </div>
             </td>
             <td>
@@ -26,8 +38,8 @@
         </tr>
     </table>
     <p>
-        <button id="add_data" disabled="true" title="add previous day" ><</button>
-        <button id="show_graphs">Show Graphs</button>
+        <!--<button id="add_data" disabled="true" title="add previous day" ><</button> -->
+
         <span></span>
     </p>
 {% endblock %}

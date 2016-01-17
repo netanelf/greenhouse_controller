@@ -9,26 +9,34 @@ var graph_colors = ["#4D4D4D","#5DA5DA","#FAA43A","#60BD68","#F17CB0","#B2912F",
 window.onload = function(){
     createEmptySeriesData();
     var show_graphs = document.getElementById('show_graphs');
-    var add_data = document.getElementById('add_data');
+    var today = new Date();
+
+    var startDate = document.getElementById('start_date');
+    var endDate = document.getElementById('end_date');
+    var startTime = document.getElementById('start_time');
+    var endTime = document.getElementById('end_time');
+
+    startDate.value = today.toISOString().slice(0, 10);
+    endDate.value = today.toISOString().slice(0, 10);
+    startTime.value = "00:00:01";
+    endTime.value = "23:59:59";
+
     show_graphs.onclick = retrieveSensorData;
-    add_data.onclick = addData;
+
 }
 
 function retrieveSensorData(event, date){
     console.debug('in showGraphs');
+    clearAllData();
     var sentAjaxCalls = 0;
     var receivedAjaxCalls = 0;
-    var add_data = document.getElementById('add_data');
-    add_data.disabled = false;
-    if(date == null){
-        if(min_data_date == null){
-            var date = new Date();
-            min_data_date = date;
-        }
-        else{
-            date = min_data_date;
-        }
-    }
+    var startDate = document.getElementById('start_date');
+    var endDate = document.getElementById('end_date');
+    var startTime = document.getElementById('start_time');
+    var endTime = document.getElementById('end_time');
+
+    var startDateTime = startDate.value + ' ' + startTime.value;
+    var endDateTime = endDate.value + ' ' + endTime.value;
 
     function onDataReceived(series){
         receivedAjaxCalls += 1;
@@ -51,24 +59,30 @@ function retrieveSensorData(event, date){
 
     for(var i=0; i<selectedSensors.length; i++ ){
         var sensorId = selectedSensors[i];
-        if(!hasData(sensorId, date)){ // we do not have the wanted data, make an ajax call to retrieve it
-            sentAjaxCalls += 1;
-            console.log('retrieving data for sensor: ' + sensorId  + 'time: ' + date);
-            $.ajax({
-                url: 'getGraphData/',
-                type: 'GET',
-                dataType: 'json',
-                data: JSON.stringify([sensorId, date.toJSON()], null, 2),
-                success: onDataReceived
-            });
-        }else{ // we already have the wanted data, only make it visable
-            setShow(sensorId, true);
-        }
+        //if(!hasData(sensorId, date)){ // we do not have the wanted data, make an ajax call to retrieve it
+        sentAjaxCalls += 1;
+        console.log('retrieving data for sensor: ' + sensorId  + 'time: ' + date);
+        $.ajax({
+            url: 'getGraphData/',
+            type: 'GET',
+            dataType: 'json',
+            data: JSON.stringify([sensorId, startDateTime, endDateTime], null, 2),
+            success: onDataReceived
+        });
+        //}else{ // we already have the wanted data, only make it visable
+        //    setShow(sensorId, true);
+        //}
     }
     if(sentAjaxCalls == 0){
         createFlot();
     }
 }
+
+
+function clearAllData(){
+
+}
+
 
 function getSelectedSensors(){
     var selectedSensors = [];
@@ -85,6 +99,7 @@ function getSelectedSensors(){
     return selectedSensors;
 }
 
+/*
 function addData(){
     // 1995, 11, 17, 3, 24, 0
     var min_date = new Date(min_data_date.getFullYear(), min_data_date.getMonth(), min_data_date.getDate() -1, min_data_date.getHours(), min_data_date.getMinutes());
@@ -93,7 +108,7 @@ function addData(){
     console.debug('in addData, requesting data for: ' + min_date);
     retrieveSensorData(null, min_date);
 }
-
+*/
 
 /*
 * check if label 'sensorId' has data from the day part in date.
@@ -235,6 +250,7 @@ function getSerie(label){
 
 function addDataToSerie(label, data){
     var s = getSerie(label);
+    s.data = [];
     for(var i=0; i<data.length; i++){
         s.data.unshift(data[i]);
     }

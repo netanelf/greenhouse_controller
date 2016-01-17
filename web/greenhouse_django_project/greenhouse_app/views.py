@@ -175,18 +175,23 @@ def getGraphData(request):
     k = list(request.GET.viewkeys())
     data = json.loads(k[0])
     wanted_sensor = data[0]
-    wanted_time = data[1]
+    start_time = data[1]  # "2016-01-17 00:00:01"
+    end_time = data[2]
 
-    d_start = datetime(year=int(wanted_time[:4]), month=int(wanted_time[5:7]), day=int(wanted_time[8:10]), hour=0, minute=0, second=0, microsecond=0)
+    #print 'start_time: {}'.format(start_time)
+    #print 'end_time: {}'.format(end_time)
+    d_start = datetime(year=int(start_time[:4]), month=int(start_time[5:7]), day=int(start_time[8:10]),
+                       hour=int(start_time[11:13]), minute=int(start_time[14:16]), second=int(start_time[17:19]),
+                       microsecond=0)
     d_start = timezone.make_aware(value=d_start, timezone=timezone.get_current_timezone())
-    d_end = datetime(year=int(wanted_time[:4]), month=int(wanted_time[5:7]), day=int(wanted_time[8:10]), hour=23, minute=59, second=59, microsecond=0)
+
+    d_end = datetime(year=int(end_time[:4]), month=int(end_time[5:7]), day=int(end_time[8:10]),
+                     hour=int(end_time[11:13]), minute=int(end_time[14:16]), second=int(end_time[17:19]),
+                     microsecond=0)
     d_end = timezone.make_aware(value=d_end, timezone=timezone.get_current_timezone())
 
-    print 'wanted time between {} and {}'.format(d_start, d_end)
-    #s = Sensor.objects.get(name=wanted_sensor)
+    #print 'wanted time between {} and {}'.format(d_start, d_end)
     s = ControllerOBject.objects.get(name=wanted_sensor)
-    #last_measure = Measure.objects.filter(sensor=s).latest('time')
-    #day_start = (last_measure.time).replace(hour=0, minute=0, second=0, microsecond=0)
 
     data = []
     name = s.name
@@ -203,4 +208,3 @@ def getGraphData(request):
     sensor_data = {'data': data, 'label': name}
 
     return HttpResponse(json.dumps(sensor_data))
-
