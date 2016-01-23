@@ -27,7 +27,6 @@ window.onload = function(){
 
 function retrieveSensorData(event, date){
     console.debug('in showGraphs');
-    clearAllData();
     var sentAjaxCalls = 0;
     var receivedAjaxCalls = 0;
     var startDate = document.getElementById('start_date');
@@ -76,11 +75,6 @@ function retrieveSensorData(event, date){
     if(sentAjaxCalls == 0){
         createFlot();
     }
-}
-
-
-function clearAllData(){
-
 }
 
 

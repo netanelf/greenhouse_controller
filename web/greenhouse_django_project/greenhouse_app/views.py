@@ -89,7 +89,7 @@ def getLastSensorValues(request):
             val = '{:.2f}'.format(val)
             t = measure.time
             t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
-            t = t.strftime('%d/%m/%y %H:%M:%S')
+            t = t.strftime('%d/%m/%Y %H:%M:%S')
         except Exception:
             val = 'unknown'
             t = 'unknown'

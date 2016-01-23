@@ -17,33 +17,32 @@ def populate_sensors():
     ds18b20 = SensorKind.objects.get_or_create(kind='ds18b20')[0]
     tsl2561 = SensorKind.objects.get_or_create(kind='tsl2561')[0]
 
-    print 'creating sensor: {}'.format('dht22_temp_door')
-    s = Sensor.objects.get_or_create(name='dht22_temp_door')[0]
+    print 'creating sensor: {}'.format('dht_1_temp')
+    s = Sensor.objects.get_or_create(name='dht_1_temp')[0]
     s.kind = dht_22_temp
     s.simulate = False
-    s.pin = 8
+    s.pin = 37
     s.i2c = False
     s.save()
 
-    print 'creating sensor: {}'.format('dht22_humidity_door')
-    s = Sensor.objects.get_or_create(name='dht22_humidity_door')[0]
+    print 'creating sensor: {}'.format('dht_1_humidity')
+    s = Sensor.objects.get_or_create(name='dht_1_humidity')[0]
     s.kind = dht_22_humidity
     s.simulate = False
-    s.pin = 8
+    s.pin = 37
     s.i2c = False
     s.save()
 
-    print 'creating sensor: {}'.format('dht22_temp_window')
-    Sensor.objects.get_or_create(name='dht22_temp_window', kind=dht_22_temp, simulate=False, pin=15, i2c=False)[0]
-
-    print 'creating sensor: {}'.format('dht22_humidity_window')
-    Sensor.objects.get_or_create(name='dht22_humidity_window', kind=dht_22_humidity, simulate=False, pin=15, i2c=False)[0]
+    #print 'creating sensor: {}'.format('dht_2_temp')
+    #Sensor.objects.get_or_create(name='dht_2_temp', kind=dht_22_temp, simulate=False, pin=38, i2c=False)[0]
+    #print 'creating sensor: {}'.format('dht_2_humidity')
+    #Sensor.objects.get_or_create(name='dht_2_humidity', kind=dht_22_humidity, simulate=False, pin=38, i2c=False)[0]
 
     print 'creating sensor: {}'.format('DS18B20_water')
     Sensor.objects.get_or_create(name='DS18B20_water', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467d282ff')[0]
 
-    print 'creating sensor: {}'.format('DS18B20_indoor')
-    Sensor.objects.get_or_create(name='DS18B20_indoor', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467eefbff')[0]
+    #print 'creating sensor: {}'.format('DS18B20_indoor')
+    #Sensor.objects.get_or_create(name='DS18B20_indoor', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467eefbff')[0]
 
     print 'creating sensor: {}'.format('TSL2561_lux_1')
     Sensor.objects.get_or_create(name='lux_1', kind=tsl2561, simulate=False, pin=99, i2c=True, device_id='0x39')[0]
