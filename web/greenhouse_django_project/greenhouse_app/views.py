@@ -172,6 +172,7 @@ def getGraphData(request):
     :return:
     """
     print 'in getGraphData'
+    t0 = time.time()
     k = list(request.GET.viewkeys())
     data = json.loads(k[0])
     wanted_sensor = data[0]
@@ -192,11 +193,14 @@ def getGraphData(request):
 
     #print 'wanted time between {} and {}'.format(d_start, d_end)
     s = ControllerOBject.objects.get(name=wanted_sensor)
+    t1 = time.time()
 
     data = []
     name = s.name
     measures = Measure.objects.filter(sensor=s, time__gt=d_start, time__lt=d_end)
-    for measure in measures:
+    t2 = time.time()
+    print 'data lenght: {}'.format(len(measures))
+    for measure in measures: # TODO: this formating takes more than 1 second per 2300 measures, we should try to make that a lot better
         val = measure.val
         val = '{:.2f}'.format(val)
         t_python = measure.time
@@ -204,7 +208,13 @@ def getGraphData(request):
         t = int(time.mktime(t_python.timetuple())*1000)
         data.append([t, val])
 
+    t3 = time.time()
     data.reverse()
     sensor_data = {'data': data, 'label': name}
-
+    t4 = time.time()
+    print 'getting sensor from DB took {} [S]'.format(t1-t0)
+    print 'getting data from DB took {} [S]'.format(t2-t1)
+    print 'data formating took {} [S]'.format(t3-t2)
+    print 'data reversing took {} [S]'.format(t4-t3)
+    print 'all in all {} [S]'.format(t4-t0)
     return HttpResponse(json.dumps(sensor_data))

@@ -6,17 +6,18 @@ import logging
 class SRDriver(object):
     """
     control a SN74HC595 Shift register
-    OE - output enable, not used ***hold at GROUND***
+    OE - output enable, enabled in init  TODO: add support for disabling output?
     SRCLR - clear shifty register, not used, ***hold at VCC***
     SRCLK - clock the shift register (input = SER), on LOW to HIGH transition
     RCLK - load all registers into buffer, on LOW to HIGH transition
     SER - data that will go into first register
     """
 
-    def __init__(self, SER, RCLK, SRCLK, register_size=8, simulate=True):
+    def __init__(self, SER, RCLK, SRCLK, ENABLE, register_size=8, simulate=True):
         self.ser = SER
         self.rclk = RCLK
         self.srclk = SRCLK
+        self.enable = ENABLE
         self.size = register_size
         self.state = [1] * self.size
         self.simulate = simulate
@@ -30,10 +31,12 @@ class SRDriver(object):
             GPIO.setup(self.ser, GPIO.OUT)
             GPIO.setup(self.rclk, GPIO.OUT)
             GPIO.setup(self.srclk, GPIO.OUT)
+            GPIO.setup(self.enable, GPIO.OUT)
 
             GPIO.output(self.ser, 0)
             GPIO.output(self.rclk, 0)
             GPIO.output(self.srclk, 0)
+            GPIO.output(self.enable, 0)
 
         self.clear_register()
 
@@ -97,10 +100,10 @@ class SRDriver(object):
 
 
 if __name__ == '__main__':
-    sr = SRDriver(SER=40, RCLK=38, SRCLK=36, simulate=False)
-    for i in range(10):
-        sr.clear_register()
-        for i in range(8):
-            sr.change_bit(pin=i, new_state=1)
-            time.sleep(0.1)
+    sr = SRDriver(SER=12, RCLK=13, SRCLK=15, ENABLE=11, register_size=8, simulate=False)
+    #for i in range(10):
+    sr.clear_register()
+    for i in range(8):
+	sr.change_bit(pin=i, new_state=1)
+        time.sleep(10)
 
