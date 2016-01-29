@@ -179,8 +179,8 @@ def getGraphData(request):
     start_time = data[1]  # "2016-01-17 00:00:01"
     end_time = data[2]
 
-    #print 'start_time: {}'.format(start_time)
-    #print 'end_time: {}'.format(end_time)
+    print 'string start_time: {}'.format(start_time)
+    print 'string end_time: {}'.format(end_time)
     d_start = datetime(year=int(start_time[:4]), month=int(start_time[5:7]), day=int(start_time[8:10]),
                        hour=int(start_time[11:13]), minute=int(start_time[14:16]), second=int(start_time[17:19]),
                        microsecond=0)
@@ -191,13 +191,14 @@ def getGraphData(request):
                      microsecond=0)
     d_end = timezone.make_aware(value=d_end, timezone=timezone.get_current_timezone())
 
-    #print 'wanted time between {} and {}'.format(d_start, d_end)
+    print 'wanted time between {} and {}'.format(d_start, d_end)
     s = ControllerOBject.objects.get(name=wanted_sensor)
     t1 = time.time()
 
     data = []
     name = s.name
-    measures = Measure.objects.filter(sensor=s, time__gt=d_start, time__lt=d_end)
+    measures = Measure.objects.filter(sensor=s, time__range=(d_start, d_end))
+    #measures = Measure.objects.all()
     t2 = time.time()
     print 'data lenght: {}'.format(len(measures))
     for measure in measures: # TODO: this formating takes more than 1 second per 2300 measures, we should try to make that a lot better

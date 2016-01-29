@@ -39,13 +39,13 @@ def populate_sensors():
     #Sensor.objects.get_or_create(name='dht_2_humidity', kind=dht_22_humidity, simulate=False, pin=38, i2c=False)[0]
 
     print 'creating sensor: {}'.format('DS18B20_water')
-    Sensor.objects.get_or_create(name='DS18B20_water', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467d282ff')[0]
+    Sensor.objects.get_or_create(name='DS18B20_water', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-011581dabaff')[0]
 
     #print 'creating sensor: {}'.format('DS18B20_indoor')
     #Sensor.objects.get_or_create(name='DS18B20_indoor', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467eefbff')[0]
 
-    print 'creating sensor: {}'.format('TSL2561_lux_1')
-    Sensor.objects.get_or_create(name='lux_1', kind=tsl2561, simulate=False, pin=99, i2c=True, device_id='0x39')[0]
+    #print 'creating sensor: {}'.format('TSL2561_lux_1')
+    #Sensor.objects.get_or_create(name='lux_1', kind=tsl2561, simulate=False, pin=99, i2c=True, device_id='0x39')[0]
 
 
 def populate_relays():
@@ -55,7 +55,7 @@ def populate_relays():
     
     print 'creating relay: (name=light1, pin=1, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='light1')[0]
-    r.pin = 1
+    r.pin = 0
     r.state = 1
     r.wanted_state = 1
     r.time_governor = t
@@ -63,14 +63,14 @@ def populate_relays():
 
     print 'creating relay: (name=light2, pin=2, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='light2')[0]
-    r.pin = 2
+    r.pin = 1
     r.state = 1
     r.wanted_state = 1
     r.save()
 
     print 'creating relay: (name=fan, pin=3, state=1, wanted_state=1)'
     r = Relay.objects.get_or_create(name='fan')[0]
-    r.pin = 3
+    r.pin = 2
     r.state = 1
     r.wanted_state = 1
     r.save()
