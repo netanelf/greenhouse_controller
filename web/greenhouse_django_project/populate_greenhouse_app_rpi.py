@@ -44,8 +44,8 @@ def populate_sensors():
     #print 'creating sensor: {}'.format('DS18B20_indoor')
     #Sensor.objects.get_or_create(name='DS18B20_indoor', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-031467eefbff')[0]
 
-    #print 'creating sensor: {}'.format('TSL2561_lux_1')
-    #Sensor.objects.get_or_create(name='lux_1', kind=tsl2561, simulate=False, pin=99, i2c=True, device_id='0x39')[0]
+    print 'creating sensor: {}'.format('TSL2561_lux_1')
+    Sensor.objects.get_or_create(name='lux_1', kind=tsl2561, simulate=False, pin=99, i2c=True, device_id='0x39')[0]
 
 
 def populate_relays():

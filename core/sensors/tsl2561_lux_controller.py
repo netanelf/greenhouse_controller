@@ -14,9 +14,11 @@ class TSL2561LuxController(SensorController):
         super(TSL2561LuxController, self).__init__(name)
         self.simulate = simulate
         if not self.simulate:
-            global Adafruit_I2C
-            from Adafruit_I2C import Adafruit_I2C
-            self.i2c = Adafruit_I2C(address)
+            #global Adafruit_I2C
+            #from Adafruit_I2C import Adafruit_I2C
+            import i2c_driver
+            self.conn = i2c_driver.I2CDevice(addr=self.address)
+            #self.i2c = Adafruit_I2C(address)
             self.address = address
             self.pause = pause
             self.debug = debug
