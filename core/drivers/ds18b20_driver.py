@@ -33,6 +33,6 @@ def read_ds18b20_temp(sensor_id):
             temp_c = float(temp_string) / 1000.0
             return temp_c
     except Exception as ex:
-        logger.error('while trying to read value for sensor: {}, got exception: {}'.format(id, ex))
+        logger.error('while trying to read value for sensor: {}, got exception: {}'.format(sensor_id, ex))
         return None
 

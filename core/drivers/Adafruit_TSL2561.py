@@ -295,7 +295,7 @@ class Adafruit_TSL2561(object):
         self._tsl2561AutoGain = False
         self._tsl2561IntegrationTime = self.TSL2561_INTEGRATIONTIME_13MS
         self._tsl2561Gain = self.TSL2561_GAIN_1X
-        self._i2c = Adafruit_I2C(self._address)
+        self._i2c = Adafruit_I2C.Adafruit_I2C(self._address)
         self._luminosity = 0
         self._broadband = 0
         self._ir = 0

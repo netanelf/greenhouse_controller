@@ -22,7 +22,7 @@ class TSL2561LuxController(SensorController):
             self.address = address
             self.pause = pause
             self.debug = debug
-            self.conn = Adafruit_TSL2561(address=address, debug=debug)
+            self.conn = Adafruit_TSL2561.Adafruit_TSL2561(address=address, debug=debug)
             self.conn.begin()
             #self.gain = 0  # no gain preselected
             #self.i2c.write8(0x80, 0x03)     # enable the device
