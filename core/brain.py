@@ -146,7 +146,7 @@ class Brain(threading.Thread):
         write some data to LCD
         :return:
         """
-        if not self._simulate_hw:
+        if (not self._simulate_hw) and (self.lcd is not None):
             try:
                 for i, d in enumerate(self._data):
                     if i < 4:  # write only first four readings
