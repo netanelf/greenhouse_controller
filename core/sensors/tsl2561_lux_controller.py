@@ -1,13 +1,9 @@
 #!/usr/bin/python
 # Code sourced from AdaFruit discussion board: https://www.adafruit.com/forums/viewtopic.php?f=8&t=34922
 
-import time
 import random
-#Adafruit_I2C from https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code/blob/master/Adafruit_I2C/Adafruit_I2C.py
-
 from django.utils import timezone
 from sensor_controller import SensorController, Measurement
-from core.drivers import Adafruit_TSL2561
 
 
 class TSL2561LuxController(SensorController):
@@ -15,17 +11,12 @@ class TSL2561LuxController(SensorController):
         super(TSL2561LuxController, self).__init__(name)
         self.simulate = simulate
         if not self.simulate:
-            #global Adafruit_I2C
-            #from Adafruit_I2C import Adafruit_I2C
-            #from core.drivers import i2c_driver
-            #self.i2c = Adafruit_I2C(address)
+            from core.drivers import Adafruit_TSL2561
             self.address = address
             self.pause = pause
             self.debug = debug
             self.conn = Adafruit_TSL2561.Adafruit_TSL2561(address=address, debug=debug)
             self.conn.begin()
-            #self.gain = 0  # no gain preselected
-            #self.i2c.write8(0x80, 0x03)     # enable the device
 
         self.last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
 

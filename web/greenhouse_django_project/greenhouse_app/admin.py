@@ -1,5 +1,5 @@
 from django.contrib import admin
-from greenhouse_app.models import Sensor, SensorKind, Measure, Relay, TimeGovernor, Configurations
+from greenhouse_app.models import Sensor, SensorKind, Measure, Relay, TimeGovernor, Configuration
 # Register your models here.
 
 class RelayAdmin(admin.ModelAdmin):
@@ -23,4 +23,4 @@ admin.site.register(Sensor, SensorAdmin)
 admin.site.register(Measure)
 admin.site.register(Relay, RelayAdmin)
 admin.site.register(TimeGovernor, TimeGovernorAdmin)
-admin.site.register(Configurations, ConfigurationsAdmin)
+admin.site.register(Configuration, ConfigurationsAdmin)

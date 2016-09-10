@@ -20,7 +20,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.setti
 import django
 django.setup()
 from django.utils import timezone
-from greenhouse_app.models import Sensor, Measure, Relay, Configurations, ControllerOBject
+from greenhouse_app.models import Sensor, Measure, Relay, Configuration, ControllerOBject
 
 
 class Brain(threading.Thread):
@@ -231,7 +231,7 @@ class Brain(threading.Thread):
         :return:
         """
         self._logger.debug('in update_configurations')
-        for c in Configurations.objects.all():
+        for c in Configuration.objects.all():
             if c.name == 'manual_mode':
                 self._manual_mode = c.value
 

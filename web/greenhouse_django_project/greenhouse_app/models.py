@@ -95,8 +95,23 @@ class TimeGovernor(models.Model):
         elif self.kind == 'O':
             t = timezone.now()
             t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
-            t = t.time()  # take only time part of date + time
-            if self.on_start_time < t < self.on_end_time:
+
+            on_time_this_date = timezone.make_naive(timezone.now(), timezone=timezone.get_current_timezone())\
+                .replace(hour=self.on_start_time.hour,
+                         minute=self.on_start_time.minute,
+                         second=self.on_start_time.second,
+                         microsecond=0)
+
+            off_time_this_date = timezone.make_naive(timezone.now(), timezone=timezone.get_current_timezone())\
+                .replace(hour=self.on_end_time.hour,
+                         minute=self.on_end_time.minute,
+                         second=self.on_end_time.second,
+                         microsecond=0)
+
+            if off_time_this_date < on_time_this_date:  # for example: 6PM -- 6AM (next day)
+                off_time_this_date = off_time_this_date + timedelta(days=1)
+
+            if on_time_this_date < t < off_time_this_date:
                 return 1
             else:
                 return 0
@@ -129,7 +144,7 @@ class Relay(ControllerOBject):
         return self.name
 
 
-class Configurations(models.Model):
+class Configuration(models.Model):
     name = models.CharField(max_length=128, unique=True)
     value = models.IntegerField(default=0)
     explanation = models.CharField(max_length=256, default='')

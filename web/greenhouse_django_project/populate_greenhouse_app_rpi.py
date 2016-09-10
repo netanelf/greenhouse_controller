@@ -3,7 +3,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.setti
 
 import django
 django.setup()
-from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Configurations
+from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Configuration
 
 
 def populate_sensors():
@@ -71,7 +71,7 @@ def populate_relays():
 
 
 def populate_configurations():
-    c = Configurations.objects.get_or_create(name='manual_mode')[0]
+    c = Configuration.objects.get_or_create(name='manual_mode')[0]
     c.value=0
     c.explanation='if set to 1, governors do not change relay states, only manual user changes'
     c.save()

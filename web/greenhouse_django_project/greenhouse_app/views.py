@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configurations, ControllerOBject
+from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configuration, ControllerOBject
 import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
@@ -125,7 +125,7 @@ def setRelaysState(request):
 
 def relays(request):
     relay_list = Relay.objects.order_by()
-    manual_mode = Configurations.objects.get(name='manual_mode')
+    manual_mode = Configuration.objects.get(name='manual_mode')
     context_dict = {'relays': relay_list, 'manual_mode': manual_mode.value}
     return render(request, 'greenhouse_app/relays.html', context_dict)
 
@@ -154,7 +154,7 @@ def setConfiguration(request):
         print 'data: {}'.format(data)
         val = int(data['value'])
         print 'val: {}'.format(val)
-        r = Configurations.objects.get(name=data['name'])
+        r = Configuration.objects.get(name=data['name'])
         print r
         r.value = val
         r.save()
