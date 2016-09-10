@@ -223,7 +223,7 @@ class Brain(threading.Thread):
                 self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
                 #sensor = Sensor.objects.get(name=d.sensor_name)
                 controller = ControllerOBject.objects.get(name=d.sensor_name)
-                Measure.objects.create(sensor=controller, time=d.time, val=d.value)
+                Measure.objects.create(sensor=controller, measure_time=d.time, val=d.value)
 
     def update_configurations(self):
         """

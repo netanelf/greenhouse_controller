@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta, datetime
+import time
 
 
 class SensorKind(models.Model):
@@ -46,11 +47,18 @@ class Measure(models.Model):
     represent one value measurement
     """
     sensor = models.ForeignKey(ControllerOBject)
-    time = models.DateTimeField(db_index=True)
+    measure_time = models.DateTimeField(db_index=True)
     val = models.FloatField()
 
+    def calculate_ts(self):
+        t_python = self.measure_time
+        t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
+        return int(time.mktime(t_python.timetuple())*1000)
+
+    ts = property(calculate_ts)
+
     def __unicode__(self):
-        return 'sensor: {}, time: {}, value: {}'.format(self.sensor, self.time, self.val)
+        return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time, self.val, self.ts)
 
 
 class TimeGovernor(models.Model):

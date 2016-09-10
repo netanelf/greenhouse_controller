@@ -71,7 +71,7 @@ def downloadMeasurements(request):
 
 
 def getSensorsData(request):
-    measurement_list = Measure.objects.order_by('-time')[:20]
+    measurement_list = Measure.objects.order_by('-measure_time')[:20]
     context_dict = {'measurements': measurement_list}
     # Render the response and send it back!
     return render(request, 'greenhouse_app/sensorsData.html', context_dict)
@@ -84,10 +84,10 @@ def getLastSensorValues(request):
     for s in sensor_list:
         name = s.name
         try:
-            measure = Measure.objects.filter(sensor=s).latest('time')
+            measure = Measure.objects.filter(sensor=s).latest('measure_time')
             val = measure.val
             val = '{:.2f}'.format(val)
-            t = measure.time
+            t = measure.measure_time
             t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
             t = t.strftime('%d/%m/%Y %H:%M:%S')
         except Exception:
@@ -197,16 +197,17 @@ def getGraphData(request):
 
     data = []
     name = s.name
-    measures = Measure.objects.filter(sensor=s, time__range=(d_start, d_end))
+    measures = Measure.objects.filter(sensor=s, measure_time__range=(d_start, d_end))
     #measures = Measure.objects.all()
     t2 = time.time()
     print 'data lenght: {}'.format(len(measures))
     for measure in measures: # TODO: this formating takes more than 1 second per 2300 measures, we should try to make that a lot better
         val = measure.val
         val = '{:.2f}'.format(val)
-        t_python = measure.time
-        t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
-        t = int(time.mktime(t_python.timetuple())*1000)
+        #t_python = measure.time
+        #t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
+        #t = int(time.mktime(t_python.timetuple())*1000)
+        t = measure.ts
         data.append([t, val])
 
     t3 = time.time()
