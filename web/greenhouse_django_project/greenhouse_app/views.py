@@ -200,15 +200,15 @@ def getGraphData(request):
     measures = Measure.objects.filter(sensor=s, measure_time__range=(d_start, d_end))
     #measures = Measure.objects.all()
     t2 = time.time()
-    print 'data lenght: {}'.format(len(measures))
+    print 'data lenght: {}'.format(measures.count())
     for measure in measures: # TODO: this formating takes more than 1 second per 2300 measures, we should try to make that a lot better
-        val = measure.val
-        val = '{:.2f}'.format(val)
+        #val = measure.val
+        #val = '{:.2f}'.format(val)
         #t_python = measure.time
         #t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
         #t = int(time.mktime(t_python.timetuple())*1000)
-        t = measure.ts
-        data.append([t, val])
+        #t = measure.ts
+        data.append([measure.ts, measure.val])
 
     t3 = time.time()
     data.reverse()

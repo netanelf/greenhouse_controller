@@ -20,6 +20,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.setti
 import django
 django.setup()
 from django.utils import timezone
+from django.db.utils import OperationalError
 from greenhouse_app.models import Sensor, Measure, Relay, Configuration, ControllerOBject
 
 
@@ -220,10 +221,17 @@ class Brain(threading.Thread):
         self._logger.debug('in _write_data_to_db')
         with self._data_lock:
             for d in self._data:
-                self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
-                #sensor = Sensor.objects.get(name=d.sensor_name)
-                controller = ControllerOBject.objects.get(name=d.sensor_name)
-                Measure.objects.create(sensor=controller, measure_time=d.time, val=d.value)
+                t = 0
+                while t in range(cfg.DB_RETRIES):
+                    try:
+                        self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
+                        #sensor = Sensor.objects.get(name=d.sensor_name)
+                        controller = ControllerOBject.objects.get(name=d.sensor_name)
+                        Measure.objects.create(sensor=controller, measure_time=d.time, val=d.value)
+                        break
+                    except OperationalError as ex:
+                        self._logger.error('while writing to DB got ex: {}, try: {}'.format(ex, t))
+                        t += 1
 
     def update_configurations(self):
         """
