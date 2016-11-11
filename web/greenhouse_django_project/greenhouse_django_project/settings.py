@@ -37,7 +37,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'greenhouse_app',
+    'dbbackup',  # django-dbbackup
 )
+
+DBBACKUP_STORAGE = 'dbbackup.storage.filesystem_storage'
+DBBACKUP_STORAGE_OPTIONS = {'location': '/var/backups'}
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -67,7 +71,7 @@ DATABASES = {
     },
     'OPTIONS': {
         'timeout': 20,
-    }
+    },
 }
 
 # Internationalization
