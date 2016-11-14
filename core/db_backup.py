@@ -4,11 +4,11 @@ import threading
 from datetime import datetime
 from time import sleep
 import os
+import cfg
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
-from django.utils import timezone
 from greenhouse_app.models import Measure
 
 
@@ -25,7 +25,7 @@ class DbBackuper(threading.Thread):
             data = self._check_if_should_backup()
             self._send_data_to_backup(data)
 
-            sleep(5)
+            sleep(cfg.DB_BACKUPPER_WAIT_TIME)
 
     def stop_thread(self):
         print 'in stop_thread'
@@ -35,8 +35,8 @@ class DbBackuper(threading.Thread):
         measures = Measure.objects.all()
         length = measures.count()
         self.logger.info('data lenght: {}'.format(length))
-        if length > 1000:
-            return Measure.objects.order_by('-measure_time')[:100]
+        if length > cfg.NUMBER_OF_ITEMS_IN_RPI_DB:
+            return Measure.objects.order_by('measure_time')[0:cfg.NUMBER_OF_ITEMS_TO_MOVE_ONCE]
 
     def _send_data_to_backup(self, data):
         try:
@@ -53,4 +53,5 @@ class DbBackuper(threading.Thread):
 
     def _delete_data_from_local(self, one_measure):
         self.logger.debug('deleting {} from local db'.format(one_measure))
+        one_measure.delete(using='default', keep_parents=False)
 

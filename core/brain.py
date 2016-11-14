@@ -9,7 +9,7 @@ import sys
 
 import cfg
 import utils
-#from db_backup import DbBackuper
+from db_backup import DbBackuper
 from sensors.sensor_controller import Measurement
 from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
@@ -275,9 +275,9 @@ if __name__ == '__main__':
     b.setDaemon(True)
     b.start()
 
-    #backuper = DbBackuper()
-    #backuper.setDaemon(True)
-    #backuper.start()
+    backuper = DbBackuper()
+    backuper.setDaemon(True)
+    backuper.start()
 
     name = raw_input("Do you want to exit? (Y)")
     print 'user entered {}'.format(name)
