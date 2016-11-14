@@ -24,7 +24,7 @@ class DHT22HumidityController(SensorController):
             h = self._dht22_driver.get_humidity()
             if h is None:
                 self._logger.error('could not read data from sensor: {},'.format(self._name))
-                h = 0
+                return None
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=h)
         return self._last_read
 
