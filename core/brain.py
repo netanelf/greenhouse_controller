@@ -9,7 +9,7 @@ import sys
 
 import cfg
 import utils
-from db_backup import DbBackuper
+from db_backup import DbBackupper
 from sensors.sensor_controller import Measurement
 from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
@@ -266,6 +266,7 @@ def init_logging():
 
 if __name__ == '__main__':
     init_logging()
+
     if len(sys.argv) > 1:
         if str(sys.argv[1]) == 'simulate':
             print 'running in simulate HW mode'
@@ -276,7 +277,7 @@ if __name__ == '__main__':
     b.setDaemon(True)
     b.start()
 
-    backuper = DbBackuper()
+    backuper = DbBackupper()
     backuper.setDaemon(True)
     backuper.start()
 

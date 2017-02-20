@@ -12,9 +12,14 @@ django.setup()
 from greenhouse_app.models import Measure
 
 
-class DbBackuper(threading.Thread):
+class DbBackupper(threading.Thread):
+    """
+    thread that ensures working DB (actually only measures Table in DB) stays small.
+    if Measurements table has more than NUMBER_OF_ITEMS_IN_RPI_DB records:
+    the thread starts to move the old records chunk by chunk to a backup DB
+    """
     def __init__(self):
-        super(DbBackuper, self).__init__()
+        super(DbBackupper, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.should_run = False
 
@@ -23,12 +28,13 @@ class DbBackuper(threading.Thread):
         while self.should_run:
             self.logger.info('db backup thread {}'.format(datetime.now()))
             data = self._check_if_should_backup()
-            self._send_data_to_backup(data)
+            if data is not None:
+                self._send_data_to_backup(data)
 
             sleep(cfg.DB_BACKUPPER_WAIT_TIME)
 
     def stop_thread(self):
-        print 'in stop_thread'
+        self.logger.info('in stop_thread')
         self.should_run = False
 
     def _check_if_should_backup(self):
