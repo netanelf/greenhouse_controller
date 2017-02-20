@@ -1,6 +1,7 @@
 __author__ = 'netanel'
 
 import logging
+from logging.handlers import RotatingFileHandler
 from datetime import timedelta
 import time
 import threading
@@ -253,8 +254,15 @@ class Brain(threading.Thread):
 def init_logging():
     logger = logging.getLogger()
     s_handler = logging.StreamHandler()
+    '''
     f_handler = logging.FileHandler(filename=os.path.join(utils.get_root_path(), 'logs', 'greenHouseCntrl_{}.log'
         .format(timezone.make_naive(value=timezone.now(), timezone=timezone.get_current_timezone()).strftime('%d-%m-%y_%H-%M-%S'))))
+    '''
+    f_handler = RotatingFileHandler(filename=os.path.join(utils.get_root_path(), 'logs', 'greenHouseCntrl_{}.log'
+                                            .format(timezone.make_naive(value=timezone.now(),
+                                                                        timezone=timezone.get_current_timezone())
+                                                    .strftime('%d-%m-%y_%H-%M-%S'))),
+                                    maxBytes=10000)
 
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     s_handler.setFormatter(formatter)

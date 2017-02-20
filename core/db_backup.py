@@ -62,7 +62,7 @@ class DbBackupper(threading.Thread):
         self.logger.debug('deleting {} from local db'.format(one_measure))
         one_measure.delete(using='default')
 
-
+'''
 class DbMover(threading.Thread):
 
     def __init__(self):
@@ -109,9 +109,10 @@ class DbMover(threading.Thread):
     def stop_thread(self):
         self.logger.info('in stop_thread (DbMover)')
         self.should_run = False
-
+'''
 if __name__ == '__main__':
     from brain import init_logging
+    '''
     init_logging()
     mover = DbMover()
     mover.setDaemon(True)
@@ -119,3 +120,4 @@ if __name__ == '__main__':
     sleep(20)
     mover.stop_thread()
     sleep(5)
+    '''
