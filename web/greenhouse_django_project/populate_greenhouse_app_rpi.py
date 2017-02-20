@@ -8,9 +8,9 @@ from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Confi
 
 def populate_sensors(dbname):
     print 'deleting data in SensorKind'
-    SensorKind.objects.all().delete()
+    SensorKind.objects.using(dbname).all().delete()
     print 'deleting data in Sensor'
-    Sensor.objects.all().delete()
+    Sensor.objects.using(dbname).all().delete()
     print 'deleting data in TimeGovernors'
     TimeGovernor.objects.using(dbname).all().delete()
 
@@ -81,9 +81,9 @@ def populate_configurations(dbname):
 
 if __name__ == '__main__':
     print "Starting population script..."
-    print "Starting population script..."
     dbs = ['default', 'backup']
     for db in dbs:
+        print "Starting db: {} ".format(db)
         populate_sensors(db)
         populate_relays(db)
         populate_configurations(db)

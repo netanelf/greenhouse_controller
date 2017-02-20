@@ -53,5 +53,5 @@ class DbBackuper(threading.Thread):
 
     def _delete_data_from_local(self, one_measure):
         self.logger.debug('deleting {} from local db'.format(one_measure))
-        one_measure.delete(using='default', keep_parents=False)
+        one_measure.delete(using='default')
 

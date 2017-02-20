@@ -24,7 +24,7 @@ class DHT22TempController(SensorController):
             t = self._dht22_driver.get_temp()
             if t is None:
                 self._logger.error('could not read data from sensor: {},'.format(self._name))
-                t = 0
+                return None
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=t)
         return self._last_read
 
