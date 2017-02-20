@@ -1,6 +1,7 @@
 __author__ = 'netanel'
 
 import logging
+import os
 
 LOG_LEVEL = logging.DEBUG
 DB_RETRIES = 5
@@ -19,4 +20,18 @@ REGISTER_SIZE = 8
 NUMBER_OF_ITEMS_IN_RPI_DB = 1000*64
 NUMBER_OF_ITEMS_TO_MOVE_ONCE = 100
 DB_BACKUPPER_WAIT_TIME = 10
+LOCAL_BACKUP_DB_PATH = os.path.join(os.path.dirname(__file__),
+                                    'web',
+                                    'greenhouse_django_project',
+                                    'backup.sqlite3')
+
+
+# this should probably point to the used DB in the PC side
+REMOTE_BACKUP_DB_PATH = os.path.join(os.path.dirname(__file__),
+                                    'web',
+                                    'greenhouse_django_project',
+                                    'remote',
+                                    'db.sqlite3')
+
+
 

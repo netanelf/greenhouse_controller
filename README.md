@@ -13,6 +13,7 @@ web:
 1. delete db.sqlite3 (if exists)
 2. delete all migrations
 3. manage.py makemigrations greenhouse_app
-4. manage.py migrate
-5. python populate_greenhouse_app_rpi.py
+4. manage.py migrate --database='backup'
+5. manage.py migrate --database='default'
+6. python populate_greenhouse_app_rpi.py
 
