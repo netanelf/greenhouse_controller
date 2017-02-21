@@ -1,11 +1,10 @@
 __author__ = 'netanel'
 import logging
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime
 from time import sleep
 import os
 import cfg
-import shutil
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django

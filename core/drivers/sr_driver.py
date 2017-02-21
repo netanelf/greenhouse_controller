@@ -87,6 +87,8 @@ class SRDriver(object):
         :param new_state: new value
         """
         if not self.simulate:
+            self.logger.debug('pin: {}, new_state: {}'.format(pin, new_state))
+            new_state = int(new_state)
             new_full_state = list(self.state)
             self.logger.debug('old_SR_state: {}'.format(new_full_state))
             new_full_state[pin] = new_state

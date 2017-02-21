@@ -62,3 +62,6 @@ class Measurement(object):
 
     def __unicode__(self):
         return 'sensor_name: {}, time: {}, value: {}'.format(self.sensor_name, self.time, self.value)
+
+    def __repr__(self):
+        return 'sensor_name: {}, time: {}, value: {}'.format(self.sensor_name, self.time, self.value)

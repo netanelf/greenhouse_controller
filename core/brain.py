@@ -36,7 +36,7 @@ class Brain(threading.Thread):
 
     def __init__(self, simulation_mode):
         threading.Thread.__init__(self)
-        self._logger = logging.getLogger(__name__)
+        self._logger = logging.getLogger(self.__class__.__name__)
         self._simulate_hw = simulation_mode
 
         # all sensors
@@ -262,7 +262,8 @@ def init_logging():
                                             .format(timezone.make_naive(value=timezone.now(),
                                                                         timezone=timezone.get_current_timezone())
                                                     .strftime('%d-%m-%y_%H-%M-%S'))),
-                                    maxBytes=10000)
+                                    maxBytes=10E6,
+                                    backupCount=500)
 
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     s_handler.setFormatter(formatter)

@@ -26,6 +26,7 @@ class DHT22TempController(SensorController):
                 self._logger.error('could not read data from sensor: {},'.format(self._name))
                 return None
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=t)
+        self._logger.debug('read: {}'.format(self._last_read))
         return self._last_read
 
     def simulate_data(self):

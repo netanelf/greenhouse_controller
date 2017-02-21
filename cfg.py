@@ -6,7 +6,7 @@ import os
 LOG_LEVEL = logging.DEBUG
 DB_RETRIES = 5
 
-READING_RESOLUTION = 10  # [S] gather sensors reading every READING_RESOLUTION time
+READING_RESOLUTION = 30  # [S] gather sensors reading every READING_RESOLUTION time
 RELAY_DELTA_MEASURE_MS = 10  # [mS] when arelay changes we want to "measure" two points before and after change so we get binary graphs
 
 # shift register controls
@@ -17,9 +17,12 @@ ENABLE = 11
 REGISTER_SIZE = 8
 
 # DB backupper configurations
-NUMBER_OF_ITEMS_IN_RPI_DB = 1000*64
+NUMBER_OF_ITEMS_IN_RPI_DB = 1000*32
 NUMBER_OF_ITEMS_TO_MOVE_ONCE = 100
 DB_BACKUPPER_WAIT_TIME = 10
+
+
+# Dbmover configurations (not used?)
 LOCAL_BACKUP_DB_PATH = os.path.join(os.path.dirname(__file__),
                                     'web',
                                     'greenhouse_django_project',
