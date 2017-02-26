@@ -6,7 +6,7 @@ import os
 LOG_LEVEL = logging.DEBUG
 DB_RETRIES = 5
 
-READING_RESOLUTION = 5  # [S] gather sensors reading every READING_RESOLUTION time
+READING_RESOLUTION = 30  # [S] gather sensors reading every READING_RESOLUTION time
 RELAY_DELTA_MEASURE_MS = 10  # [mS] when arelay changes we want to "measure" two points before and after change so we get binary graphs
 NUM_HISTORY_MEASUREMENTS = 8  # save last 3 measurement - this can be used for rolling average outliers etc.
 
