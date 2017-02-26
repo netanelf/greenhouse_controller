@@ -1,6 +1,6 @@
 __author__ = 'netanel'
 
-from sensor_controller import SensorController, Measurement
+from sensor_controller import SensorController, Measurement, history_appender_decorator
 from django.utils import timezone
 import random
 from core.drivers import ds18b20_driver
@@ -16,6 +16,7 @@ class DS18B20TempController(SensorController):
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate
 
+    @history_appender_decorator
     def read(self):
         super(DS18B20TempController, self).read()
         if self._simulate:

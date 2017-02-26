@@ -1,7 +1,6 @@
 __author__ = 'netanel'
 
 import logging
-from logging.handlers import RotatingFileHandler
 from datetime import timedelta
 import time
 import threading
@@ -9,7 +8,7 @@ import os
 import sys
 
 import cfg
-import utils
+from core.utils import init_logging
 from db_backup import DbBackupper
 from sensors.sensor_controller import Measurement
 from sensors.dht22_temp_controller import DHT22TempController
@@ -251,30 +250,8 @@ class Brain(threading.Thread):
         self._killed = True
 
 
-def init_logging():
-    logger = logging.getLogger()
-    s_handler = logging.StreamHandler()
-    '''
-    f_handler = logging.FileHandler(filename=os.path.join(utils.get_root_path(), 'logs', 'greenHouseCntrl_{}.log'
-        .format(timezone.make_naive(value=timezone.now(), timezone=timezone.get_current_timezone()).strftime('%d-%m-%y_%H-%M-%S'))))
-    '''
-    f_handler = RotatingFileHandler(filename=os.path.join(utils.get_root_path(), 'logs', 'greenHouseCntrl_{}.log'
-                                            .format(timezone.make_naive(value=timezone.now(),
-                                                                        timezone=timezone.get_current_timezone())
-                                                    .strftime('%d-%m-%y_%H-%M-%S'))),
-                                    maxBytes=10E6,
-                                    backupCount=500)
-
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    s_handler.setFormatter(formatter)
-    f_handler.setFormatter(formatter)
-    logger.addHandler(s_handler)
-    logger.addHandler(f_handler)
-    logger.setLevel(cfg.LOG_LEVEL)
-
-
 if __name__ == '__main__':
-    init_logging()
+    init_logging(logger_name='greenHouseController', logger_level=logging.DEBUG)
 
     if len(sys.argv) > 1:
         if str(sys.argv[1]) == 'simulate':

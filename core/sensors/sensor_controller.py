@@ -1,6 +1,8 @@
 __author__ = 'netanel'
 
 import logging
+from collections import deque
+import cfg
 
 
 class SensorController(object):
@@ -10,6 +12,7 @@ class SensorController(object):
     def __init__(self, name):
         self._name = name
         self._logger = logging.getLogger(name)
+        self._history = deque([None] * cfg.NUM_HISTORY_MEASUREMENTS, maxlen=cfg.NUM_HISTORY_MEASUREMENTS)
 
     def get_name(self):
         return self._name
@@ -21,6 +24,15 @@ class SensorController(object):
         """
         self._logger.debug('initiated a read for sensor {}'.format(self._name))
 
+
+def history_appender_decorator(func):
+    def decorated(self):
+        val = func(self)
+        self._logger.debug('adding {} to history'.format(val))
+        self._history.append(val)
+        self._logger.debug('history: {}'.format(self._history))
+
+    return decorated
 
 # convert between physical pi to GPIO (for Adafruit_DHT that uses GPIO numbering)
 # (Physical pin: GPIO number)

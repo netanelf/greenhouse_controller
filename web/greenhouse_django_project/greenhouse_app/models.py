@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta, datetime
 import time
+import logging
 
 
 class SensorKind(models.Model):
@@ -27,6 +28,7 @@ class ControllerOBject(models.Model):
 
     def __unicode__(self):
         return self.name
+
 
 class Sensor(ControllerOBject):
     """
@@ -64,6 +66,7 @@ class Measure(models.Model):
 class TimeGovernor(models.Model):
     """
     """
+    logger = logging.getLogger(__name__)
     GOVERNOR_KINDS = (
         ('R', 'recurring'),
         ('O', 'on off'),
@@ -83,6 +86,7 @@ class TimeGovernor(models.Model):
         """
         return the output of this governor (should the relay be in ON or OFF state)
         """
+        self.logger.debug('kind: {}'.format(self.kind))
         if self.kind == 'R':
             t = timezone.now()
             t_0 = datetime(year=t.year, month=t.month, day=t.day, hour=self.recurring_on_start_time.hour,
@@ -101,6 +105,7 @@ class TimeGovernor(models.Model):
                 return 0
 
         elif self.kind == 'O':
+
             t = timezone.now()
             t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
 
@@ -116,8 +121,11 @@ class TimeGovernor(models.Model):
                          second=self.on_end_time.second,
                          microsecond=0)
 
-            if off_time_this_date < on_time_this_date:  # for example: 6PM -- 6AM (next day)
-                off_time_this_date = off_time_this_date + timedelta(days=1)
+            if self.on_end_time < self.on_start_time:
+                if t.hour < 12:
+                    on_time_this_date = on_time_this_date - timedelta(days=1)  # yesterday
+                else:
+                    off_time_this_date = off_time_this_date + timedelta(days=1) # tomorrow
 
             if on_time_this_date < t < off_time_this_date:
                 return 1

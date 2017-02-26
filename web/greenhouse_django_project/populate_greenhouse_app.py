@@ -126,7 +126,7 @@ def populate_configurations(dbname):
 
 if __name__ == '__main__':
     print "Starting population script..."
-    dbs = ['default', 'backup']
+    dbs = ['default']
     for db in dbs:
         print 'starting DB: {}'.format(db)
         populate_sensors(db)

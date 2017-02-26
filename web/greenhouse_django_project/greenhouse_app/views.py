@@ -7,6 +7,7 @@ import csv
 import cStringIO as StringIO
 import time
 from datetime import datetime
+import logging
 
 
 def index(request):
@@ -171,7 +172,8 @@ def getGraphData(request):
     :param request:
     :return:
     """
-    print 'in getGraphData'
+    logger = logging.getLogger(__name__)
+    logger.debug('in getGraphData')
     t0 = time.time()
     k = list(request.GET.viewkeys())
     data = json.loads(k[0])
@@ -200,7 +202,7 @@ def getGraphData(request):
     measures = Measure.objects.filter(sensor=s, measure_time__range=(d_start, d_end))
     #measures = Measure.objects.all()
     t2 = time.time()
-    print 'data lenght: {}'.format(measures.count())
+    logger.debug('data length: {}'.format(measures.count()))
     for measure in measures: # TODO: this formating takes more than 1 second per 2300 measures, we should try to make that a lot better
         #val = measure.val
         #val = '{:.2f}'.format(val)

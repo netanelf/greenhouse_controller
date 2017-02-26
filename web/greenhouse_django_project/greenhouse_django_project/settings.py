@@ -10,6 +10,9 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+import logging
+from core.utils import init_logging
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
 
@@ -103,4 +106,11 @@ STATICFILES_DIRS = (STATIC_PATH,)
 
 TEMPLATE_PATH = os.path.join(BASE_DIR, 'templates')
 TEMPLATE_DIRS = (TEMPLATE_PATH,)
+
+
+LOGGING_CONFIG = None
+init_logging(logger_name='greenHouseWeb', logger_level=logging.DEBUG)
+
+
+
 
