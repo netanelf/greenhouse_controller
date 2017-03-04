@@ -31,6 +31,7 @@ def history_appender_decorator(func):
         self._logger.debug('adding {} to history'.format(val))
         self._history.append(val)
         self._logger.debug('history: {}'.format(self._history))
+        return val
 
     return decorated
 

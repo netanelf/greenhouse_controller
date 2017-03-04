@@ -3,7 +3,7 @@
 
 import random
 from django.utils import timezone
-from sensor_controller import SensorController, Measurement
+from sensor_controller import SensorController, Measurement, history_appender_decorator
 
 
 class TSL2561LuxController(SensorController):
@@ -20,6 +20,7 @@ class TSL2561LuxController(SensorController):
 
         self.last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
 
+    @history_appender_decorator
     def read(self):
         super(TSL2561LuxController, self).read()
         if self.simulate:

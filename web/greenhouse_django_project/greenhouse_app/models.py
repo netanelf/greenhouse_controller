@@ -67,6 +67,7 @@ class TimeGovernor(models.Model):
     """
     """
     logger = logging.getLogger(__name__)
+
     GOVERNOR_KINDS = (
         ('R', 'recurring'),
         ('O', 'on off'),

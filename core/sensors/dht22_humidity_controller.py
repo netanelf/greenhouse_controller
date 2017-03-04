@@ -1,7 +1,7 @@
 __author__ = 'netanel'
 
 
-from sensor_controller import SensorController, Measurement
+from sensor_controller import SensorController, Measurement, history_appender_decorator
 from django.utils import timezone
 import random
 
@@ -16,6 +16,7 @@ class DHT22HumidityController(SensorController):
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate
 
+    @history_appender_decorator
     def read(self):
         super(DHT22HumidityController, self).read()
         if self._simulate:
