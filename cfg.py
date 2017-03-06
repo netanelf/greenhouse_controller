@@ -22,6 +22,8 @@ NUMBER_OF_ITEMS_IN_RPI_DB = 1000*32
 NUMBER_OF_ITEMS_TO_MOVE_ONCE = 100
 DB_BACKUPPER_WAIT_TIME = 10
 
+# image capture configurations
+IMAGE_CAPTURE_WAIT_TIME = 10
 
 # Dbmover configurations (not used?)
 LOCAL_BACKUP_DB_PATH = os.path.join(os.path.dirname(__file__),

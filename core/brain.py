@@ -8,8 +8,10 @@ import os
 import sys
 
 import cfg
+import utils
 from core.utils import init_logging
 from db_backup import DbBackupper
+from image_capture import ImageCapture
 from sensors.sensor_controller import Measurement
 from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
@@ -266,6 +268,12 @@ if __name__ == '__main__':
     backuper = DbBackupper()
     backuper.setDaemon(True)
     backuper.start()
+
+    save_path = os.path.join(utils.get_root_path(), 'logs', 'images')
+    time_between_captures = timedelta(hours=6)
+    capturer = ImageCapture(save_path=save_path, time_between_captures=time_between_captures, args_for_raspistill=['-vf', '-hf'])
+    capturer.setDaemon(True)
+    capturer.start()
 
     name = raw_input("Do you want to exit? (Y)")
     print 'user entered {}'.format(name)

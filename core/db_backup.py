@@ -110,7 +110,6 @@ class DbMover(threading.Thread):
         self.should_run = False
 '''
 if __name__ == '__main__':
-    from brain import init_logging
     '''
     init_logging()
     mover = DbMover()
