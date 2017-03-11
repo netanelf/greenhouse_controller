@@ -95,6 +95,7 @@ class Brain(threading.Thread):
     def run(self):
         while not self._killed:
             if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
+                self._logger.info('brain cycle')
                 self.update_configurations()
                 self._last_read_time = timezone.now()
                 self.issue_sensor_reading()
@@ -105,6 +106,7 @@ class Brain(threading.Thread):
                 self.lcd_update()
                 self.camera_on_off_set()
                 self.write_data_to_db()
+                self._logger.info('brain cycle end')
 
             time.sleep(1)
         self._logger.info('brain killed')
