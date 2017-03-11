@@ -38,8 +38,8 @@ class Brain(threading.Thread):
     def __init__(self, simulation_mode):
         threading.Thread.__init__(self)
         self._logger = logging.getLogger(self.__class__.__name__)
-        self.loger.info('initializing Brain')
-        self.loger.info('simulation_mode: {}'.format(simulation_mode))
+        self._logger.info('initializing Brain')
+        self._logger.info('simulation_mode: {}'.format(simulation_mode))
 
         self._simulate_hw = simulation_mode
 
