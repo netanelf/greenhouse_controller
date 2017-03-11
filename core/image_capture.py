@@ -20,6 +20,7 @@ class ImageCapture(threading.Thread):
         self.args_for_raspistill = args_for_raspistill
         self.last_capture_time = datetime.min
         self.should_run = False
+        self.controller_capture_switch = True  # this is meant to be changed from other threads, and allow/ disallow for images to be taken
         self.logger.info('ImageCapture Finished Init')
 
     def run(self):
@@ -30,11 +31,15 @@ class ImageCapture(threading.Thread):
                 self._capture()
             sleep(cfg.IMAGE_CAPTURE_WAIT_TIME)
 
+    def change_controller_capture_switch(self, new_state):
+        self.logger.info('in change_controller_capture_switch, new_state: {}'.format(new_state))
+        self.controller_capture_switch = new_state
+
     def _check_if_should_capture(self):
         current_time = datetime.now()
         self.logger.debug('in _check_if_should_capture, current_time: {}, self.last_capture_time: {}, self.time_between_captures: {}'
                           .format(current_time, self.last_capture_time, self.time_between_captures))
-        if current_time - self.last_capture_time > self.time_between_captures:
+        if (current_time - self.last_capture_time > self.time_between_captures) and (self.controller_capture_switch is True):
             return True
         else:
             return False

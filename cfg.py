@@ -2,6 +2,7 @@ __author__ = 'netanel'
 
 import logging
 import os
+from datetime import timedelta
 
 LOG_LEVEL = logging.DEBUG
 DB_RETRIES = 5
@@ -23,7 +24,10 @@ NUMBER_OF_ITEMS_TO_MOVE_ONCE = 100
 DB_BACKUPPER_WAIT_TIME = 10
 
 # image capture configurations
-IMAGE_CAPTURE_WAIT_TIME = 10
+IMAGE_CAPTURE_WAIT_TIME = 10  # thread cycle time
+IMAGE_FREQUENCY = timedelta(hours=4)
+IMAGE_LUX_THRESHOLD = 25  # if lux reading is below threshold disallow image captures
+
 
 # Dbmover configurations (not used?)
 LOCAL_BACKUP_DB_PATH = os.path.join(os.path.dirname(__file__),

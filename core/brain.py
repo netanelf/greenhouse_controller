@@ -67,6 +67,26 @@ class Brain(threading.Thread):
         # configurations, updated from db
         self._manual_mode = 0
 
+        self.helper_threads = {}
+        self.start_helper_threads()
+
+    def start_helper_threads(self):
+        """
+        start helper threads: backuper, image_capture etc...
+        :return:
+        """
+        backuper = DbBackupper()
+        backuper.setDaemon(True)
+        backuper.start()
+        self.helper_threads['backuper'] = backuper
+
+        save_path = os.path.join(utils.get_root_path(), 'logs', 'images')
+        time_between_captures = cfg.IMAGE_FREQUENCY
+        capturer = ImageCapture(save_path=save_path, time_between_captures=time_between_captures, args_for_raspistill=['-vf', '-hf'])
+        capturer.setDaemon(True)
+        capturer.start()
+        self.helper_threads['capturer'] = capturer
+
     def run(self):
         while not self._killed:
             if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
@@ -78,6 +98,7 @@ class Brain(threading.Thread):
                     self.issue_governors_relay_set()
                 self.issue_relay_set()
                 self.lcd_update()
+                self.camera_on_off_set()
                 self.write_data_to_db()
 
             time.sleep(1)
@@ -168,6 +189,21 @@ class Brain(threading.Thread):
                         self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
             except Exception as ex:
                 self._logger.error('could not write to lcd, ex: {}'.format(ex))
+
+    def camera_on_off_set(self):
+        """
+        update camera state according to lux reading, if below threshold, do not take pictures
+        :return:
+        """
+        self._logger.debug('in camera_on_off_set')
+        for sensor_reading in self._data:
+            if 'lux' in sensor_reading.sensor_name:
+                val = sensor_reading.value
+                capturer = self.helper_threads['capturer']
+                if val >= cfg.IMAGE_LUX_THRESHOLD:
+                    capturer.change_controller_capture_switch(new_state=True)
+                else:
+                    capturer.change_controller_capture_switch(new_state=False)
 
     def get_dht22_controller(self, pin):
         """
@@ -264,16 +300,6 @@ if __name__ == '__main__':
         b = Brain(simulation_mode=False)
     b.setDaemon(True)
     b.start()
-
-    backuper = DbBackupper()
-    backuper.setDaemon(True)
-    backuper.start()
-
-    save_path = os.path.join(utils.get_root_path(), 'logs', 'images')
-    time_between_captures = timedelta(hours=6)
-    capturer = ImageCapture(save_path=save_path, time_between_captures=time_between_captures, args_for_raspistill=['-vf', '-hf'])
-    capturer.setDaemon(True)
-    capturer.start()
 
     name = raw_input("Do you want to exit? (Y)")
     print 'user entered {}'.format(name)
