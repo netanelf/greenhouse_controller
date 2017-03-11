@@ -18,6 +18,9 @@ def read_retry(sensor, pin, retries=15, delay_seconds=2, platform=None):
 class DHT22Driver(object):
     def __init__(self, pin):
         self.logger = logging.getLogger('dht22driver_pin_{}'.format(pin))
+        self.logger.info('initializing DHT22Driver')
+        self.logger.info('pin: {}'.format(pin))
+
         self.pin = pin
         try:
             self.gpio = GPIO_TO_PIN_TABLE[self.pin]

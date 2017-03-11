@@ -15,6 +15,10 @@ class ImageCapture(threading.Thread):
     def __init__(self, save_path, time_between_captures, args_for_raspistill=None):
         super(ImageCapture, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.info('initializing ImageCapture')
+        self.logger.info('save_path: {}'.format(save_path))
+        self.logger.info('time_between_captures: {}'.format(time_between_captures))
+        self.logger.info('args_for_raspistill: {}'.format(args_for_raspistill))
         self.save_path = save_path
         self.time_between_captures = time_between_captures
         self.args_for_raspistill = args_for_raspistill
@@ -32,7 +36,7 @@ class ImageCapture(threading.Thread):
             sleep(cfg.IMAGE_CAPTURE_WAIT_TIME)
 
     def change_controller_capture_switch(self, new_state):
-        self.logger.info('in change_controller_capture_switch, new_state: {}'.format(new_state))
+        self.logger.debug('in change_controller_capture_switch, new_state: {}'.format(new_state))
         self.controller_capture_switch = new_state
 
     def _check_if_should_capture(self):

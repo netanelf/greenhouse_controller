@@ -38,6 +38,9 @@ class Brain(threading.Thread):
     def __init__(self, simulation_mode):
         threading.Thread.__init__(self)
         self._logger = logging.getLogger(self.__class__.__name__)
+        self.loger.info('initializing Brain')
+        self.loger.info('simulation_mode: {}'.format(simulation_mode))
+
         self._simulate_hw = simulation_mode
 
         # all sensors
@@ -69,12 +72,14 @@ class Brain(threading.Thread):
 
         self.helper_threads = {}
         self.start_helper_threads()
+        self.logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
         """
         start helper threads: backuper, image_capture etc...
         :return:
         """
+        self._logger.info('in start_helper_threads')
         backuper = DbBackupper()
         backuper.setDaemon(True)
         backuper.start()
@@ -289,7 +294,7 @@ class Brain(threading.Thread):
 
 
 if __name__ == '__main__':
-    init_logging(logger_name='greenHouseController', logger_level=logging.DEBUG)
+    init_logging(logger_name='greenHouseController', logger_level=cfg.LOG_LEVEL)
 
     if len(sys.argv) > 1:
         if str(sys.argv[1]) == 'simulate':

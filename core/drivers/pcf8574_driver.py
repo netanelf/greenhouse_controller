@@ -10,11 +10,15 @@ class PCF8574Driver(object):
     """
 
     def __init__(self, address, simulate=True):
+        self.logger = logging.getLogger('PVF8574Driver')
+        self.logger.info('initializing PCF8574Driver')
+        self.logger.info('address: {}'.format(address))
+        self.logger.info('simulate: {}'.format(simulate))
+
         self.address = address
         self.size = 8
         self.state = [1] * self.size
         self.simulate = simulate
-        self.logger = logging.getLogger('PVF8574Driver')
 
         if not simulate:
             import i2c_driver

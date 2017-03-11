@@ -9,6 +9,13 @@ from sensor_controller import SensorController, Measurement, history_appender_de
 class TSL2561LuxController(SensorController):
     def __init__(self, name, address=0x39, debug=False, pause=0.8, simulate=True):
         super(TSL2561LuxController, self).__init__(name)
+        self._logger.info('initializing TSL2561LuxController')
+        self._logger.info('name: {}'.format(name))
+        self._logger.info('address: {}'.format(address))
+        self._logger.info('debug: {}'.format(debug))
+        self._logger.info('pause: {}'.format(pause))
+        self._logger.info('simulate: {}'.format(simulate))
+
         self.simulate = simulate
         if not self.simulate:
             from core.drivers import Adafruit_TSL2561

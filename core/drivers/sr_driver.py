@@ -14,6 +14,16 @@ class SRDriver(object):
     """
 
     def __init__(self, SER, RCLK, SRCLK, ENABLE, register_size=8, simulate=True):
+        self.logger = logging.getLogger('SRDriver')
+
+        self.logger.info('initializing SRDriver')
+        self.logger.info('SER: {}'.format(SER))
+        self.logger.info('RCLK: {}'.format(RCLK))
+        self.logger.info('SRCLK: {}'.format(SRCLK))
+        self.logger.info('ENABLE: {}'.format(ENABLE))
+        self.logger.info('register_size: {}'.format(register_size))
+        self.logger.info('simulate: {}'.format(simulate))
+
         self.ser = SER
         self.rclk = RCLK
         self.srclk = SRCLK
@@ -21,7 +31,6 @@ class SRDriver(object):
         self.size = register_size
         self.state = [1] * self.size
         self.simulate = simulate
-        self.logger = logging.getLogger('SRDriver')
 
         if not simulate:
             print 'not simulate ****************************'
@@ -106,6 +115,6 @@ if __name__ == '__main__':
     #for i in range(10):
     sr.clear_register()
     for i in range(8):
-	sr.change_bit(pin=i, new_state=1)
+        sr.change_bit(pin=i, new_state=1)
         time.sleep(10)
 

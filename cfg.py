@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import timedelta
 
-LOG_LEVEL = logging.DEBUG
+LOG_LEVEL = logging.INFO
 DB_RETRIES = 5
 
 READING_RESOLUTION = 30  # [S] gather sensors reading every READING_RESOLUTION time

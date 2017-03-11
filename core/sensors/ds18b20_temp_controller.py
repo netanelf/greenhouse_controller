@@ -12,6 +12,10 @@ class DS18B20TempController(SensorController):
     """
     def __init__(self, name, device_id, simulate=True):
         super(DS18B20TempController, self).__init__(name)
+        self._logger.info('initializing DS18B20TempController')
+        self._logger.info('name: {}'.format(name))
+        self._logger.info('device_id: {}'.format(device_id))
+        self._logger.info('simulate: {}'.format(simulate))
         self._device_id = device_id
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate

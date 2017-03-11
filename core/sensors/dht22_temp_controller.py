@@ -12,6 +12,10 @@ class DHT22TempController(SensorController):
     """
     def __init__(self, name, dht22_driver, simulate=True):
         super(DHT22TempController, self).__init__(name)
+        self._logger.info('initializing DHT22TempController')
+        self._logger.info('name: {}'.format(name))
+        self._logger.info('dht22_driver: {}'.format(dht22_driver))
+        self._logger.info('simulate: {}'.format(simulate))
         self._dht22_driver = dht22_driver
         self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate

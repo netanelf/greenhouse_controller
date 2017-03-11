@@ -12,6 +12,15 @@ class RelayController(object):
         :param state: initial state
         :return:
         """
+        self.logger = logging.getLogger(name)
+
+        self.logger.info('initializing RelayController')
+        self.logger.info('name: {}'.format(name))
+        self.logger.info('pin: {}'.format(pin))
+        self.logger.info('shift_register: {}'.format(shift_register))
+        self.logger.info('state: {}'.format(state))
+        self.logger.info('simulate: {}'.format(simulate))
+
         self.name = name
         self.pin = pin
         self.simulate = simulate
@@ -29,7 +38,7 @@ class RelayController(object):
             GPIO.setup(self.pin, GPIO.OUT)
             GPIO.output(self.pin, state)
 
-        self.logger = logging.getLogger(name)
+
 
         self.change_state(new_state=state)
         self.state = state
