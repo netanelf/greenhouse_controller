@@ -72,7 +72,7 @@ class Brain(threading.Thread):
 
         self.helper_threads = {}
         self.start_helper_threads()
-        self.logger.info('Brain Finished Init')
+        self._logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
         """
