@@ -289,6 +289,10 @@ class Brain(threading.Thread):
                 self._manual_mode = c.value
 
     def kill_brain(self):
+        self._logger.info('killing helper_threads')
+        self.helper_threads['backuper'].stop_thread()
+        self.helper_threads['capturer'].stop_thread()
+        time.sleep(0.5)
         self._logger.info('killing brain thread')
         self._killed = True
 
@@ -310,5 +314,4 @@ if __name__ == '__main__':
     print 'user entered {}'.format(name)
     if name == 'Y':
         b.kill_brain()
-        backuper.stop_thread()
         time.sleep(1)
