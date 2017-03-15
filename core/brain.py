@@ -204,13 +204,16 @@ class Brain(threading.Thread):
         """
         self._logger.debug('in camera_on_off_set')
         for sensor_reading in self._data:
-            if 'lux' in sensor_reading.sensor_name:
-                val = sensor_reading.value
-                capturer = self.helper_threads['capturer']
-                if val >= cfg.IMAGE_LUX_THRESHOLD:
-                    capturer.change_controller_capture_switch(new_state=True)
-                else:
-                    capturer.change_controller_capture_switch(new_state=False)
+            try:
+                if 'lux' in sensor_reading.sensor_name:
+                    val = sensor_reading.value
+                    capturer = self.helper_threads['capturer']
+                    if val >= cfg.IMAGE_LUX_THRESHOLD:
+                        capturer.change_controller_capture_switch(new_state=True)
+                    else:
+                        capturer.change_controller_capture_switch(new_state=False)
+            except Exception as ex:
+                self._logger.error('in camera_on_off_set, got exception: {}'.format(ex))
 
     def get_dht22_controller(self, pin):
         """
