@@ -11,7 +11,7 @@
 6. tightvnc apparently opens another session therefore when it starts - the script is ran again, do not use (X11vnc on session 0 should work)
 
 
-web:
+web (new):
 1. delete db.sqlite3 (if exists)
 2. delete all migrations
 3. manage.py makemigrations greenhouse_app
@@ -19,6 +19,10 @@ web:
 5. manage.py migrate --database='default'
 6. python populate_greenhouse_app_rpi.py
 
+web (save db):
+1. manage.py makemigrations
+2. manage.py migrate --database='backup'
+3. manage.py migrate --database='default'
 
 comments:
 1. Because Rpi is slow (especially the flash memory) we keep db.sqlite3 small as possible

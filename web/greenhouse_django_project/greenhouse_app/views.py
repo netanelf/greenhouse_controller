@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configuration, ControllerOBject
+from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configuration, ControllerOBject, KeepAlive
 import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
@@ -18,7 +18,11 @@ def index(request):
     sensor_list = Sensor.objects.order_by()
     relay_list = Relay.objects.order_by()
     time_governors_list = TimeGovernor.objects.order_by()
-    context_dict = {'sensors': sensor_list, 'relays': relay_list, 'governors': time_governors_list}
+    keep_alive_list = KeepAlive.objects.order_by()
+    context_dict = {'sensors': sensor_list,
+                    'relays': relay_list,
+                    'governors': time_governors_list,
+                    'keepalives': keep_alive_list}
     # Render the response and send it back!
     return render(request, 'greenhouse_app/index.html', context_dict)
 
@@ -96,6 +100,20 @@ def getLastSensorValues(request):
             t = 'unknown'
         sensor_data.append({'name': name, 'val': val, 'time': t})
     return HttpResponse(json.dumps(sensor_data))
+
+
+def getKeepAliveValues(request):
+    keep_alive_cursor = KeepAlive.objects.all()
+    keep_alive_list = []
+    for k in keep_alive_cursor:
+        name = k.name
+        timestamp = k.timestamp
+        timestamp = timezone.make_naive(timestamp, timezone=timezone.get_current_timezone())
+        timestamp = timestamp.strftime('%d/%m/%Y %H:%M:%S')
+        alive = k.alive
+        keep_alive_list.append({'name': name, 'timestamp': timestamp, 'alive': alive})
+
+    return HttpResponse(json.dumps(keep_alive_list))
 
 
 def getRelaysState(request):

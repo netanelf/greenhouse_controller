@@ -79,6 +79,33 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="col-md-4">
+                <h3 align="center">Keep Alive</h3>
+                <table align="center">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Alive</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for k in keepalives %}
+                            <tr>
+                                <td id={{k.name}}>
+                                    <div id="{{k.name}}_color" class={% if k.alive == 1 %}"text-success"{% else %}"text-danger"{% endif %}>
+                                        {{k.name}}
+                                    </div>
+                                </td>
+                                <td id={{k.name}}_alive></td>
+                                <td id={{k.name}}_timestamp></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -142,4 +169,46 @@
 
     getLastSensorValues();
     setInterval(getLastSensorValues, 5000);
+
+
+    function onKeepAliveload(e) {
+        //console.log(e.target.response);
+        var data = JSON.parse(e.target.response);
+        for (var i=0; i<data.length; i++){
+            var d = data[i];
+            var keepAliveNameColorTag = d.name + '_color';
+            var keepAliveAliveId = d.name + '_alive';
+            var keepAliveTimeStampId = d.name + '_timestamp';
+            var alive = d.alive;
+            var timestamp = d.timestamp;
+            var colorCssTag;
+            if (alive){
+                colorCssTag = 'text-success';
+            }
+            else{
+                colorCssTag = 'text-danger';
+            }
+
+            var c = document.getElementById(keepAliveAliveId);
+            c.innerHTML = alive;
+
+
+            var e = document.getElementById(keepAliveTimeStampId);
+            e.innerHTML = timestamp;
+
+            f = document.getElementById(keepAliveNameColorTag);
+            f.className = colorCssTag;
+        }
+    }
+
+    function getKeepAliveValues(){
+        var xhr=new XMLHttpRequest();
+        xhr.addEventListener('load', onKeepAliveload);
+        xhr.open('GET', 'getKeepAlive/', true);
+        xhr.send(null);
+    }
+
+    getKeepAliveValues();
+    setInterval(getKeepAliveValues, 5000);
+
 {% endblock %}

@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import timedelta
 
-LOG_LEVEL = logging.INFO
+LOG_LEVEL = logging.DEBUG
 DB_RETRIES = 5
 
 READING_RESOLUTION = 30  # [S] gather sensors reading every READING_RESOLUTION time
@@ -28,6 +28,8 @@ IMAGE_CAPTURE_WAIT_TIME = 10  # thread cycle time
 IMAGE_FREQUENCY = timedelta(hours=4)
 IMAGE_LUX_THRESHOLD = 25  # if lux reading is below threshold disallow image captures
 
+# keep-alive
+KEEP_ALIVE_TIMEOUT = timedelta(seconds=60)  # TODO: not used due to importing problems...
 
 # Dbmover configurations (not used?)
 LOCAL_BACKUP_DB_PATH = os.path.join(os.path.dirname(__file__),

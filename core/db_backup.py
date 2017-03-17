@@ -5,6 +5,7 @@ from datetime import datetime
 from time import sleep
 import os
 import cfg
+import utils
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
@@ -22,6 +23,7 @@ class DbBackupper(threading.Thread):
         super(DbBackupper, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info('initializing DbBackupper')
+        utils.register_keep_alive(name=self.__class__.__name__)
         self.should_run = False
 
     def run(self):
@@ -31,7 +33,7 @@ class DbBackupper(threading.Thread):
             data = self._check_if_should_backup()
             if data is not None:
                 self._send_data_to_backup(data)
-
+            utils.update_keep_alive(name=self.__class__.__name__)
             sleep(cfg.DB_BACKUPPER_WAIT_TIME)
 
     def stop_thread(self):

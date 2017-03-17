@@ -24,7 +24,7 @@ import django
 django.setup()
 from django.utils import timezone
 from django.db.utils import OperationalError
-from greenhouse_app.models import Sensor, Measure, Relay, Configuration, ControllerOBject
+from greenhouse_app.models import Sensor, Measure, Relay, Configuration, ControllerOBject, KeepAlive
 
 
 class Brain(threading.Thread):
@@ -72,6 +72,7 @@ class Brain(threading.Thread):
 
         self.helper_threads = {}
         self.start_helper_threads()
+        utils.register_keep_alive(name=self.__class__.__name__)
         self._logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
@@ -108,7 +109,8 @@ class Brain(threading.Thread):
                 self.write_data_to_db()
                 self._logger.info('brain cycle end')
 
-            time.sleep(1)
+            utils.update_keep_alive(name=self.__class__.__name__)
+            time.sleep(5)
         self._logger.info('brain killed')
 
     def get_current_data(self):

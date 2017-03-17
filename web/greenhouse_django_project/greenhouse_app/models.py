@@ -168,3 +168,25 @@ class Configuration(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class KeepAlive(models.Model):
+    """
+    keep-alive form some component
+    component-name, last_ka_timestamp
+    """
+    name = models.CharField(max_length=128, unique=True)
+    timestamp = models.DateTimeField(db_index=True)
+
+    def calculate_is_alive(self):
+        current_time = timezone.make_naive(value=timezone.now(), timezone=timezone.get_current_timezone())
+        naive_timestamp = timezone.make_naive(value=self.timestamp, timezone=timezone.get_current_timezone())
+        if current_time - naive_timestamp > timedelta(seconds=60):
+            return False
+        else:
+            return True
+
+    alive = property(calculate_is_alive)
+
+    def __unicode__(self):
+        return 'name: {}, timestamp: {}, alive: {}'.format(self.name, self.timestamp, self.alive)

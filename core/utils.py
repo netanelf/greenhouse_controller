@@ -1,7 +1,10 @@
 __author__ = 'netanel'
-
 import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
+import django
+django.setup()
 from django.utils import timezone
+from greenhouse_app.models import KeepAlive
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -34,4 +37,33 @@ def init_logging(logger_name, logger_level):
     logger.addHandler(f_handler)
     logger.setLevel(logger_level)
 
+
+def register_keep_alive(name):
+    """
+    ensure keepalive table has a row for brain
+    :param name: name of model for registering keepalive
+    :return:
+    """
+    l = logging.getLogger('utils')
+    try:
+        l.info('trying to add {} into KeepAlive table'.format(name))
+        KeepAlive.objects.get_or_create(name=name, timestamp=timezone.now())
+    except Exception as ex:
+        l.error('got exception: {}'.format(ex))
+
+
+def update_keep_alive(name):
+    """
+    write new timestamp to keepalive table
+    :return:
+    """
+    l = logging.getLogger('utils')
+    try:
+        t = timezone.now()
+        l.debug('trying to update {} KeepAlive timestamp to: {}'.format(name, t))
+        k = KeepAlive.objects.get(name=name)
+        k.timestamp = t
+        k.save()
+    except Exception as ex:
+        l.error('got exception: {}'.format(ex))
 

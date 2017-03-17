@@ -13,6 +13,7 @@ urlpatterns = patterns('',
                        url(r'^graphs/getGraphData', views.getGraphData, name='getGraphData'),
                        url(r'^graphs/', views.graphs, name='graphs'),
                        url(r'^setConfiguration/', views.setConfiguration, name='setConfiguration'),
+                       url(r'^getKeepAlive/', views.getKeepAliveValues, name='getKeepAlive'),
                        )
 
 

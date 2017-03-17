@@ -25,6 +25,7 @@ class ImageCapture(threading.Thread):
         self.last_capture_time = datetime.min
         self.should_run = False
         self.controller_capture_switch = True  # this is meant to be changed from other threads, and allow/ disallow for images to be taken
+        utils.register_keep_alive(name=self.__class__.__name__)
         self.logger.info('ImageCapture Finished Init')
 
     def run(self):
@@ -33,6 +34,7 @@ class ImageCapture(threading.Thread):
             self.logger.info('image capture thread {}'.format(datetime.now()))
             if self._check_if_should_capture():
                 self._capture()
+            utils.update_keep_alive(name=self.__class__.__name__)
             sleep(cfg.IMAGE_CAPTURE_WAIT_TIME)
 
     def change_controller_capture_switch(self, new_state):
