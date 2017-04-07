@@ -53,7 +53,7 @@ class DbBackupper(threading.Thread):
                 if self._write_data_to_backup(one_measure=d):
                     self._delete_data_from_local(d)
         except Exception as ex:
-            self.logger.error('while db backup, got exception: {}'.format(ex))
+            self.logger.exception('while db backup, got exception: {}'.format(ex))
 
     def _write_data_to_backup(self, one_measure):
         self.logger.debug('writing {} to server backup'.format(one_measure))

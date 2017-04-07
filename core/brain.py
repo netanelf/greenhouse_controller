@@ -60,7 +60,7 @@ class Brain(threading.Thread):
                 self.lcd = lcd2004_driver.Lcd()
                 self.lcd_alive = 'x'
             except Exception as ex:
-                self._logger.error('could not initialize lcd, ex: {}'.format(ex))
+                self._logger.exception('could not initialize lcd, ex: {}'.format(ex))
 
         self._last_read_time = timezone.now()
         self._data_lock = threading.RLock()
@@ -197,7 +197,7 @@ class Brain(threading.Thread):
                                 self.lcd_alive = 'x'
                         self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
             except Exception as ex:
-                self._logger.error('could not write to lcd, ex: {}'.format(ex))
+                self._logger.exception('could not write to lcd, ex: {}'.format(ex))
 
     def camera_on_off_set(self):
         """
@@ -215,7 +215,7 @@ class Brain(threading.Thread):
                     else:
                         capturer.change_controller_capture_switch(new_state=False)
             except Exception as ex:
-                self._logger.error('in camera_on_off_set, got exception: {}'.format(ex))
+                self._logger.exception('in camera_on_off_set, got exception: {}'.format(ex))
 
     def get_dht22_controller(self, pin):
         """
@@ -266,7 +266,7 @@ class Brain(threading.Thread):
                     self._data.append(m1)
 
                 except Exception as ex:
-                    self._logger.info('some exception: {}'.format(ex))
+                    self._logger.exception('some exception: {}'.format(ex))
 
     def write_data_to_db(self):
         self._logger.debug('in _write_data_to_db')
@@ -277,12 +277,12 @@ class Brain(threading.Thread):
                     while t in range(cfg.DB_RETRIES):
                         try:
                             self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
-                            #sensor = Sensor.objects.get(name=d.sensor_name)
                             controller = ControllerOBject.objects.get(name=d.sensor_name)
                             Measure.objects.create(sensor=controller, measure_time=d.time, val=d.value)
                             break
                         except OperationalError as ex:
-                            self._logger.error('while writing to DB got ex: {}, try: {}'.format(ex, t))
+                            self._logger.error('while writing to DB got exception, try: {}'.format(t))
+                            self._logger.exception(ex)
                             t += 1
 
     def update_configurations(self):

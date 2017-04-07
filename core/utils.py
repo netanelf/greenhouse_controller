@@ -49,7 +49,7 @@ def register_keep_alive(name):
         l.info('trying to add {} into KeepAlive table'.format(name))
         KeepAlive.objects.get_or_create(name=name, timestamp=timezone.now())
     except Exception as ex:
-        l.error('got exception: {}'.format(ex))
+        l.exception('got exception: {}'.format(ex))
 
 
 def update_keep_alive(name):
@@ -65,5 +65,5 @@ def update_keep_alive(name):
         k.timestamp = t
         k.save()
     except Exception as ex:
-        l.error('got exception: {}'.format(ex))
+        l.exception('got exception: {}'.format(ex))
 

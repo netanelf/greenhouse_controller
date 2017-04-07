@@ -61,7 +61,7 @@ class ImageCapture(threading.Thread):
             self.logger.debug('built command for subprocess: {}'.format(command))
             subprocess.call(command)
         except Exception as ex:
-            self.logger.error('got exception in capture: {}'.format(ex))
+            self.logger.exception('got exception in capture: {}'.format(ex))
         self.last_capture_time = datetime.now()
 
     def stop_thread(self):
