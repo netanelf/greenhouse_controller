@@ -85,7 +85,7 @@ class FailureManager(threading.Thread):
         :return:
         """
         self.logger.info('in restart_computer')
-        command = ['sudo', 'restart']
+        command = ['sudo', 'reboot']
         self.logger.info('created command for subprocess: {}'.format(command))
         subprocess.call(command)
 
