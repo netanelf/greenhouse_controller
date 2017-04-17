@@ -12,7 +12,7 @@ __author__ = 'netanel'
 
 
 class ImageCapture(threading.Thread):
-    def __init__(self, save_path, time_between_captures, args_for_raspistill=None):
+    def __init__(self, save_path, time_between_captures, failure_manager, args_for_raspistill=None):
         super(ImageCapture, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info('initializing ImageCapture')
@@ -24,6 +24,7 @@ class ImageCapture(threading.Thread):
         self.args_for_raspistill = args_for_raspistill
         self.last_capture_time = datetime.min
         self.should_run = False
+        self.failure_manager = failure_manager
         self.controller_capture_switch = True  # this is meant to be changed from other threads, and allow/ disallow for images to be taken
         utils.register_keep_alive(name=self.__class__.__name__)
         self.logger.info('ImageCapture Finished Init')
@@ -34,7 +35,7 @@ class ImageCapture(threading.Thread):
             self.logger.info('image capture thread {}'.format(datetime.now()))
             if self._check_if_should_capture():
                 self._capture()
-            utils.update_keep_alive(name=self.__class__.__name__)
+            utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.failure_manager)
             sleep(cfg.IMAGE_CAPTURE_WAIT_TIME)
 
     def change_controller_capture_switch(self, new_state):

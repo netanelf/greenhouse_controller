@@ -52,7 +52,7 @@ def register_keep_alive(name):
         l.exception('got exception: {}'.format(ex))
 
 
-def update_keep_alive(name):
+def update_keep_alive(name, failure_manager):
     """
     write new timestamp to keepalive table
     :return:
@@ -64,6 +64,8 @@ def update_keep_alive(name):
         k = KeepAlive.objects.get(name=name)
         k.timestamp = t
         k.save()
+        a = 1/0
     except Exception as ex:
         l.exception('got exception: {}'.format(ex))
+        failure_manager.add_failure(ex=ex, caller=update_keep_alive.__name__)
 

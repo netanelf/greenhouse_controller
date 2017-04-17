@@ -19,12 +19,13 @@ class DbBackupper(threading.Thread):
     if Measurements table has more than NUMBER_OF_ITEMS_IN_RPI_DB records:
     the thread starts to move the old records chunk by chunk to a backup DB
     """
-    def __init__(self):
+    def __init__(self, failure_manager):
         super(DbBackupper, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info('initializing DbBackupper')
         utils.register_keep_alive(name=self.__class__.__name__)
         self.should_run = False
+        self.failure_manager = failure_manager
 
     def run(self):
         self.should_run = True
@@ -33,7 +34,7 @@ class DbBackupper(threading.Thread):
             data = self._check_if_should_backup()
             if data is not None:
                 self._send_data_to_backup(data)
-            utils.update_keep_alive(name=self.__class__.__name__)
+            utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.failure_manager)
             sleep(cfg.DB_BACKUPPER_WAIT_TIME)
 
     def stop_thread(self):

@@ -12,6 +12,7 @@ import utils
 from core.utils import init_logging
 from db_backup import DbBackupper
 from image_capture import ImageCapture
+from failurs_manager import FailureManager
 from sensors.sensor_controller import Measurement
 from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
@@ -80,15 +81,23 @@ class Brain(threading.Thread):
         start helper threads: backuper, image_capture etc...
         :return:
         """
+        failure_manager = FailureManager()
+        failure_manager.setDaemon(True)
+        failure_manager.start()
+        self.helper_threads['failure_manager'] = failure_manager
+
         self._logger.info('in start_helper_threads')
-        backuper = DbBackupper()
+        backuper = DbBackupper(failure_manager=self.helper_threads['failure_manager'])
         backuper.setDaemon(True)
         backuper.start()
         self.helper_threads['backuper'] = backuper
 
         save_path = os.path.join(utils.get_root_path(), 'logs', 'images')
         time_between_captures = cfg.IMAGE_FREQUENCY
-        capturer = ImageCapture(save_path=save_path, time_between_captures=time_between_captures, args_for_raspistill=['-vf', '-hf'])
+        capturer = ImageCapture(save_path=save_path,
+                                time_between_captures=time_between_captures,
+                                failure_manager=self.helper_threads['failure_manager'],
+                                args_for_raspistill=['-vf', '-hf'])
         capturer.setDaemon(True)
         capturer.start()
         self.helper_threads['capturer'] = capturer
@@ -109,7 +118,7 @@ class Brain(threading.Thread):
                 self.write_data_to_db()
                 self._logger.info('brain cycle end')
 
-            utils.update_keep_alive(name=self.__class__.__name__)
+            utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.helper_threads['failure_manager'])
             time.sleep(5)
         self._logger.info('brain killed')
 
@@ -198,6 +207,7 @@ class Brain(threading.Thread):
                         self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
             except Exception as ex:
                 self._logger.exception('could not write to lcd, ex: {}'.format(ex))
+                self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
 
     def camera_on_off_set(self):
         """
@@ -267,6 +277,7 @@ class Brain(threading.Thread):
 
                 except Exception as ex:
                     self._logger.exception('some exception: {}'.format(ex))
+                    self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
 
     def write_data_to_db(self):
         self._logger.debug('in _write_data_to_db')
@@ -283,6 +294,7 @@ class Brain(threading.Thread):
                         except OperationalError as ex:
                             self._logger.error('while writing to DB got exception, try: {}'.format(t))
                             self._logger.exception(ex)
+                            self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
                             t += 1
 
     def update_configurations(self):
@@ -297,8 +309,9 @@ class Brain(threading.Thread):
 
     def kill_brain(self):
         self._logger.info('killing helper_threads')
-        self.helper_threads['backuper'].stop_thread()
-        self.helper_threads['capturer'].stop_thread()
+        for thread_name, thread_object in self.helper_threads.items():
+            thread_object.stop_thread()
+
         time.sleep(0.5)
         self._logger.info('killing brain thread')
         self._killed = True
