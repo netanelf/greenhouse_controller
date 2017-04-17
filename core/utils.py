@@ -64,7 +64,6 @@ def update_keep_alive(name, failure_manager):
         k = KeepAlive.objects.get(name=name)
         k.timestamp = t
         k.save()
-        a = 1/0
     except Exception as ex:
         l.exception('got exception: {}'.format(ex))
         failure_manager.add_failure(ex=ex, caller=update_keep_alive.__name__)
