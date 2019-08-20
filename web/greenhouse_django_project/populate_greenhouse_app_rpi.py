@@ -64,11 +64,11 @@ def populate_relays(dbname):
     r.time_governor = t2
     r.save(using=dbname)
 
-    print 'creating relay: (name=pump, pin=3, state=1, wanted_state=1)'
+    print 'creating relay: (name=pump, pin=5, state=1, wanted_state=1)'
     r = Relay.objects.using(dbname).get_or_create(name='pump')[0]
-    r.pin = 2
-    r.state = 0
-    r.wanted_state = 0
+    r.pin = 4
+    r.state = 1
+    r.wanted_state = 1
     r.save(using=dbname)
 
 
@@ -84,6 +84,6 @@ if __name__ == '__main__':
     dbs = ['default', 'backup']
     for db in dbs:
         print "Starting db: {} ".format(db)
-        populate_sensors(db)
+        #populate_sensors(db)
         populate_relays(db)
         populate_configurations(db)
