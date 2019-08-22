@@ -1,8 +1,9 @@
 import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
-
+from datetime import timedelta
 import django
 django.setup()
+from django.utils import timezone
 from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Configuration
 
 
@@ -45,8 +46,23 @@ def populate_sensors(dbname):
 
 def populate_relays(dbname):
 
-    t = TimeGovernor.objects.using(dbname).get_or_create(name='light_governer', kind='O', on_start_time='19:00:00', on_end_time='06:00:00', recurring_on_start_time='08:00:00', recurring_on_period=60, recurring_off_period=30)[0]
-    t2 = TimeGovernor.objects.using(dbname).get_or_create(name='fan_governer', kind='R', on_start_time='19:00:00', on_end_time='06:00:00', recurring_on_start_time='08:00:00', recurring_on_period=60*5, recurring_off_period=30)[0]
+    t = TimeGovernor.objects.using(dbname).get_or_create(name='light_governer',
+                                                         kind='O',
+                                                         on_start_time='19:00:00',
+                                                         on_end_time='06:00:00',
+                                                         recurring_on_start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                                         recurring_on_period=timedelta(seconds=60),
+                                                         recurring_off_period=timedelta(seconds=30)
+                                                         )[0]
+
+    t2 = TimeGovernor.objects.using(dbname).get_or_create(name='fan_governer',
+                                                          kind='R',
+                                                          on_start_time='19:00:00',
+                                                          on_end_time='06:00:00',
+                                                          recurring_on_start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                                          recurring_on_period=timedelta(seconds=300),
+                                                          recurring_off_period=timedelta(seconds=30)
+                                                          )[0]
     
     print 'creating relay: (name=light, pin=1, state=1, wanted_state=1)'
     r = Relay.objects.using(dbname).get_or_create(name='light')[0]
@@ -69,6 +85,7 @@ def populate_relays(dbname):
     r.pin = 4
     r.state = 1
     r.wanted_state = 1
+    r.time_governor = t
     r.save(using=dbname)
 
 

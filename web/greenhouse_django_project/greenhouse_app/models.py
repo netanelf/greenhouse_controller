@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta, datetime
+from multiselectfield import MultiSelectField
 import time
 import logging
 
@@ -72,16 +73,27 @@ class TimeGovernor(models.Model):
         ('R', 'recurring'),
         ('O', 'on off'),
     )
-    name = models.CharField(max_length=128, unique=True)
 
+    DAY_OF_THE_WEEK = (
+        (1, 'Sunday'),
+        (2, 'Monday'),
+        (3, 'Tuesday'),
+        (4, 'Wednesday'),
+        (5, 'Thursday'),
+        (6, 'Friday'),
+        (7, 'Saturday'),
+    )
+
+    name = models.CharField(max_length=128, unique=True)
     kind = models.CharField(max_length=1, choices=GOVERNOR_KINDS)
 
-    on_start_time = models.TimeField()
-    on_end_time = models.TimeField()
+    on_start_time = models.TimeField(help_text='used only in "on off" governor')
+    on_end_time = models.TimeField(help_text='used only in "on off" governor')
 
-    recurring_on_start_time = models.TimeField()
-    recurring_on_period = models.IntegerField()  # seconds
-    recurring_off_period = models.IntegerField()  # seconds
+    recurring_on_start_time = models.DateTimeField(help_text='used only in "on off" governor')
+    recurring_on_period = models.DurationField(help_text='timedelta "DD HH:MM:SS", used only in "recurring" governor')  # seconds
+    recurring_off_period = models.DurationField(help_text='timedelta "DD HH:MM:SS", used only in "recurring" governor')  # seconds
+
 
     def on_off_status(self):
         """
@@ -90,17 +102,13 @@ class TimeGovernor(models.Model):
         self.logger.debug('kind: {}'.format(self.kind))
         if self.kind == 'R':
             t = timezone.now()
-            t_0 = datetime(year=t.year, month=t.month, day=t.day, hour=self.recurring_on_start_time.hour,
-                           minute=self.recurring_on_start_time.minute,
-                           second=self.recurring_on_start_time.second,
-                           microsecond=0, tzinfo=t.tzinfo)
-            tdelta = t - t_0
-            delta_seconds = tdelta.total_seconds()
-            period = self.recurring_on_period + self.recurring_off_period
-            a, b = divmod(delta_seconds, period)
-            shited_t = t - timedelta(seconds=a * period)
-            d = shited_t - t_0
-            if 0 <= d.total_seconds() < self.recurring_on_period:
+            t_delta = t - self.recurring_on_start_time
+            delta_seconds = t_delta.total_seconds()
+            period_sec = (self.recurring_on_period + self.recurring_off_period).total_seconds()
+            a, b = divmod(delta_seconds, period_sec)
+            shifted_t = t - timedelta(seconds=a * period_sec)
+            #print('comparing {} with float: {}'.format(self.recurring_on_period, float(self.recurring_on_period)))
+            if self.recurring_on_start_time <= shifted_t < self.recurring_on_start_time + self.recurring_on_period:
                 return 1
             else:
                 return 0
