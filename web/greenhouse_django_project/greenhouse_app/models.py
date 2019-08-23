@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta, datetime
-from multiselectfield import MultiSelectField
 import time
 import logging
 
@@ -72,16 +71,6 @@ class TimeGovernor(models.Model):
     GOVERNOR_KINDS = (
         ('R', 'recurring'),
         ('O', 'on off'),
-    )
-
-    DAY_OF_THE_WEEK = (
-        (1, 'Sunday'),
-        (2, 'Monday'),
-        (3, 'Tuesday'),
-        (4, 'Wednesday'),
-        (5, 'Thursday'),
-        (6, 'Friday'),
-        (7, 'Saturday'),
     )
 
     name = models.CharField(max_length=128, unique=True)

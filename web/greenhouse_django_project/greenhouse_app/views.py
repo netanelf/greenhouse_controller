@@ -8,8 +8,24 @@ import cStringIO as StringIO
 import time
 from datetime import datetime
 import logging
+from functools import wraps
 
 
+logger = logging.getLogger('django')
+
+
+def timing_decorator(func):
+
+    def wrapped(*args, **kwargs):
+        t0 = time.time()
+        ret_val = func(*args, **kwargs)
+        t1 = time.time()
+        logger.info('{} took {}[s]'.format(func.__name__, t1 - t0))
+        return ret_val
+    return wrapped
+
+
+@timing_decorator
 def index(request):
     """
     main view for home page
@@ -26,11 +42,11 @@ def index(request):
     # Render the response and send it back!
     return render(request, 'greenhouse_app/index.html', context_dict)
 
-
+@timing_decorator
 def measurements(request):
     return render(request, 'greenhouse_app/measurements.html')
 
-
+@timing_decorator
 def downloadMeasurements(request):
     """
     send all measurements as .csv file
@@ -74,14 +90,14 @@ def downloadMeasurements(request):
     response['Content-Disposition'] = 'attachment; filename="measurements.csv"'
     return response
 
-
+@timing_decorator
 def getSensorsData(request):
     measurement_list = Measure.objects.order_by('-measure_time')[:20]
     context_dict = {'measurements': measurement_list}
     # Render the response and send it back!
     return render(request, 'greenhouse_app/sensorsData.html', context_dict)
 
-
+@timing_decorator
 def getLastSensorValues(request):
     sensor_list = Sensor.objects.order_by()
 
@@ -102,6 +118,7 @@ def getLastSensorValues(request):
     return HttpResponse(json.dumps(sensor_data))
 
 
+@timing_decorator
 def getKeepAliveValues(request):
     keep_alive_cursor = KeepAlive.objects.all()
     keep_alive_list = []
@@ -112,10 +129,10 @@ def getKeepAliveValues(request):
         timestamp = timestamp.strftime('%d/%m/%Y %H:%M:%S')
         alive = k.alive
         keep_alive_list.append({'name': name, 'timestamp': timestamp, 'alive': alive})
-
     return HttpResponse(json.dumps(keep_alive_list))
 
 
+@timing_decorator
 def getRelaysState(request):
     relay_list = Relay.objects.order_by()
 
@@ -127,8 +144,8 @@ def getRelaysState(request):
 
 
 # ajax callback
+@timing_decorator
 def setRelaysState(request):
-    print 'in setRelaysState'
     a = request.GET.viewkeys()
 
     for k in a:
@@ -142,6 +159,7 @@ def setRelaysState(request):
     return HttpResponse(json.dumps({'NoData': None}))
 
 
+@timing_decorator
 def relays(request):
     relay_list = Relay.objects.order_by()
     manual_mode = Configuration.objects.get(name='manual_mode')
@@ -149,6 +167,7 @@ def relays(request):
     return render(request, 'greenhouse_app/relays.html', context_dict)
 
 
+@timing_decorator
 def graphs(request):
     #sensors = Sensor.objects.all()
     sensors = ControllerOBject.objects.all()
@@ -157,15 +176,14 @@ def graphs(request):
         sensors_names.append(s.name)
     context_dict = {'sensors': sensors_names}
 
-    print context_dict
     return render(request, 'greenhouse_app/graphs.html', context_dict)
 
 
+@timing_decorator
 def setConfiguration(request):
     """
     change some configuration in models.Configurations
     """
-    print 'in setConfiguration'
     a = request.GET.viewkeys()
 
     for k in a:
@@ -181,6 +199,7 @@ def setConfiguration(request):
     return HttpResponse(json.dumps({'NoData': None}))
 
 
+@timing_decorator
 def getGraphData(request):
     """
     {
@@ -190,7 +209,6 @@ def getGraphData(request):
     :param request:
     :return:
     """
-    logger = logging.getLogger(__name__)
     logger.debug('in getGraphData')
     t0 = time.time()
     k = list(request.GET.viewkeys())

@@ -63,6 +63,15 @@ def populate_relays(dbname):
                                                           recurring_on_period=timedelta(seconds=300),
                                                           recurring_off_period=timedelta(seconds=30)
                                                           )[0]
+
+    t3 = TimeGovernor.objects.using(dbname).get_or_create(name='pump_governer',
+                                                          kind='R',
+                                                          on_start_time='19:00:00',
+                                                          on_end_time='06:00:00',
+                                                          recurring_on_start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                                          recurring_on_period=timedelta(seconds=120),
+                                                          recurring_off_period=timedelta(seconds=120)
+                                                          )[0]
     
     print 'creating relay: (name=light, pin=1, state=1, wanted_state=1)'
     r = Relay.objects.using(dbname).get_or_create(name='light')[0]
@@ -85,14 +94,14 @@ def populate_relays(dbname):
     r.pin = 4
     r.state = 1
     r.wanted_state = 1
-    r.time_governor = t
+    r.time_governor = t3
     r.save(using=dbname)
 
 
 def populate_configurations(dbname):
     c = Configuration.objects.using(dbname).get_or_create(name='manual_mode')[0]
-    c.value=0
-    c.explanation='if set to 1, governors do not change relay states, only manual user changes'
+    c.value = 0
+    c.explanation = 'if set to 1, governors do not change relay states, only manual user changes'
     c.save(using=dbname)
 
 
