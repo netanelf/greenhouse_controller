@@ -63,6 +63,7 @@ def populate_relays(dbname):
                                                          recurring_on_period=timedelta(seconds=90),
                                                          recurring_off_period=timedelta(seconds=90)
                                                          )[0]
+
     t2 = TimeGovernor.objects.using(dbname).get_or_create(name='rec_90_90',
                                                           kind='R',
                                                           on_start_time='08:00:00',
@@ -93,44 +94,16 @@ def populate_relays(dbname):
     r.state = 1
     r.wanted_state = 1
     r.save(using=dbname)
-    '''
-    print 'creating relay: (name=humidity, pin=3, state=1, wanted_state=1)'
-    r = Relay.objects.get_or_create(name='humidity')[0]
-    r.pin = 3
-    r.state = 1
-    r.wanted_state = 1
-    r.save()
 
-    print 'creating relay: (name=humidity, pin=4, state=1, wanted_state=1)'
-    r = Relay.objects.get_or_create(name='fan2')[0]
+    print 'creating relay: (name=pump, pin=5, state=1, wanted_state=1)'
+    r = Relay.objects.using(dbname).get_or_create(name='fan')[0]
     r.pin = 4
     r.state = 1
     r.wanted_state = 1
-    r.save()
-
-    print 'creating relay: (name=misc0, pin=5, state=1, wanted_state=1)'
-    r = Relay.objects.get_or_create(name='misc0')[0]
-    r.pin = 5
-    r.state = 1
-    r.wanted_state = 1
-    r.save()
-
-    print 'creating relay: (name=misc1, pin=6, state=1, wanted_state=1)'
-    r = Relay.objects.get_or_create(name='misc1')[0]
-    r.pin = 6
-    r.state = 1
-    r.wanted_state = 1
+    r.simulate = 1
+    r.inverted = 1
     r.time_governor = t2
-    r.save()
-
-    print 'creating relay: (name=misc2, pin=7, state=1, wanted_state=1)'
-    r = Relay.objects.get_or_create(name='misc2')[0]
-    r.pin = 7
-    r.state = 1
-    r.wanted_state = 1
-    r.time_governor = t2
-    r.save()
-    '''
+    r.save(using=dbname)
 
 
 def populate_configurations(dbname):

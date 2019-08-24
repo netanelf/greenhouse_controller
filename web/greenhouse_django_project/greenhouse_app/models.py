@@ -153,6 +153,7 @@ class Relay(ControllerOBject):
     wanted_state = models.BooleanField(default=False)
     simulate = models.BooleanField(default=True)
     time_governor = models.ForeignKey(TimeGovernor, null=True)
+    inverted = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name

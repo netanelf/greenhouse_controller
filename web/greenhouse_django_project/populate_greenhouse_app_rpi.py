@@ -69,8 +69,8 @@ def populate_relays(dbname):
                                                           on_start_time='19:00:00',
                                                           on_end_time='06:00:00',
                                                           recurring_on_start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                          recurring_on_period=timedelta(seconds=120),
-                                                          recurring_off_period=timedelta(seconds=120)
+                                                          recurring_on_period=timedelta(seconds=45),
+                                                          recurring_off_period=timedelta(seconds=90)
                                                           )[0]
     
     print 'creating relay: (name=light, pin=1, state=1, wanted_state=1)'
@@ -90,10 +90,20 @@ def populate_relays(dbname):
     r.save(using=dbname)
 
     print 'creating relay: (name=pump, pin=5, state=1, wanted_state=1)'
-    r = Relay.objects.using(dbname).get_or_create(name='pump')[0]
+    r = Relay.objects.using(dbname).get_or_create(name='pump1')[0]
     r.pin = 4
     r.state = 1
     r.wanted_state = 1
+    r.inverted = 1
+    r.time_governor = t3
+    r.save(using=dbname)
+
+    print 'creating relay: (name=pump2, pin=6, state=1, wanted_state=1)'
+    r = Relay.objects.using(dbname).get_or_create(name='pump2')[0]
+    r.pin = 5
+    r.state = 1
+    r.wanted_state = 1
+    r.inverted = 0
     r.time_governor = t3
     r.save(using=dbname)
 
