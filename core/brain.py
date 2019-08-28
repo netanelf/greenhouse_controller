@@ -104,21 +104,26 @@ class Brain(threading.Thread):
 
     def run(self):
         while not self._killed:
-            if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
-                self._logger.info('brain cycle')
-                self.update_configurations()
-                self._last_read_time = timezone.now()
-                self.issue_sensor_reading()
+            try:
+                if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
+                    self._logger.info('brain cycle')
+                    self.update_configurations()
+                    self._last_read_time = timezone.now()
+                    self.issue_sensor_reading()
 
-                if not self._manual_mode:
-                    self.issue_governors_relay_set()
-                self.issue_relay_set()
-                self.lcd_update()
-                self.camera_on_off_set()
-                self.write_data_to_db()
-                self._logger.info('brain cycle end')
+                    if not self._manual_mode:
+                        self.issue_governors_relay_set()
+                    self.issue_relay_set()
+                    self.lcd_update()
+                    self.camera_on_off_set()
+                    self.write_data_to_db()
+                    self._logger.info('brain cycle end')
 
-            utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.helper_threads['failure_manager'])
+                utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.helper_threads['failure_manager'])
+            except Exception as ex:
+                self._logger.error('in main brain cycle, got exception:')
+                self._logger.exception(ex)
+                
             time.sleep(5)
         self._logger.info('brain killed')
 
