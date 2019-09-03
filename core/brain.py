@@ -64,6 +64,9 @@ class Brain(threading.Thread):
                 self._logger.exception('could not initialize lcd, ex: {}'.format(ex))
 
         self._last_read_time = timezone.now()
+        self._last_relay_set_time = timezone.now()
+        self._last_keepalive_time = timezone.now()
+        self._last_configuration_time = timezone.now()
         self._data_lock = threading.RLock()
         self._data = []
         self._killed = False
@@ -92,39 +95,55 @@ class Brain(threading.Thread):
         backuper.start()
         self.helper_threads['backuper'] = backuper
 
-        save_path = os.path.join(utils.get_root_path(), 'logs', 'images')
-        time_between_captures = cfg.IMAGE_FREQUENCY
-        capturer = ImageCapture(save_path=save_path,
-                                time_between_captures=time_between_captures,
-                                failure_manager=self.helper_threads['failure_manager'],
-                                args_for_raspistill=['-vf', '-hf'])
-        capturer.setDaemon(True)
-        capturer.start()
-        self.helper_threads['capturer'] = capturer
+        if cfg.CAPTURE_IMAGES:
+            save_path = os.path.join(utils.get_root_path(), 'logs', 'images')
+            time_between_captures = cfg.IMAGE_FREQUENCY
+            capturer = ImageCapture(save_path=save_path,
+                                    time_between_captures=time_between_captures,
+                                    failure_manager=self.helper_threads['failure_manager'],
+                                    args_for_raspistill=['-vf', '-hf'])
+            capturer.setDaemon(True)
+            capturer.start()
+            self.helper_threads['capturer'] = capturer
 
     def run(self):
         while not self._killed:
             try:
-                if timezone.now() - self._last_read_time > timedelta(seconds=cfg.READING_RESOLUTION):
-                    self._logger.info('brain cycle')
-                    self.update_configurations()
+                if timezone.now() - self._last_read_time > timedelta(seconds=cfg.SENSOR_READING_RESOLUTION):
+                    self._logger.info('brain sensors read cycle')
                     self._last_read_time = timezone.now()
                     self.issue_sensor_reading()
+                    self.write_data_to_db()
+                    self._logger.info('brain sensors read cycle end')
 
+                if timezone.now() - self._last_relay_set_time > timedelta(seconds=cfg.RELAY_STATE_WRITING_RESOLUTION):
+                    self._logger.info('brain relay set cycle')
+                    self._last_relay_set_time = timezone.now()
                     if not self._manual_mode:
                         self.issue_governors_relay_set()
                     self.issue_relay_set()
-                    self.lcd_update()
-                    self.camera_on_off_set()
                     self.write_data_to_db()
-                    self._logger.info('brain cycle end')
+                    self._logger.info('brain relay set cycle end')
 
-                utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.helper_threads['failure_manager'])
+                if timezone.now() - self._last_keepalive_time > timedelta(seconds=cfg.KEEP_ALIVE_RESOLUTION):
+                    self._logger.info('brain keepalive cycle')
+                    self._last_keepalive_time = timezone.now()
+                    utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.helper_threads['failure_manager'])
+                    self._logger.info('brain keepalive cycle end')
+
+                if timezone.now() - self._last_configuration_time > timedelta(seconds=cfg.CONFIGURATION_RESOLUTION):
+                    self._logger.info('brain configuration cycle')
+                    self._last_configuration_time = timezone.now()
+                    self.update_configurations()
+                    self.camera_on_off_set()
+                    self.lcd_update()  # TODO: if LCD is actually used - it can have its own update cycle
+                    self._logger.info('brain configuration cycle end')
+
             except Exception as ex:
                 self._logger.error('in main brain cycle, got exception:')
                 self._logger.exception(ex)
-                
-            time.sleep(5)
+
+            time.sleep(0.1)
         self._logger.info('brain killed')
 
     def get_current_data(self):
