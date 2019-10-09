@@ -11,6 +11,7 @@ class SensorKind(models.Model):
                     ('dht22humidity', 'dht22humidity'),
                     ('ds18b20', 'ds18b20'),
                     ('tsl2561', 'tsl2561'),
+                    ('digitalInput', 'digitalInput'),
                     ('other', 'other')
     )
     kind = models.CharField(max_length=128, choices=SENSOR_KINDS, unique=True, default='other')

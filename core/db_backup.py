@@ -1,7 +1,7 @@
 __author__ = 'netanel'
 import logging
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import sleep
 import os
 import cfg
@@ -11,6 +11,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.setti
 import django
 django.setup()
 from greenhouse_app.models import Measure
+from django.utils import timezone
 
 
 class DbBackupper(threading.Thread):
@@ -25,6 +26,7 @@ class DbBackupper(threading.Thread):
         self.logger.info('initializing DbBackupper')
         utils.register_keep_alive(name=self.__class__.__name__)
         self.should_run = False
+        self.last_keep_alive_time = timezone.now()
         self.failure_manager = failure_manager
 
     def run(self):
@@ -34,7 +36,11 @@ class DbBackupper(threading.Thread):
             data = self._check_if_should_backup()
             if data is not None:
                 self._send_data_to_backup(data)
-            utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.failure_manager)
+
+            if timezone.now() - self.last_keep_alive_time > timedelta(cfg.KEEP_ALIVE_RESOLUTION):
+                self.last_keep_alive_time = timezone.now()
+                utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.failure_manager)
+
             sleep(cfg.DB_BACKUPPER_WAIT_TIME)
 
     def stop_thread(self):

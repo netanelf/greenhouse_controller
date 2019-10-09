@@ -18,6 +18,7 @@ from sensors.dht22_temp_controller import DHT22TempController
 from sensors.dht22_humidity_controller import DHT22HumidityController
 from sensors.ds18b20_temp_controller import DS18B20TempController
 from sensors.tsl2561_lux_controller import TSL2561LuxController
+from sensors.digital_input_sensor import DigitalInputSensor
 from controllers.relay_controller import RelayController
 from drivers import sr_driver, dht22_driver, pcf8574_driver
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
@@ -177,6 +178,10 @@ class Brain(threading.Thread):
             elif s.kind.kind == 'tsl2561':
                 self._logger.debug('sensor: ({}) is tsl2561, creating controller'.format(s))
                 self._sensors.append(TSL2561LuxController(name=s.name, address=int(s.device_id, 16), debug=False, simulate=s.simulate))
+
+            elif s.kind.kind == 'digitalInput':
+                self._logger.debug('sensor: ({}) is digitalInput, creating controller'.format(s))
+                self._sensors.append(DigitalInputSensor(name=s.name, pin=s.pin, simulate=s.simulate))
 
     def create_relay_controllers(self):
         """

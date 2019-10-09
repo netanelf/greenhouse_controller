@@ -20,6 +20,7 @@ def populate_sensors(dbname):
     dht_22_humidity = SensorKind.objects.using(dbname).get_or_create(kind='dht22humidity')[0]
     ds18b20 = SensorKind.objects.using(dbname).get_or_create(kind='ds18b20')[0]
     tsl2561 = SensorKind.objects.using(dbname).get_or_create(kind='tsl2561')[0]
+    digitalInput = SensorKind.objects.using(dbname).get_or_create(kind='digitalInput')[0]
 
     print 'creating sensor: {}'.format('dht22_temp_door')
     s = Sensor.objects.using(dbname).get_or_create(name='dht22_temp_door')[0]
@@ -51,6 +52,9 @@ def populate_sensors(dbname):
 
     print 'creating sensor: {}'.format('TSL2561_lux_1')
     Sensor.objects.using(dbname).get_or_create(name='lux_1', kind=tsl2561, simulate=True, pin=99, i2c=True, device_id='0x39')[0]
+
+    print('creating sensor: {}'.format('DigitalInput_water_low_level'))
+    Sensor.objects.using(dbname).get_or_create(name='water_low_level', kind=digitalInput, simulate=True, pin=10, i2c=False)[0]
 
 
 def populate_relays(dbname):

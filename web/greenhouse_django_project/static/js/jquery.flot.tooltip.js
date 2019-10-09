@@ -26,7 +26,7 @@
             // %x.2 -> precision of X value,
             // %p -> percent
 	    // %n -> value (not percent) of pie chart
-            xDateFormat: '%d/%y \n %H:%M:%S', //'%H:%M:%S'
+            xDateFormat: '%d/%m/%y %H:%M:%S', //'%H:%M:%S'
             yDateFormat: null,
             monthNames: null,
             dayNames: null,
