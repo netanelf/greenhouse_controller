@@ -13,7 +13,7 @@ KEEP_ALIVE_RESOLUTION = 10  # [S] send brain keepalive
 CONFIGURATION_RESOLUTION = 10  # [S] all other things to do in brain cycle
 
 RELAY_DELTA_MEASURE_MS = 10  # [mS] when arelay changes we want to "measure" two points before and after change so we get binary graphs
-NUM_HISTORY_MEASUREMENTS = 8  # save last 3 measurement - this can be used for rolling average outliers etc.
+NUM_HISTORY_MEASUREMENTS = 8  # save last x measurement - this can be used for rolling average outliers etc.
 
 # shift register controls
 SER = 12
@@ -28,10 +28,11 @@ NUMBER_OF_ITEMS_IN_RPI_DB = 1000*32
 NUMBER_OF_ITEMS_TO_MOVE_ONCE = 100
 
 # image capture configurations
-CAPTURE_IMAGES = False
+CAPTURE_IMAGES = True
 IMAGE_CAPTURE_WAIT_TIME = 10  # thread cycle time
 IMAGE_FREQUENCY = timedelta(hours=4)
 IMAGE_LUX_THRESHOLD = 25  # if lux reading is below threshold disallow image captures
+RASPISTILL_ARGS = [] # ['-vf', '-hf'], flip, etc.
 
 # failures manager configurations
 FAILURE_MANAGER_WAIT_TIME = 2

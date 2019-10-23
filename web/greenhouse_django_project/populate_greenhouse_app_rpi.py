@@ -40,70 +40,27 @@ def populate_sensors(dbname):
     print 'creating sensor: {}'.format('DS18B20_temp')
     Sensor.objects.using(dbname).get_or_create(name='DS18B20_temp', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-011581dabaff')[0]
 
-    print 'creating sensor: {}'.format('TSL2561_lux')
-    Sensor.objects.using(dbname).get_or_create(name='lux', kind=tsl2561, simulate=False, pin=99, i2c=True, device_id='0x39')[0]
+    #print 'creating sensor: {}'.format('TSL2561_lux')
+    #Sensor.objects.using(dbname).get_or_create(name='lux', kind=tsl2561, simulate=False, pin=99, i2c=True, device_id='0x39')[0]
 
 
 def populate_relays(dbname):
-
-    t = TimeGovernor.objects.using(dbname).get_or_create(name='light_governer',
-                                                         kind='O',
-                                                         on_start_time='19:00:00',
-                                                         on_end_time='06:00:00',
-                                                         recurring_on_start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                         recurring_on_period=timedelta(seconds=60),
-                                                         recurring_off_period=timedelta(seconds=30)
-                                                         )[0]
-
-    t2 = TimeGovernor.objects.using(dbname).get_or_create(name='fan_governer',
-                                                          kind='R',
-                                                          on_start_time='19:00:00',
-                                                          on_end_time='06:00:00',
-                                                          recurring_on_start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                          recurring_on_period=timedelta(seconds=300),
-                                                          recurring_off_period=timedelta(seconds=30)
-                                                          )[0]
 
     t3 = TimeGovernor.objects.using(dbname).get_or_create(name='pump_governer',
                                                           kind='R',
                                                           on_start_time='19:00:00',
                                                           on_end_time='06:00:00',
-                                                          recurring_on_start_time=timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                                          recurring_on_period=timedelta(seconds=45),
-                                                          recurring_off_period=timedelta(seconds=90)
+                                                          recurring_on_start_time='2019-09-21 05:30:00',
+                                                          recurring_on_period=timedelta(minutes=10),
+                                                          recurring_off_period=(timedelta(days=2) - timedelta(minutes=10))
                                                           )[0]
     
-    print 'creating relay: (name=light, pin=1, state=1, wanted_state=1)'
-    r = Relay.objects.using(dbname).get_or_create(name='light')[0]
-    r.pin = 0
-    r.state = 1
-    r.wanted_state = 1
-    r.time_governor = t
-    r.save(using=dbname)
-
-    print 'creating relay: (name=fan, pin=2, state=1, wanted_state=1)'
-    r = Relay.objects.using(dbname).get_or_create(name='fan')[0]
-    r.pin = 1
-    r.state = 1
-    r.wanted_state = 1
-    r.time_governor = t2
-    r.save(using=dbname)
-
     print 'creating relay: (name=pump, pin=5, state=1, wanted_state=1)'
     r = Relay.objects.using(dbname).get_or_create(name='pump1')[0]
     r.pin = 4
     r.state = 1
     r.wanted_state = 1
     r.inverted = 1
-    r.time_governor = t3
-    r.save(using=dbname)
-
-    print 'creating relay: (name=pump2, pin=6, state=1, wanted_state=1)'
-    r = Relay.objects.using(dbname).get_or_create(name='pump2')[0]
-    r.pin = 5
-    r.state = 1
-    r.wanted_state = 1
-    r.inverted = 0
     r.time_governor = t3
     r.save(using=dbname)
 
@@ -120,6 +77,6 @@ if __name__ == '__main__':
     dbs = ['default', 'backup']
     for db in dbs:
         print "Starting db: {} ".format(db)
-        #populate_sensors(db)
+        populate_sensors(db)
         populate_relays(db)
         populate_configurations(db)

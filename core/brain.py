@@ -102,7 +102,7 @@ class Brain(threading.Thread):
             capturer = ImageCapture(save_path=save_path,
                                     time_between_captures=time_between_captures,
                                     failure_manager=self.helper_threads['failure_manager'],
-                                    args_for_raspistill=['-vf', '-hf'])
+                                    args_for_raspistill=cfg.RASPISTILL_ARGS)
             capturer.setDaemon(True)
             capturer.start()
             self.helper_threads['capturer'] = capturer

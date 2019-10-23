@@ -12,7 +12,7 @@ __author__ = 'netanel'
 
 
 class ImageCapture(threading.Thread):
-    def __init__(self, save_path, time_between_captures, failure_manager, args_for_raspistill=None):
+    def __init__(self, save_path, time_between_captures, failure_manager, args_for_raspistill=[]):
         super(ImageCapture, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info('initializing ImageCapture')
