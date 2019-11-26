@@ -12,7 +12,7 @@ __author__ = 'netanel'
 
 
 class ImageCapture(threading.Thread):
-    def __init__(self, save_path, time_between_captures, failure_manager, args_for_raspistill=[]):
+    def __init__(self, save_path, time_between_captures, failure_manager=None, args_for_raspistill=[]):
         super(ImageCapture, self).__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.info('initializing ImageCapture')
@@ -32,11 +32,14 @@ class ImageCapture(threading.Thread):
     def run(self):
         self.should_run = True
         while self.should_run:
-            self.logger.info('image capture thread {}'.format(datetime.now()))
-            if self._check_if_should_capture():
-                self._capture()
-            utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.failure_manager)
-            sleep(cfg.IMAGE_CAPTURE_WAIT_TIME)
+            try:
+                self.logger.info('image capture thread {}'.format(datetime.now()))
+                if self._check_if_should_capture():
+                    self._capture()
+                utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.failure_manager)
+                sleep(cfg.IMAGE_CAPTURE_WAIT_TIME)
+            except Exception as ex:
+                self.logger.exception(ex)
 
     def change_controller_capture_switch(self, new_state):
         self.logger.debug('in change_controller_capture_switch, new_state: {}'.format(new_state))
@@ -76,7 +79,8 @@ if __name__ == '__main__':
     utils.init_logging('image_capturer', logging.DEBUG)
     save_path = os.path.join(utils.get_root_path(), 'logs', 'images')
     time_between_captures = timedelta(seconds=120)
-    capturer = ImageCapture(save_path=save_path, time_between_captures=time_between_captures, args_for_raspistill=['-vf'])
+    RASPISTILL_ARGS = ['-a', '12']
+    capturer = ImageCapture(save_path=save_path, time_between_captures=time_between_captures, args_for_raspistill=RASPISTILL_ARGS)
     capturer.setDaemon(True)
     capturer.start()
     sleep(60*5)

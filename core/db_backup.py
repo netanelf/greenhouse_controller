@@ -37,7 +37,7 @@ class DbBackupper(threading.Thread):
             if data is not None:
                 self._send_data_to_backup(data)
 
-            if timezone.now() - self.last_keep_alive_time > timedelta(cfg.KEEP_ALIVE_RESOLUTION):
+            if timezone.now() - self.last_keep_alive_time > timedelta(seconds=cfg.KEEP_ALIVE_RESOLUTION):
                 self.last_keep_alive_time = timezone.now()
                 utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.failure_manager)
 
