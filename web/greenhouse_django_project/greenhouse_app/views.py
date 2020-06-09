@@ -4,7 +4,8 @@ import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
 import csv
-import cStringIO as StringIO
+#import cStringIO as StringIO
+from io import StringIO
 import time
 from datetime import datetime
 import logging
@@ -188,11 +189,11 @@ def setConfiguration(request):
 
     for k in a:
         data = json.loads(k)
-        print 'data: {}'.format(data)
+        print('data: {}'.format(data))
         val = int(data['value'])
-        print 'val: {}'.format(val)
+        print('val: {}'.format(val))
         r = Configuration.objects.get(name=data['name'])
-        print r
+        print(r)
         r.value = val
         r.save()
 
@@ -217,8 +218,8 @@ def getGraphData(request):
     start_time = data[1]  # "2016-01-17 00:00:01"
     end_time = data[2]
 
-    print 'string start_time: {}'.format(start_time)
-    print 'string end_time: {}'.format(end_time)
+    print('string start_time: {}'.format(start_time))
+    print('string end_time: {}'.format(end_time))
     d_start = datetime(year=int(start_time[:4]), month=int(start_time[5:7]), day=int(start_time[8:10]),
                        hour=int(start_time[11:13]), minute=int(start_time[14:16]), second=int(start_time[17:19]),
                        microsecond=0)
@@ -229,7 +230,7 @@ def getGraphData(request):
                      microsecond=0)
     d_end = timezone.make_aware(value=d_end, timezone=timezone.get_current_timezone())
 
-    print 'wanted time between {} and {}'.format(d_start, d_end)
+    print('wanted time between {} and {}'.format(d_start, d_end))
     s = ControllerOBject.objects.get(name=wanted_sensor)
     t1 = time.time()
 
@@ -252,9 +253,9 @@ def getGraphData(request):
     data.reverse()
     sensor_data = {'data': data, 'label': name}
     t4 = time.time()
-    print 'getting sensor from DB took {} [S]'.format(t1-t0)
-    print 'getting data from DB took {} [S]'.format(t2-t1)
-    print 'data formating took {} [S]'.format(t3-t2)
-    print 'data reversing took {} [S]'.format(t4-t3)
-    print 'all in all {} [S]'.format(t4-t0)
+    print('getting sensor from DB took {} [S]'.format(t1-t0))
+    print('getting data from DB took {} [S]'.format(t2-t1))
+    print('data formating took {} [S]'.format(t3-t2))
+    print('data reversing took {} [S]'.format(t4-t3))
+    print('all in all {} [S]'.format(t4-t0))
     return HttpResponse(json.dumps(sensor_data))

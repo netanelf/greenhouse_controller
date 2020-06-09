@@ -1,7 +1,7 @@
 __author__ = 'netanel'
 
 
-from sensor_controller import SensorController, Measurement, history_appender_decorator
+from .sensor_controller import SensorController, Measurement, history_appender_decorator
 from django.utils import timezone
 import random
 

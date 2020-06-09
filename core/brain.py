@@ -351,16 +351,16 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         if str(sys.argv[1]) == 'simulate':
-            print 'running in simulate HW mode'
+            print('running in simulate HW mode')
             b = Brain(simulation_mode=True)
     else:
-        print 'running in real HW mode'
+        print('running in real HW mode')
         b = Brain(simulation_mode=False)
     b.setDaemon(True)
     b.start()
 
-    name = raw_input("Do you want to exit? (Y)")
-    print 'user entered {}'.format(name)
+    name = input("Do you want to exit? (Y)")
+    print('user entered {}'.format(name))
     if name == 'Y':
         b.kill_brain()
         time.sleep(1)

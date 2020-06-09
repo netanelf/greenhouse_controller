@@ -42,8 +42,6 @@ class PCF8574Driver(object):
         :param pin: pin/ bit number
         :param new_state: new value
         """
-
-
         new_full_state = list(self.state)
         self.logger.debug('old state: {}'.format(new_full_state))
         new_full_state[pin] = new_state
@@ -67,7 +65,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     pcf = PCF8574Driver(address=0x80, simulate=True)
 
-    print 'initial state: {}'.format(pcf.state)
+    print('initial state: {}'.format(pcf.state))
 
     for i in range(5):
         pcf.change_bit(pin=i, new_state=1)

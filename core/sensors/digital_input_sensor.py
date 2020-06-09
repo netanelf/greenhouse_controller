@@ -1,4 +1,4 @@
-from sensor_controller import SensorController, Measurement
+from .sensor_controller import SensorController, Measurement
 from random import Random
 
 from django.utils import timezone

@@ -3,7 +3,7 @@
 
 import random
 from django.utils import timezone
-from sensor_controller import SensorController, Measurement, history_appender_decorator
+from .sensor_controller import SensorController, Measurement, history_appender_decorator
 
 
 class TSL2561LuxController(SensorController):

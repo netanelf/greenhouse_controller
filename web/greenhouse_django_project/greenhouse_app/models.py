@@ -35,7 +35,7 @@ class Sensor(ControllerOBject):
     """
     represent one sensor
     """
-    kind = models.ForeignKey(SensorKind, blank=True, null=True)
+    kind = models.ForeignKey(SensorKind, blank=True, null=True, on_delete=models.CASCADE)
     simulate = models.BooleanField(default=True)
     pin = models.PositiveSmallIntegerField(default=99)
     i2c = models.BooleanField(default=False)
@@ -49,7 +49,7 @@ class Measure(models.Model):
     """
     represent one value measurement
     """
-    sensor = models.ForeignKey(ControllerOBject)
+    sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE)
     measure_time = models.DateTimeField(db_index=True)
     val = models.FloatField()
 
@@ -83,7 +83,6 @@ class TimeGovernor(models.Model):
     recurring_on_start_time = models.DateTimeField(help_text='used only in "on off" governor')
     recurring_on_period = models.DurationField(help_text='timedelta "DD HH:MM:SS", used only in "recurring" governor')  # seconds
     recurring_off_period = models.DurationField(help_text='timedelta "DD HH:MM:SS", used only in "recurring" governor')  # seconds
-
 
     def on_off_status(self):
         """
@@ -153,7 +152,7 @@ class Relay(ControllerOBject):
     state = models.BooleanField(default=False)
     wanted_state = models.BooleanField(default=False)
     simulate = models.BooleanField(default=True)
-    time_governor = models.ForeignKey(TimeGovernor, null=True)
+    time_governor = models.ForeignKey(TimeGovernor, null=True, on_delete=models.CASCADE)
     inverted = models.BooleanField(default=False)
 
     def __unicode__(self):
@@ -189,3 +188,43 @@ class KeepAlive(models.Model):
 
     def __unicode__(self):
         return 'name: {}, timestamp: {}, alive: {}'.format(self.name, self.timestamp, self.alive)
+
+
+class Event(models.Model):
+    """
+    base class for events models
+    """
+    name = models.CharField(
+        max_length=100,
+    )
+
+
+class EventAtTimeT(Event):
+    """
+    event that fires at time event_time
+    """
+    event_time = models.TimeField(help_text='Time to fire event')
+
+
+class Conditions(models.Model):
+    """
+    base class for conditions models
+    """
+    name = models.CharField(
+        max_length=100,
+    )
+
+
+class Actions(models.Model):
+    """
+    base class for Actions models
+    """
+    name = models.CharField(
+        max_length=100,
+    )
+
+
+class SaveSensorValToDB(Actions):
+    sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE)
+    measure_time = models.DateTimeField(db_index=True)
+    val = models.FloatField()
