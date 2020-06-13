@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import timedelta, datetime
+from polymorphic.models import PolymorphicModel
 import time
 import logging
 
@@ -16,7 +17,7 @@ class SensorKind(models.Model):
     )
     kind = models.CharField(max_length=128, choices=SENSOR_KINDS, unique=True, default='other')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.kind
 
 
@@ -27,7 +28,7 @@ class ControllerOBject(models.Model):
     """
     name = models.CharField(max_length=128, unique=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -41,7 +42,7 @@ class Sensor(ControllerOBject):
     i2c = models.BooleanField(default=False)
     device_id = models.CharField(max_length=32, default='')
     
-    #def __unicode__(self):
+    #def __str__(self):
     #    return self.name
 
 
@@ -60,7 +61,7 @@ class Measure(models.Model):
 
     ts = property(calculate_ts)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time, self.val, self.ts)
 
 
@@ -139,7 +140,7 @@ class TimeGovernor(models.Model):
     state = property(on_off_status)
     nice_kind = property(get_nice_kind)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -155,7 +156,7 @@ class Relay(ControllerOBject):
     time_governor = models.ForeignKey(TimeGovernor, null=True, on_delete=models.CASCADE)
     inverted = models.BooleanField(default=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -164,7 +165,7 @@ class Configuration(models.Model):
     value = models.IntegerField(default=0)
     explanation = models.CharField(max_length=256, default='')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -186,17 +187,20 @@ class KeepAlive(models.Model):
 
     alive = property(calculate_is_alive)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'name: {}, timestamp: {}, alive: {}'.format(self.name, self.timestamp, self.alive)
 
 
-class Event(models.Model):
+class Event(PolymorphicModel):
     """
     base class for events models
     """
     name = models.CharField(
         max_length=100,
     )
+
+    def __str__(self):
+        return self.name
 
 
 class EventAtTimeT(Event):
@@ -205,8 +209,18 @@ class EventAtTimeT(Event):
     """
     event_time = models.TimeField(help_text='Time to fire event')
 
+    def __str__(self):
+        return self.name
 
-class Conditions(models.Model):
+
+class EventEveryDT(Event):
+    event_delta_t = models.DurationField(default=timedelta)
+
+    def __str__(self):
+        return self.name
+
+
+class Condition(PolymorphicModel):
     """
     base class for conditions models
     """
@@ -214,8 +228,11 @@ class Conditions(models.Model):
         max_length=100,
     )
 
+    def __str__(self):
+        return self.name
 
-class Actions(models.Model):
+
+class Action(PolymorphicModel):
     """
     base class for Actions models
     """
@@ -223,8 +240,27 @@ class Actions(models.Model):
         max_length=100,
     )
 
+    def __str__(self):
+        return self.name
 
-class SaveSensorValToDB(Actions):
+
+class ActionSaveSensorValToDB(Action):
     sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE)
-    measure_time = models.DateTimeField(db_index=True)
-    val = models.FloatField()
+
+    def __str__(self):
+        return self.name
+
+
+class Flow(models.Model):
+    name = models.CharField(
+        max_length=100,
+    )
+
+    events = models.ManyToManyField(Event)
+    conditions = models.ManyToManyField(Condition, blank=True)
+    actions = models.ManyToManyField(Action)
+
+    def __str__(self):
+        return self.name
+
+

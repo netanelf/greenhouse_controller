@@ -5,7 +5,7 @@ import django
 django.setup()
 from django.utils import timezone
 from datetime import timedelta
-from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Configuration
+from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Configuration, EventAtTimeT, ActionSaveSensorValToDB
 
 
 def populate_sensors(dbname):
@@ -112,9 +112,25 @@ def populate_relays(dbname):
 
 def populate_configurations(dbname):
     c = Configuration.objects.using(dbname).get_or_create(name='manual_mode')[0]
-    c.value=0
-    c.explanation='if set to 1, governors do not change relay states, only manual user changes'
+    c.value = 0
+    c.explanation = 'if set to 1, governors do not change relay states, only manual user changes'
     c.save(using=dbname)
+
+
+def populate_events(dbname):
+    t = '17:00:00'
+    e = EventAtTimeT.objects.using(dbname).get_or_create(
+        name=f'picture at certain time {t}',
+        event_time=t)[0]
+    e.save(using=dbname)
+
+
+def populate_actions(dbname):
+    sensor = Sensor.objects.using(dbname).all()[0]
+    a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
+        sensor=sensor,
+    )[0]
+    a.save()
 
 
 if __name__ == '__main__':
@@ -125,3 +141,5 @@ if __name__ == '__main__':
         populate_sensors(db)
         populate_relays(db)
         populate_configurations(db)
+        populate_events(db)
+        populate_actions(db)

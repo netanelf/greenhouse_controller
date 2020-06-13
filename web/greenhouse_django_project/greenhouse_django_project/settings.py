@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'greenhouse_app',
     #'dbbackup',  # django-dbbackup
+    'polymorphic',
 )
 
 DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
