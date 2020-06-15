@@ -17,7 +17,6 @@ class DHT22TempController(SensorController):
         self._logger.info('dht22_driver: {}'.format(dht22_driver))
         self._logger.info('simulate: {}'.format(simulate))
         self._dht22_driver = dht22_driver
-        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate
 
     @history_appender_decorator

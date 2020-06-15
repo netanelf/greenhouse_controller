@@ -18,11 +18,10 @@ class DHT22HumidityController(SensorController):
         self._logger.info('simulate: {}'.format(simulate))
 
         self._dht22_driver = dht22_driver
-        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate
 
     @history_appender_decorator
-    def read(self):
+    def read(self) -> Measurement:
         super(DHT22HumidityController, self).read()
         if self._simulate:
             h = self.simulate_data()

@@ -5,7 +5,7 @@ import django
 django.setup()
 from django.utils import timezone
 from datetime import timedelta
-from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Configuration, EventAtTimeT, ActionSaveSensorValToDB
+from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Configuration, EventAtTimeT, ActionSaveSensorValToDB, Flow
 
 
 def populate_sensors(dbname):
@@ -117,20 +117,35 @@ def populate_configurations(dbname):
     c.save(using=dbname)
 
 
+def populate_flows(dbname):
+    e = populate_events(dbname)
+    a = populate_actions(dbname)
+    f = Flow.objects.using(dbname).get_or_create(
+        name=f'save sensor data flow',
+    )[0]
+    f.events.set((e,))
+    f.actions.set((a,))
+    f.save()
+
+
 def populate_events(dbname):
     t = '17:00:00'
     e = EventAtTimeT.objects.using(dbname).get_or_create(
-        name=f'picture at certain time {t}',
+        name=f'event at {t}',
         event_time=t)[0]
     e.save(using=dbname)
+    return e
 
 
 def populate_actions(dbname):
     sensor = Sensor.objects.using(dbname).all()[0]
+    sensor_name = sensor.name
     a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
+        name=f'save {sensor_name} vals to db',
         sensor=sensor,
     )[0]
     a.save()
+    return a
 
 
 if __name__ == '__main__':
@@ -141,5 +156,4 @@ if __name__ == '__main__':
         populate_sensors(db)
         populate_relays(db)
         populate_configurations(db)
-        populate_events(db)
-        populate_actions(db)
+        populate_flows(db)

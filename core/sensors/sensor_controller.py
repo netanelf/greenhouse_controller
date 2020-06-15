@@ -2,7 +2,21 @@ __author__ = 'netanel'
 
 import logging
 from collections import deque
+from django.utils import timezone
 import cfg
+
+
+class Measurement(object):
+    def __init__(self, time, value, sensor_name):
+        self.time = time
+        self.value = value
+        self.sensor_name = sensor_name
+
+    def __unicode__(self):
+        return 'sensor_name: {}, time: {}, value: {}'.format(self.sensor_name, self.time, self.value)
+
+    def __repr__(self):
+        return 'sensor_name: {}, time: {}, value: {}'.format(self.sensor_name, self.time, self.value)
 
 
 class SensorController(object):
@@ -13,16 +27,16 @@ class SensorController(object):
         self._name = name
         self._logger = logging.getLogger(name)
         self._history = deque([None] * cfg.NUM_HISTORY_MEASUREMENTS, maxlen=cfg.NUM_HISTORY_MEASUREMENTS)
+        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
 
-    def get_name(self):
+    def get_name(self) -> str:
         return self._name
 
-    def read(self):
-        """
-        issue a reading of the sensor
-        :return: Measurement object
-        """
-        self._logger.debug('initiated a read for sensor {}'.format(self._name))
+    def get_last_read(self) -> Measurement:
+        return self._last_read
+
+    def read(self) -> Measurement:
+        raise NotImplemented
 
 
 def history_appender_decorator(func):
@@ -67,14 +81,3 @@ GPIO_TO_PIN_TABLE = {
 }
 
 
-class Measurement(object):
-    def __init__(self, time, value, sensor_name):
-        self.time = time
-        self.value = value
-        self.sensor_name = sensor_name
-
-    def __unicode__(self):
-        return 'sensor_name: {}, time: {}, value: {}'.format(self.sensor_name, self.time, self.value)
-
-    def __repr__(self):
-        return 'sensor_name: {}, time: {}, value: {}'.format(self.sensor_name, self.time, self.value)

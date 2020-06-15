@@ -24,7 +24,7 @@ class DigitalInputSensor(SensorController):
             GPIO.setmode(GPIO.BOARD)
             GPIO.setup(self._pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-    def read(self):
+    def read(self) -> Measurement:
         super(DigitalInputSensor, self).read()
         if self._simulate:
             self._logger.debug('in simulation mode, random value')
@@ -32,5 +32,6 @@ class DigitalInputSensor(SensorController):
         else:
             v = GPIO.input(self._pin)
 
-        return Measurement(sensor_name=self._name, time=timezone.now(), value=v)
+        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=v)
+        return self._last_read
 

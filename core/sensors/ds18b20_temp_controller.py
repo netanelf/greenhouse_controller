@@ -17,7 +17,6 @@ class DS18B20TempController(SensorController):
         self._logger.info('device_id: {}'.format(device_id))
         self._logger.info('simulate: {}'.format(simulate))
         self._device_id = device_id
-        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
         self._simulate = simulate
 
     @history_appender_decorator

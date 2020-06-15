@@ -4,18 +4,22 @@ from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModel
 # Register your models here.
 
 
+@admin.register(Relay)
 class RelayAdmin(admin.ModelAdmin):
     list_display = ('name', 'pin', 'state', 'wanted_state', 'simulate', 'time_governor')
 
 
+@admin.register(Sensor)
 class SensorAdmin(admin.ModelAdmin):
     list_display = ('name', 'kind', 'simulate', 'pin', 'i2c', 'device_id')
 
 
+@admin.register(TimeGovernor)
 class TimeGovernorAdmin(admin.ModelAdmin):
     list_display = ('name', 'kind', 'state')
 
 
+@admin.register(Configuration)
 class ConfigurationsAdmin(admin.ModelAdmin):
     list_display = ('name', 'value', 'explanation')
 
@@ -55,10 +59,3 @@ class EventEveryDTAdmin(PolymorphicChildModelAdmin):
 class FlowAdmin(admin.ModelAdmin):
     list_display = ('name',)
 
-
-admin.site.register(SensorKind)
-admin.site.register(Sensor, SensorAdmin)
-admin.site.register(Measure)
-admin.site.register(Relay, RelayAdmin)
-admin.site.register(TimeGovernor, TimeGovernorAdmin)
-admin.site.register(Configuration, ConfigurationsAdmin)
