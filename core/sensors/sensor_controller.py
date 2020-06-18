@@ -3,6 +3,7 @@ __author__ = 'netanel'
 import logging
 from collections import deque
 from django.utils import timezone
+from datetime import datetime
 import cfg
 
 
@@ -27,7 +28,8 @@ class SensorController(object):
         self._name = name
         self._logger = logging.getLogger(name)
         self._history = deque([None] * cfg.NUM_HISTORY_MEASUREMENTS, maxlen=cfg.NUM_HISTORY_MEASUREMENTS)
-        self._last_read = Measurement(sensor_name=self._name, time=timezone.datetime.min, value=None)
+        self._last_read = Measurement(sensor_name=self._name, time=datetime(2000, 1, 1, tzinfo=timezone.get_current_timezone()), value=None)
+        print(1)
 
     def get_name(self) -> str:
         return self._name

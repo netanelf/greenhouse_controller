@@ -23,3 +23,17 @@ class EventAtTimeTO(EventO):
             self._last_firing_time = now
             return True
         return False
+
+
+class EventEveryDTO(EventO):
+    def __init__(self, name, dt: timedelta):
+        super(EventEveryDTO, self).__init__(name)
+        self._event_firing_dt = dt
+        self._last_event_firing_time = datetime.min
+
+    def check_should_fire(self) -> bool:
+        now = datetime.now()
+        if now >= self._last_event_firing_time + self._event_firing_dt:
+            self._last_event_firing_time = now
+            return True
+        return False

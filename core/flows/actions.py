@@ -1,6 +1,6 @@
 from core.sensors.sensor_controller import SensorController
 from core.db_interface import DbInterface
-from datetime import datetime
+from django.utils import timezone
 import logging
 
 
@@ -22,7 +22,7 @@ class ActionSaveSensorValToDBO(ActionO):
     def perform_action(self):
         self._logger.debug('perform action called')
         measurement = self._sensor_controller.get_last_read()
-        if (datetime.now() - measurement.time).seconds > 10:
+        if (timezone.now() - measurement.time).seconds > 10:
             self._logger.info(f'sensor last data is old ({measurement.time}), initiating a read')
             measurement = self._sensor_controller.read()
         self._db_interface.write_sensor_data_to_history_db(

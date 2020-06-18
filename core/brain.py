@@ -29,7 +29,7 @@ from django.utils import timezone
 from django.db.utils import OperationalError
 from greenhouse_app.models import Sensor, Relay, Configuration, ControllerOBject, KeepAlive, Flow, ActionSaveSensorValToDB, Event, EventAtTimeT, EventEveryDT
 from core.flows.actions import ActionO, ActionSaveSensorValToDBO
-from core.flows.events import EventO, EventAtTimeTO
+from core.flows.events import EventO, EventAtTimeTO, EventEveryDTO
 from core.flows.flow_manager import FlowManager
 from core.db_interface import DbInterface
 
@@ -245,7 +245,8 @@ class Brain(threading.Thread):
     def _create_event_object(self, event: Event):
         if isinstance(event, EventAtTimeT):
             return EventAtTimeTO(name=event.name, t=event.event_time)
-        #elif isinstance(event, EventEveryDT):
+        elif isinstance(event, EventEveryDT):
+            return EventEveryDTO(name=event.name, dt=event.event_delta_t)
         else:
             self._logger.error(f'could not find object for event: {event}')
 
