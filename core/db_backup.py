@@ -10,8 +10,8 @@ import utils
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
-from greenhouse_app.models import Measure
 from django.utils import timezone
+from greenhouse_app.models import HistoryValue
 
 
 class DbBackupper(threading.Thread):
@@ -48,11 +48,11 @@ class DbBackupper(threading.Thread):
         self.should_run = False
 
     def _check_if_should_backup(self):
-        measures = Measure.objects.all()
+        measures = HistoryValue.objects.all()
         length = measures.count()
         self.logger.info('data lenght: {}'.format(length))
         if length > cfg.NUMBER_OF_ITEMS_IN_RPI_DB:
-            return Measure.objects.order_by('measure_time')[0:cfg.NUMBER_OF_ITEMS_TO_MOVE_ONCE]
+            return HistoryValue.objects.order_by('measure_time')[0:cfg.NUMBER_OF_ITEMS_TO_MOVE_ONCE]
 
     def _send_data_to_backup(self, data):
         try:

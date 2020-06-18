@@ -46,7 +46,46 @@ class Sensor(ControllerOBject):
     #    return self.name
 
 
-class Measure(models.Model):
+# class Measure(models.Model):
+#     """
+#     represent one value measurement
+#     """
+#     sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE)
+#     measure_time = models.DateTimeField(db_index=True)
+#     val = models.FloatField()
+#
+#     def calculate_ts(self):
+#         t_python = self.measure_time
+#         t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
+#         return int(time.mktime(t_python.timetuple())*1000)
+#
+#     ts = property(calculate_ts)
+#
+#     def __str__(self):
+#         return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time, self.val, self.ts)
+
+
+class CurrentValue(models.Model):
+    """
+    represent one value measurement
+    """
+    sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE, unique=True)
+    measure_time = models.DateTimeField()
+    val = models.FloatField()
+
+    def calculate_ts(self):
+        t_python = self.measure_time
+        t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
+        return int(time.mktime(t_python.timetuple()) * 1000)
+
+    ts = property(calculate_ts)
+
+    def __str__(self):
+        return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time,
+                                                                                self.val, self.ts)
+
+
+class HistoryValue(models.Model):
     """
     represent one value measurement
     """
@@ -57,12 +96,13 @@ class Measure(models.Model):
     def calculate_ts(self):
         t_python = self.measure_time
         t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
-        return int(time.mktime(t_python.timetuple())*1000)
+        return int(time.mktime(t_python.timetuple()) * 1000)
 
     ts = property(calculate_ts)
 
     def __str__(self):
-        return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time, self.val, self.ts)
+        return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time,
+                                                                                self.val, self.ts)
 
 
 class TimeGovernor(models.Model):
@@ -256,7 +296,7 @@ class Flow(models.Model):
         max_length=100,
     )
 
-    events = models.ManyToManyField(Event)
+    event = models.ForeignKey(Event, null=True, on_delete=models.CASCADE)
     conditions = models.ManyToManyField(Condition, blank=True)
     actions = models.ManyToManyField(Action)
 

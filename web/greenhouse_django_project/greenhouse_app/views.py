@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configuration, ControllerOBject, KeepAlive
+from greenhouse_app.models import Sensor, Relay, TimeGovernor, Configuration, ControllerOBject, KeepAlive, CurrentValue
 import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
@@ -106,7 +106,8 @@ def getLastSensorValues(request):
     for s in sensor_list:
         name = s.name
         try:
-            measure = Measure.objects.filter(sensor=s).latest('measure_time')
+            #measure = Measure.objects.filter(sensor=s).latest('measure_time')
+            measure = CurrentValue.objects.filter(sensor=s)[0]
             val = measure.val
             val = '{:.2f}'.format(val)
             t = measure.measure_time

@@ -122,14 +122,15 @@ def populate_flows(dbname):
     a = populate_actions(dbname)
     f = Flow.objects.using(dbname).get_or_create(
         name=f'save sensor data flow',
+        event=e
     )[0]
-    f.events.set((e,))
+
     f.actions.set((a,))
     f.save()
 
 
 def populate_events(dbname):
-    t = '17:00:00'
+    t = '13:00:00'
     e = EventAtTimeT.objects.using(dbname).get_or_create(
         name=f'event at {t}',
         event_time=t)[0]

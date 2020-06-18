@@ -1,5 +1,5 @@
 from django.contrib import admin
-from greenhouse_app.models import Sensor, SensorKind, Measure, Relay, TimeGovernor, Configuration, Action, Event, EventAtTimeT, EventEveryDT, Flow, ActionSaveSensorValToDB
+from greenhouse_app.models import Sensor, Relay, TimeGovernor, Configuration, Action, Event, EventAtTimeT, EventEveryDT, Flow, ActionSaveSensorValToDB
 from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModelAdmin, PolymorphicChildModelFilter
 # Register your models here.
 

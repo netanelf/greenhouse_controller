@@ -7,10 +7,11 @@ from datetime import timedelta
 LOG_LEVEL = logging.DEBUG
 DB_RETRIES = 5
 
-SENSOR_READING_RESOLUTION = 60  # [S] gather sensors reading every READING_RESOLUTION time
+SENSOR_READING_RESOLUTION = 10  # [S] gather sensors reading every READING_RESOLUTION time
 RELAY_STATE_WRITING_RESOLUTION = 10  # [S] check if wanted state changed, write wanted state to relays
 KEEP_ALIVE_RESOLUTION = 10  # [S] send brain keepalive
 CONFIGURATION_RESOLUTION = 10  # [S] all other things to do in brain cycle
+FLOW_MANAGERS_RESOLUTION = 1  #[S]
 
 RELAY_DELTA_MEASURE_MS = 10  # [mS] when arelay changes we want to "measure" two points before and after change so we get binary graphs
 NUM_HISTORY_MEASUREMENTS = 8  # save last x measurement - this can be used for rolling average outliers etc.

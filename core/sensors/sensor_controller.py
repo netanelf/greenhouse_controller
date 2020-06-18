@@ -27,7 +27,7 @@ class SensorController(object):
         self._name = name
         self._logger = logging.getLogger(name)
         self._history = deque([None] * cfg.NUM_HISTORY_MEASUREMENTS, maxlen=cfg.NUM_HISTORY_MEASUREMENTS)
-        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
+        self._last_read = Measurement(sensor_name=self._name, time=timezone.datetime.min, value=None)
 
     def get_name(self) -> str:
         return self._name
@@ -36,7 +36,7 @@ class SensorController(object):
         return self._last_read
 
     def read(self) -> Measurement:
-        raise NotImplemented
+        pass
 
 
 def history_appender_decorator(func):
