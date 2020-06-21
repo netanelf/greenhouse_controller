@@ -43,6 +43,7 @@ class ActionSetRelayStateO(ActionO):
         if self._relay_controller.get_state() != self._wanted_state:
             self._relay_controller.change_state(new_state=self._wanted_state)
 
+
 class ActionSendEmailO(ActionO):
     def __init__(self, name, brain, address: str, subject: str, message: str):
         super(ActionSendEmailO, self).__init__(name)
@@ -62,7 +63,7 @@ class ActionSendEmailO(ActionO):
             return
        
         headers = {
-            'Authorization': f'Bearer {self._brain._configuration["sendgrid_api_key"]}',
+            'Authorization': f'Bearer {api_key}',
             'Content-Type': 'application/json'
         }
         content = {
@@ -77,7 +78,7 @@ class ActionSendEmailO(ActionO):
                 }
             ],
             'from': {
-                'email': self._brain._configuration['sendgrid_sender_address']
+                'email': sender_address
             },
             'content': [
                 {
