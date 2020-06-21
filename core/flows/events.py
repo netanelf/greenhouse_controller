@@ -19,7 +19,7 @@ class EventAtTimeTO(EventO):
 
     def check_should_fire(self) -> bool:
         now = datetime.now()
-        if now.time() > self._event_firing_time and (now - self._last_firing_time) > timedelta(hours=11):
+        if now.time() > self._event_firing_time and (now.date() > self._last_firing_time.date()):
             self._last_firing_time = now
             return True
         return False

@@ -21,7 +21,6 @@ class DHT22TempController(SensorController):
 
     @history_appender_decorator
     def read(self):
-        super(DHT22TempController, self).read()
         if self._simulate:
             t = self.simulate_data()
         else:

@@ -22,7 +22,6 @@ class DHT22HumidityController(SensorController):
 
     @history_appender_decorator
     def read(self) -> Measurement:
-        super(DHT22HumidityController, self).read()
         if self._simulate:
             h = self.simulate_data()
         else:

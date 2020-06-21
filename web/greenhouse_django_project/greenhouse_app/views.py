@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Relay, TimeGovernor, Configuration, ControllerOBject, KeepAlive, CurrentValue
+from greenhouse_app.models import Sensor, Relay, Configuration, ControllerObject, KeepAlive, CurrentValue, HistoryValue
 import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
@@ -34,11 +34,11 @@ def index(request):
 
     sensor_list = Sensor.objects.order_by()
     relay_list = Relay.objects.order_by()
-    time_governors_list = TimeGovernor.objects.order_by()
+    #time_governors_list = TimeGovernor.objects.order_by()
     keep_alive_list = KeepAlive.objects.order_by()
     context_dict = {'sensors': sensor_list,
                     'relays': relay_list,
-                    'governors': time_governors_list,
+                    #'governors': time_governors_list,
                     'keepalives': keep_alive_list}
     # Render the response and send it back!
     return render(request, 'greenhouse_app/index.html', context_dict)
@@ -53,8 +53,8 @@ def downloadMeasurements(request):
     send all measurements as .csv file
     """
     CHUNK = 128
-    measures = Measure.objects.all()
-    fields = Measure._meta.fields
+    measures = HistoryValue.objects.all()
+    fields = HistoryValue._meta.fields
     field_names = [f.name for f in fields]
 
     csvfile = StringIO.StringIO()
@@ -93,7 +93,7 @@ def downloadMeasurements(request):
 
 @timing_decorator
 def getSensorsData(request):
-    measurement_list = Measure.objects.order_by('-measure_time')[:20]
+    measurement_list = HistoryValue.objects.order_by('-measure_time')[:20]
     context_dict = {'measurements': measurement_list}
     # Render the response and send it back!
     return render(request, 'greenhouse_app/sensorsData.html', context_dict)
@@ -172,7 +172,7 @@ def relays(request):
 @timing_decorator
 def graphs(request):
     #sensors = Sensor.objects.all()
-    sensors = ControllerOBject.objects.all()
+    sensors = ControllerObject.objects.all()
     sensors_names = []
     for s in sensors:
         sensors_names.append(s.name)
@@ -232,12 +232,12 @@ def getGraphData(request):
     d_end = timezone.make_aware(value=d_end, timezone=timezone.get_current_timezone())
 
     print('wanted time between {} and {}'.format(d_start, d_end))
-    s = ControllerOBject.objects.get(name=wanted_sensor)
+    s = ControllerObject.objects.get(name=wanted_sensor)
     t1 = time.time()
 
     data = []
     name = s.name
-    measures = Measure.objects.filter(sensor=s, measure_time__range=(d_start, d_end))
+    measures = HistoryValue.objects.filter(sensor=s, measure_time__range=(d_start, d_end))
     #measures = Measure.objects.all()
     t2 = time.time()
     logger.debug('data length: {}'.format(measures.count()))

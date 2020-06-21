@@ -5,7 +5,7 @@ from polymorphic.models import PolymorphicModel
 import time
 import logging
 
-
+'''
 class SensorKind(models.Model):
     SENSOR_KINDS = (
                     ('dht22temp', 'dht22temp'),
@@ -19,9 +19,10 @@ class SensorKind(models.Model):
 
     def __str__(self):
         return self.kind
+'''
 
 
-class ControllerOBject(models.Model):
+class ControllerObject(PolymorphicModel):
     """
     represent a controller object ie. sensor or relay
     this way we can connect a measure to a relay or a sensor
@@ -32,44 +33,45 @@ class ControllerOBject(models.Model):
         return self.name
 
 
-class Sensor(ControllerOBject):
+class Sensor(ControllerObject):
     """
     represent one sensor
     """
-    kind = models.ForeignKey(SensorKind, blank=True, null=True, on_delete=models.CASCADE)
+    #kind = models.ForeignKey(SensorKind, blank=True, null=True, on_delete=models.CASCADE)
     simulate = models.BooleanField(default=True)
-    pin = models.PositiveSmallIntegerField(default=99)
-    i2c = models.BooleanField(default=False)
-    device_id = models.CharField(max_length=32, default='')
+    #pin = models.PositiveSmallIntegerField(default=99)
+    #i2c = models.BooleanField(default=False)
+    #device_id = models.CharField(max_length=32, default='')
     
-    #def __str__(self):
-    #    return self.name
+    def __str__(self):
+        return self.name
 
 
-# class Measure(models.Model):
-#     """
-#     represent one value measurement
-#     """
-#     sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE)
-#     measure_time = models.DateTimeField(db_index=True)
-#     val = models.FloatField()
-#
-#     def calculate_ts(self):
-#         t_python = self.measure_time
-#         t_python = timezone.make_naive(t_python, timezone=timezone.get_current_timezone())
-#         return int(time.mktime(t_python.timetuple())*1000)
-#
-#     ts = property(calculate_ts)
-#
-#     def __str__(self):
-#         return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time, self.val, self.ts)
+class Dht22TempSensor(Sensor):
+    pin = models.PositiveSmallIntegerField()
+
+
+class Dht22HumiditySensor(Sensor):
+    pin = models.PositiveSmallIntegerField()
+
+
+class Ds18b20Sensor(Sensor):
+    device_id = models.CharField(max_length=32, default='', help_text='Sensor unique ID')
+
+
+class Tsl2561Sensor(Sensor):
+    device_id = models.CharField(max_length=32, default='', help_text='I2C address')
+
+
+class DigitalInputSensor(Sensor):
+    pin = models.PositiveSmallIntegerField()
 
 
 class CurrentValue(models.Model):
     """
     represent one value measurement
     """
-    sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE, unique=True)
+    sensor = models.OneToOneField(ControllerObject, on_delete=models.CASCADE)
     measure_time = models.DateTimeField()
     val = models.FloatField()
 
@@ -89,7 +91,7 @@ class HistoryValue(models.Model):
     """
     represent one value measurement
     """
-    sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE)
+    sensor = models.ForeignKey(ControllerObject, on_delete=models.CASCADE)
     measure_time = models.DateTimeField(db_index=True)
     val = models.FloatField()
 
@@ -104,7 +106,7 @@ class HistoryValue(models.Model):
         return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time,
                                                                                 self.val, self.ts)
 
-
+'''
 class TimeGovernor(models.Model):
     """
     """
@@ -137,7 +139,7 @@ class TimeGovernor(models.Model):
             period_sec = (self.recurring_on_period + self.recurring_off_period).total_seconds()
             a, b = divmod(delta_seconds, period_sec)
             shifted_t = t - timedelta(seconds=a * period_sec)
-            #print('comparing {} with float: {}'.format(self.recurring_on_period, float(self.recurring_on_period)))
+            # print('comparing {} with float: {}'.format(self.recurring_on_period, float(self.recurring_on_period)))
             if self.recurring_on_start_time <= shifted_t < self.recurring_on_start_time + self.recurring_on_period:
                 return 1
             else:
@@ -182,18 +184,18 @@ class TimeGovernor(models.Model):
 
     def __str__(self):
         return self.name
+'''
 
 
-class Relay(ControllerOBject):
+class Relay(ControllerObject):
     """
     represent one relay, its name, state and wanted state
     """
-    #name = models.CharField(max_length=128, unique=True)
     pin = models.PositiveSmallIntegerField(null=True)
     state = models.BooleanField(default=False)
     wanted_state = models.BooleanField(default=False)
     simulate = models.BooleanField(default=True)
-    time_governor = models.ForeignKey(TimeGovernor, null=True, on_delete=models.CASCADE)
+    #time_governor = models.ForeignKey(TimeGovernor, null=True, on_delete=models.CASCADE)
     inverted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -235,9 +237,17 @@ class Event(PolymorphicModel):
     """
     base class for events models
     """
-    name = models.CharField(
-        max_length=100,
-    )
+    # name = models.CharField(
+    #     max_length=100,
+    # )
+    def get_name(self):
+        if isinstance(self, EventAtTimeT):
+            return 'EventAtTimeT'
+        elif isinstance(self, EventEveryDT):
+            return 'EventEveryDT'
+        else:
+            return 'BLAAAAAAA'
+    name = property(get_name)
 
     def __str__(self):
         return self.name
@@ -249,12 +259,20 @@ class EventAtTimeT(Event):
     """
     event_time = models.TimeField(help_text='Time to fire event')
 
+    # def get_name(self):
+    #     return f'EventAtTimeT_{str(self.event_time)}'
+    # name = property(get_name)
+
     def __str__(self):
         return self.name
 
 
 class EventEveryDT(Event):
     event_delta_t = models.DurationField(default=timedelta)
+
+    # def get_name(self):
+    #     return f'EventEveryDT_{str(self.event_delta_t)}'
+    # name = property(get_name)
 
     def __str__(self):
         return self.name
@@ -285,7 +303,15 @@ class Action(PolymorphicModel):
 
 
 class ActionSaveSensorValToDB(Action):
-    sensor = models.ForeignKey(ControllerOBject, on_delete=models.CASCADE)
+    sensor = models.ForeignKey(ControllerObject, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class ActionSetRelayState(Action):
+    relay = models.ForeignKey(Relay, on_delete=models.CASCADE)
+    state = models.BooleanField(default=False, help_text='Should relay be turned ON or OFF')
 
     def __str__(self):
         return self.name

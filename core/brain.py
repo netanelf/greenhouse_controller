@@ -18,7 +18,7 @@ from core.sensors.dht22_temp_controller import DHT22TempController
 from core.sensors.dht22_humidity_controller import DHT22HumidityController
 from core.sensors.ds18b20_temp_controller import DS18B20TempController
 from core.sensors.tsl2561_lux_controller import TSL2561LuxController
-from core.sensors.digital_input_sensor import DigitalInputSensor
+from core.sensors.digital_input_controller import DigitalInputController
 from core.sensors.sensor_controller import SensorController
 from core.controllers.relay_controller import RelayController
 from core.drivers import sr_driver, dht22_driver, pcf8574_driver
@@ -27,8 +27,8 @@ import django
 django.setup()
 from django.utils import timezone
 from django.db.utils import OperationalError
-from greenhouse_app.models import Sensor, Relay, Configuration, ControllerOBject, KeepAlive, Flow, ActionSaveSensorValToDB, Event, EventAtTimeT, EventEveryDT
-from core.flows.actions import ActionO, ActionSaveSensorValToDBO
+from greenhouse_app.models import *
+from core.flows.actions import ActionO, ActionSaveSensorValToDBO, ActionSetRelayStateO
 from core.flows.events import EventO, EventAtTimeTO, EventEveryDTO
 from core.flows.flow_manager import FlowManager
 from core.db_interface import DbInterface
@@ -89,7 +89,7 @@ class Brain(threading.Thread):
         self.helper_threads = {}
         self.start_helper_threads()
         register_keep_alive(name=self.__class__.__name__)
-        self._register_sesors()
+        self._register_sensors()
         self._logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
@@ -133,14 +133,14 @@ class Brain(threading.Thread):
                     self.write_data_to_db()
                     self._logger.info('brain sensors read cycle end')
 
-                if timezone.now() - self._last_relay_set_time > timedelta(seconds=cfg.RELAY_STATE_WRITING_RESOLUTION):
-                    self._logger.info('brain relay set cycle')
-                    self._last_relay_set_time = timezone.now()
-                    if not self._manual_mode:
-                        self.issue_governors_relay_set()
-                    self.issue_relay_set()
-                    #self.write_data_to_db()
-                    self._logger.info('brain relay set cycle end')
+                # if timezone.now() - self._last_relay_set_time > timedelta(seconds=cfg.RELAY_STATE_WRITING_RESOLUTION):
+                #     self._logger.info('brain relay set cycle')
+                #     self._last_relay_set_time = timezone.now()
+                #     if not self._manual_mode:
+                #         self.issue_governors_relay_set()
+                #     self.issue_relay_set()
+                #     #self.write_data_to_db()
+                #     self._logger.info('brain relay set cycle end')
 
                 if timezone.now() - self._last_keepalive_time > timedelta(seconds=cfg.KEEP_ALIVE_RESOLUTION):
                     self._logger.info('brain keepalive cycle')
@@ -177,27 +177,27 @@ class Brain(threading.Thread):
         for s in Sensor.objects.order_by():
             self._logger.debug('found sensor: ({}), creating controller'.format(s))
 
-            if s.kind.kind == 'dht22temp':
+            if isinstance(s, Dht22TempSensor):
                 dht_22_driver = self.get_dht22_controller(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22temp, creating controller'.format(s))
                 self._sensors.append(DHT22TempController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
-            elif s.kind.kind == 'dht22humidity':
+            elif isinstance(s, Dht22HumiditySensor):
                 dht_22_driver = self.get_dht22_controller(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22humidity, creating controller'.format(s))
                 self._sensors.append(DHT22HumidityController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
-            elif s.kind.kind == 'ds18b20':
+            elif isinstance(s, Ds18b20Sensor):
                 self._logger.debug('sensor: ({}) is ds18b20, creating controller'.format(s))
                 self._sensors.append(DS18B20TempController(name=s.name, device_id=s.device_id, simulate=s.simulate))
 
-            elif s.kind.kind == 'tsl2561':
+            elif isinstance(s, Tsl2561Sensor):
                 self._logger.debug('sensor: ({}) is tsl2561, creating controller'.format(s))
                 self._sensors.append(TSL2561LuxController(name=s.name, address=int(s.device_id, 16), debug=False, simulate=s.simulate))
 
-            elif s.kind.kind == 'digitalInput':
+            elif isinstance(s, DigitalInputSensor):
                 self._logger.debug('sensor: ({}) is digitalInput, creating controller'.format(s))
-                self._sensors.append(DigitalInputSensor(name=s.name, pin=s.pin, simulate=s.simulate))
+                self._sensors.append(DigitalInputController(name=s.name, pin=s.pin, simulate=s.simulate))
 
     def create_relay_controllers(self):
         """
@@ -210,7 +210,7 @@ class Brain(threading.Thread):
             self._logger.debug('found relay: ({}), creating controller'.format(r))
             self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.state, invert_polarity=r.inverted))
 
-    def _register_sesors(self):
+    def _register_sensors(self):
         self._logger.info('registering sensors')
         for s in self._sensors:
             self._db_interface.register_sensor(sensor_name=s.get_name())
@@ -237,7 +237,7 @@ class Brain(threading.Thread):
             event = f.event
             #conditions = f.conditions
             actions = f.actions
-            action_list = self._create_action_objcts(actions)
+            action_list = self._create_action_objects(actions)
             event_object = self._create_event_object(event)
             flow_object = FlowManager(flow_name=f.name, event=event_object, conditions=None, actions=action_list)
             self._flow_managers.append(flow_object)
@@ -250,7 +250,7 @@ class Brain(threading.Thread):
         else:
             self._logger.error(f'could not find object for event: {event}')
 
-    def _create_action_objcts(self, actions):
+    def _create_action_objects(self, actions):
         action_object_list = []
         for a in actions.all():
             if isinstance(a, ActionSaveSensorValToDB):
@@ -259,6 +259,14 @@ class Brain(threading.Thread):
                     ActionSaveSensorValToDBO(name=a.name,
                                              sensor=next((x for x in self._sensors if x.get_name() == sensor_name), None),
                                              db_interface=self._db_interface)
+                )
+            elif isinstance(a, ActionSetRelayStateO):
+                relay_name = a.relay.name
+                action_object_list.append(
+                    ActionSetRelayStateO(
+                        name=a.name,
+                        relay=next((x for x in self._relays if x.get_name() == relay_name), None)
+                    )
                 )
             else:
                 self._logger.error(f'could not find object for action: {a}')
@@ -327,20 +335,20 @@ class Brain(threading.Thread):
         self._dht_22_drivers.append(d)
         return d
 
-    def issue_governors_relay_set(self):
-        """
-        read current governor state and set wanted states for relays according to governor
-        """
-        for r in Relay.objects.order_by():
-            governor = r.time_governor
-            if governor is not None:
-                self._logger.debug('relay: {}, has governor: {}'.format(r.name, governor))
-                governor_state = governor.state
-
-                if governor_state != r.state:
-                    self._logger.debug('relay: {}, was changed by governor: {} to state: {}'.format(r.name, governor, governor_state))
-                    r.wanted_state = governor_state
-                    r.save()
+    # def issue_governors_relay_set(self):
+    #     """
+    #     read current governor state and set wanted states for relays according to governor
+    #     """
+    #     for r in Relay.objects.order_by():
+    #         governor = r.time_governor
+    #         if governor is not None:
+    #             self._logger.debug('relay: {}, has governor: {}'.format(r.name, governor))
+    #             governor_state = governor.state
+    #
+    #             if governor_state != r.state:
+    #                 self._logger.debug('relay: {}, was changed by governor: {} to state: {}'.format(r.name, governor, governor_state))
+    #                 r.wanted_state = governor_state
+    #                 r.save()
 
     def issue_relay_set(self):
         """

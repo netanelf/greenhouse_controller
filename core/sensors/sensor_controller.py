@@ -37,8 +37,11 @@ class SensorController(object):
     def get_last_read(self) -> Measurement:
         return self._last_read
 
-    def read(self) -> Measurement:
-        pass
+    def read(self):
+        raise NotImplementedError
+
+    def get_value(self) -> Measurement:
+        raise NotImplementedError
 
 
 def history_appender_decorator(func):

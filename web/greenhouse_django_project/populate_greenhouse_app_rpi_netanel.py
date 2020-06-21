@@ -8,11 +8,11 @@ from greenhouse_app.models import Sensor, SensorKind, Relay, TimeGovernor, Confi
 
 
 def populate_sensors(dbname):
-    print 'deleting data in SensorKind'
+    print('deleting data in SensorKind')
     SensorKind.objects.using(dbname).all().delete()
-    print 'deleting data in Sensor'
+    print('deleting data in Sensor')
     Sensor.objects.using(dbname).all().delete()
-    print 'deleting data in TimeGovernors'
+    print('deleting data in TimeGovernors')
     TimeGovernor.objects.using(dbname).all().delete()
 
     dht_22_temp = SensorKind.objects.using(dbname).get_or_create(kind='dht22temp')[0]
@@ -20,7 +20,7 @@ def populate_sensors(dbname):
     ds18b20 = SensorKind.objects.using(dbname).get_or_create(kind='ds18b20')[0]
     tsl2561 = SensorKind.objects.using(dbname).get_or_create(kind='tsl2561')[0]
 
-    print 'creating sensor: {}'.format('dht_temp')
+    print('creating sensor: {}'.format('dht_temp'))
     s = Sensor.objects.using(dbname).get_or_create(name='dht_temp')[0]
     s.kind = dht_22_temp
     s.simulate = False
@@ -28,7 +28,7 @@ def populate_sensors(dbname):
     s.i2c = False
     s.save(using=dbname)
 
-    print 'creating sensor: {}'.format('dht_humidity')
+    print('creating sensor: {}'.format('dht_humidity'))
     s = Sensor.objects.using(dbname).get_or_create(name='dht_humidity')[0]
     s.kind = dht_22_humidity
     s.simulate = False
@@ -37,7 +37,7 @@ def populate_sensors(dbname):
     s.save(using=dbname)
 
 
-    print 'creating sensor: {}'.format('DS18B20_temp')
+    print('creating sensor: {}'.format('DS18B20_temp'))
     Sensor.objects.using(dbname).get_or_create(name='DS18B20_temp', kind=ds18b20, simulate=False, pin=99, i2c=False, device_id='28-011581dabaff')[0]
 
     #print 'creating sensor: {}'.format('TSL2561_lux')
@@ -55,7 +55,7 @@ def populate_relays(dbname):
                                                           recurring_off_period=(timedelta(days=2) - timedelta(minutes=10))
                                                           )[0]
     
-    print 'creating relay: (name=pump, pin=5, state=1, wanted_state=1)'
+    print('creating relay: (name=pump, pin=5, state=1, wanted_state=1)')
     r = Relay.objects.using(dbname).get_or_create(name='pump1')[0]
     r.pin = 4
     r.state = 1
@@ -73,10 +73,10 @@ def populate_configurations(dbname):
 
 
 if __name__ == '__main__':
-    print "Starting population script..."
+    print("Starting population script...")
     dbs = ['default', 'backup']
     for db in dbs:
-        print "Starting db: {} ".format(db)
+        print("Starting db: {} ".format(db))
         populate_sensors(db)
         populate_relays(db)
         populate_configurations(db)

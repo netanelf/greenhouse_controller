@@ -27,7 +27,6 @@ class TSL2561LuxController(SensorController):
 
     @history_appender_decorator
     def read(self):
-        super(TSL2561LuxController, self).read()
         if self.simulate:
             l = self.simulate_data()
         else:

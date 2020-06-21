@@ -1,6 +1,11 @@
 __author__ = 'netanel'
 import logging
 from core.sensors.sensor_controller import GPIO_TO_PIN_TABLE
+try:
+    import Adafruit_DHT as dht
+except Exception:
+    pass
+
 
 '''
 def read_retry(sensor, pin, retries=15, delay_seconds=2, platform=None):
@@ -33,7 +38,6 @@ class DHT22Driver(object):
         self.humidity = None
 
     def read_sensor_data(self):
-        import Adafruit_DHT as dht
         h, t = dht.read_retry(sensor=dht.DHT22, pin=self.gpio, retries=5, delay_seconds=0.5)
         self.logger.debug('read dht22, pin: {}, gpio: {}, t: {}, h: {}'.format(self.pin, self.gpio, t, h))
         self.temp = t
@@ -42,6 +46,7 @@ class DHT22Driver(object):
     def get_temp(self):
         if self.temp is None:
             self.read_sensor_data()
+        # explanation: read temp + humidity to avoide communication with sensor twice
         t = self.temp
         self.temp = None
         return t
@@ -49,6 +54,7 @@ class DHT22Driver(object):
     def get_humidity(self):
         if self.humidity is None:
             self.read_sensor_data()
+        # explanation: read temp + humidity to avoide communication with sensor twice
         h = self.humidity
         self.humidity = None
         return h

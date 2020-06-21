@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from cfg import DB_RETRIES
 
-from greenhouse_app.models import ControllerOBject, HistoryValue, CurrentValue
+from greenhouse_app.models import ControllerObject, HistoryValue, CurrentValue
 from django.db.utils import OperationalError
 
 
@@ -18,7 +18,7 @@ class DbInterface(object):
             while t in range(DB_RETRIES):
                 try:
                     self._logger.debug('looking for controller: {} in Sensors Table'.format(sensor_name))
-                    controller = ControllerOBject.objects.get(name=sensor_name)
+                    controller = ControllerObject.objects.get(name=sensor_name)
                     HistoryValue.objects.create(sensor=controller, measure_time=measurement_time, val=value)
                     self._logger.debug('wrote data to db')
                     break
@@ -35,7 +35,7 @@ class DbInterface(object):
                     while t in range(DB_RETRIES):
                         try:
                             self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
-                            controller = ControllerOBject.objects.get(name=d.sensor_name)
+                            controller = ControllerObject.objects.get(name=d.sensor_name)
                             cv = CurrentValue.objects.get(sensor=controller)
                             cv.measure_time = d.time
                             cv.val = d.value
@@ -49,7 +49,7 @@ class DbInterface(object):
     def register_sensor(self, sensor_name: str):
         with self._write_lock:
             try:
-                controller = ControllerOBject.objects.get(name=sensor_name)
+                controller = ControllerObject.objects.get(name=sensor_name)
                 CurrentValue.objects.get_or_create(sensor=controller, measure_time=datetime(2000,1,1,0,0,0), val=0)
             except Exception as ex:
                 self._logger.exception(ex)

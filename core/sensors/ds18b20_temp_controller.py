@@ -21,7 +21,6 @@ class DS18B20TempController(SensorController):
 
     @history_appender_decorator
     def read(self):
-        super(DS18B20TempController, self).read()
         if self._simulate:
             t = self.simulate_data()
         else:
