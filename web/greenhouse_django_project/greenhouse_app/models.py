@@ -202,10 +202,23 @@ class Relay(ControllerObject):
         return self.name
 
 
-class Configuration(models.Model):
+class Configuration(PolymorphicModel):
     name = models.CharField(max_length=128, unique=True)
-    value = models.IntegerField(default=0)
     explanation = models.CharField(max_length=256, default='')
+
+    def __str__(self):
+        return self.name
+
+
+class ConfigurationInt(Configuration):
+    value = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.name
+
+
+class ConfigurationStr(Configuration):
+    value = models.CharField(max_length=256,default='')
 
     def __str__(self):
         return self.name
@@ -312,6 +325,15 @@ class ActionSaveSensorValToDB(Action):
 class ActionSetRelayState(Action):
     relay = models.ForeignKey(Relay, on_delete=models.CASCADE)
     state = models.BooleanField(default=False, help_text='Should relay be turned ON or OFF')
+
+    def __str__(self):
+        return self.name
+
+
+class ActionSendEmail(Action):
+    address = models.EmailField()
+    subject = models.CharField(max_length=256, default='')
+    message = models.CharField(max_length=256, default='')
 
     def __str__(self):
         return self.name

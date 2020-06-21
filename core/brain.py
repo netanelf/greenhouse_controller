@@ -28,11 +28,10 @@ django.setup()
 from django.utils import timezone
 from django.db.utils import OperationalError
 from greenhouse_app.models import *
-from core.flows.actions import ActionO, ActionSaveSensorValToDBO, ActionSetRelayStateO
+from core.flows.actions import ActionO, ActionSaveSensorValToDBO, ActionSetRelayStateO, ActionSendEmailO
 from core.flows.events import EventO, EventAtTimeTO, EventEveryDTO
 from core.flows.flow_manager import FlowManager
 from core.db_interface import DbInterface
-
 
 
 class Brain(threading.Thread):
@@ -84,7 +83,7 @@ class Brain(threading.Thread):
         self._killed = False
 
         # configurations, updated from db
-        self._manual_mode = 0
+        self._configuration = {}
 
         self.helper_threads = {}
         self.start_helper_threads()
@@ -260,12 +259,22 @@ class Brain(threading.Thread):
                                              sensor=next((x for x in self._sensors if x.get_name() == sensor_name), None),
                                              db_interface=self._db_interface)
                 )
-            elif isinstance(a, ActionSetRelayStateO):
+            elif isinstance(a, ActionSetRelayState):
                 relay_name = a.relay.name
                 action_object_list.append(
                     ActionSetRelayStateO(
                         name=a.name,
                         relay=next((x for x in self._relays if x.get_name() == relay_name), None)
+                    )
+                )
+            elif isinstance(a, ActionSendEmail):
+                action_object_list.append(
+                    ActionSendEmailO(
+                        name=a.name,
+                        brain=self,
+                        address=a.address,
+                        subject=a.subject,
+                        message=a.message
                     )
                 )
             else:
@@ -400,8 +409,7 @@ class Brain(threading.Thread):
         """
         self._logger.debug('in update_configurations')
         for c in Configuration.objects.all():
-            if c.name == 'manual_mode':
-                self._manual_mode = c.value
+            self._configuration[c.name] = c.value
 
     def kill_brain(self):
         self._logger.info('killing helper_threads')

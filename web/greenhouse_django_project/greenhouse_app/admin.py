@@ -48,14 +48,26 @@ class DigitalInputSensorAdmin(PolymorphicChildModelAdmin):
 
 
 @admin.register(Configuration)
-class ConfigurationsAdmin(admin.ModelAdmin):
+class ConfigurationAdmin(PolymorphicParentModelAdmin):
+    child_models = (ConfigurationInt, ConfigurationStr)
+
+
+@admin.register(ConfigurationInt)
+class ConfigurationIntAdmin(PolymorphicChildModelAdmin):
     list_display = ('name', 'value', 'explanation')
+    base_model = ConfigurationInt
+
+
+@admin.register(ConfigurationStr)
+class ConfigurationStrAdmin(PolymorphicChildModelAdmin):
+    list_display = ('name', 'value', 'explanation')
+    base_model = ConfigurationStr
 
 
 @admin.register(Action)
 class ActionsAdmin(PolymorphicParentModelAdmin):
     list_display = ('name', )
-    child_models = (ActionSaveSensorValToDB, ActionSetRelayState)
+    child_models = (ActionSaveSensorValToDB, ActionSetRelayState, ActionSendEmail)
 
 
 @admin.register(ActionSaveSensorValToDB)
@@ -68,6 +80,12 @@ class ActionSaveSensorValToDBAdmin(PolymorphicChildModelAdmin):
 class ActionSetRelayStateAdmin(PolymorphicChildModelAdmin):
     list_display = ('name',)
     base_model = ActionSetRelayState
+
+
+@admin.register(ActionSendEmail)
+class ActionSendEmailAdmin(PolymorphicChildModelAdmin):
+    list_display = ('name', 'address', 'subject', 'message')
+    base_model = ActionSendEmail
 
 
 @admin.register(Event)

@@ -3,7 +3,7 @@ from core.controllers.relay_controller import RelayController
 from core.db_interface import DbInterface
 from django.utils import timezone
 import logging
-
+import requests
 
 class ActionO(object):
     def __init__(self, name):
@@ -43,6 +43,56 @@ class ActionSetRelayStateO(ActionO):
         if self._relay_controller.get_state() != self._wanted_state:
             self._relay_controller.change_state(new_state=self._wanted_state)
 
+class ActionSendEmailO(ActionO):
+    def __init__(self, name, brain, address: str, subject: str, message: str):
+        super(ActionSendEmailO, self).__init__(name)
+        self._brain = brain
+        self._address = address
+        self._subject = subject
+        self._message = message
+
+    def perform_action(self):
+        self._logger.debug('going to send an email')
+
+        api_key = self._brain._configuration.get('sendgrid_api_key')
+        sender_address = self._brain._configuration.get('sendgrid_sender_address')
+
+        if (api_key == None or sender_address == None):
+            self._logger.debug('wanted to send an email, but the api key or sender address are not configured!')
+            return
+       
+        headers = {
+            'Authorization': f'Bearer {self._brain._configuration["sendgrid_api_key"]}',
+            'Content-Type': 'application/json'
+        }
+        content = {
+            'personalizations': [
+                {
+                    'to': [
+                        {
+                            'email': self._address
+                        }
+                    ],
+                    'subject': self._subject,
+                }
+            ],
+            'from': {
+                'email': self._brain._configuration['sendgrid_sender_address']
+            },
+            'content': [
+                {
+                    'type': 'text/plain',
+                    'value': self._message
+                }
+            ]
+        }
+        r = requests.post('https://api.sendgrid.com/v3/mail/send', headers = headers, json = content)
+        
+        if (r.status_code == 202):
+            self._logger.debug('sent the email successfully')
+        else:
+            self._logger.debug('something went wrong when sending the email, see the following message')
+            self._logger.debug(r.text)
 
 #class ActionReadSensorValueO(ActionO):
 

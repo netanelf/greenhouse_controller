@@ -139,9 +139,19 @@ def populate_relays(dbname):
 
 
 def populate_configurations(dbname):
-    c = Configuration.objects.using(dbname).get_or_create(name='manual_mode')[0]
+    c = ConfigurationInt.objects.using(dbname).get_or_create(name='manual_mode')[0]
     c.value = 0
     c.explanation = 'if set to 1, governors do not change relay states, only manual user changes'
+    c.save(using=dbname)
+
+    c = ConfigurationStr.objects.using(dbname).get_or_create(name='sendgrid_api_key')[0]
+    c.value = ''
+    c.explanation = 'Your SendGrid API key, to be used with Email actions'
+    c.save(using=dbname)
+
+    c = ConfigurationStr.objects.using(dbname).get_or_create(name='sendgrid_sender_address')[0]
+    c.value = ''
+    c.explanation = 'The SendGrid sender you want to be used (configured in SendGrid)'
     c.save(using=dbname)
 
 
