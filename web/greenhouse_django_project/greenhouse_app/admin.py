@@ -13,7 +13,7 @@ class RelayAdmin(admin.ModelAdmin):
 
 @admin.register(Sensor)
 class SensorAdmin(PolymorphicParentModelAdmin):
-    list_display = ('name', 'simulate')
+    polymorphic_list = True
     child_models = (Dht22TempSensor, Dht22HumiditySensor, Ds18b20Sensor, Tsl2561Sensor, DigitalInputSensor)
 
 
@@ -49,70 +49,58 @@ class DigitalInputSensorAdmin(PolymorphicChildModelAdmin):
 
 @admin.register(Configuration)
 class ConfigurationAdmin(PolymorphicParentModelAdmin):
+    polymorphic_list = True
+    list_display = ('__str__',)
     child_models = (ConfigurationInt, ConfigurationStr)
 
 
 @admin.register(ConfigurationInt)
 class ConfigurationIntAdmin(PolymorphicChildModelAdmin):
-    list_display = ('name', 'value', 'explanation')
     base_model = ConfigurationInt
 
 
 @admin.register(ConfigurationStr)
 class ConfigurationStrAdmin(PolymorphicChildModelAdmin):
-    list_display = ('name', 'value', 'explanation')
     base_model = ConfigurationStr
 
 
 @admin.register(Action)
 class ActionsAdmin(PolymorphicParentModelAdmin):
-    list_display = ('name', )
+    polymorphic_list = True
+    list_display = ('__str__',)
     child_models = (ActionSaveSensorValToDB, ActionSetRelayState, ActionSendEmail)
 
 
 @admin.register(ActionSaveSensorValToDB)
 class ActionSaveSensorValToDBAdmin(PolymorphicChildModelAdmin):
-    list_display = ('name',)
     base_model = ActionSaveSensorValToDB
 
 
 @admin.register(ActionSetRelayState)
 class ActionSetRelayStateAdmin(PolymorphicChildModelAdmin):
-    list_display = ('name',)
     base_model = ActionSetRelayState
 
 
 @admin.register(ActionSendEmail)
 class ActionSendEmailAdmin(PolymorphicChildModelAdmin):
-    list_display = ('name', 'address', 'subject', 'message')
     base_model = ActionSendEmail
 
 
 @admin.register(Event)
 class EventAdmin(PolymorphicParentModelAdmin):
-    list_display = ('name', )
-
-    # def event_type(self, object):
-    #     print(type(object))
-    #     if isinstance(object, EventAtTimeT):
-    #         return 'EventAtTimeT'
-    #     elif isinstance(object, EventEveryDT):
-    #         return 'EventEveryDT'
-    #     else:
-    #         print(object.__repr__())
+    polymorphic_list = True
+    list_display = ('__str__',)
     child_models = (EventAtTimeT, EventEveryDT)
     list_filter = (PolymorphicChildModelFilter,)
 
 
 @admin.register(EventAtTimeT)
 class EventAtTimeTAdmin(PolymorphicChildModelAdmin):
-    list_display = ('name',)
     base_model = EventAtTimeT
 
 
 @admin.register(EventEveryDT)
 class EventEveryDTAdmin(PolymorphicChildModelAdmin):
-    list_display = ('name',)
     base_model = EventEveryDT
 
 

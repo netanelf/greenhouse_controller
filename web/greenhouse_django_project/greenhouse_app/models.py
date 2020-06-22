@@ -199,29 +199,25 @@ class Relay(ControllerObject):
     inverted = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        return f'{self.name} at pin {self.pin}'
 
 
 class Configuration(PolymorphicModel):
     name = models.CharField(max_length=128, unique=True)
-    explanation = models.CharField(max_length=256, default='')
-
-    def __str__(self):
-        return self.name
 
 
 class ConfigurationInt(Configuration):
     value = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.name
+        return f'{self.name} = {self.value}'
 
 
 class ConfigurationStr(Configuration):
     value = models.CharField(max_length=256,default='')
 
     def __str__(self):
-        return self.name
+        return f'{self.name} = "{self.value}"'
 
 
 class KeepAlive(models.Model):
@@ -250,20 +246,7 @@ class Event(PolymorphicModel):
     """
     base class for events models
     """
-    # name = models.CharField(
-    #     max_length=100,
-    # )
-    def get_name(self):
-        if isinstance(self, EventAtTimeT):
-            return 'EventAtTimeT'
-        elif isinstance(self, EventEveryDT):
-            return 'EventEveryDT'
-        else:
-            return 'BLAAAAAAA'
-    name = property(get_name)
-
-    def __str__(self):
-        return self.name
+    pass
 
 
 class EventAtTimeT(Event):
@@ -272,54 +255,36 @@ class EventAtTimeT(Event):
     """
     event_time = models.TimeField(help_text='Time to fire event')
 
-    # def get_name(self):
-    #     return f'EventAtTimeT_{str(self.event_time)}'
-    # name = property(get_name)
-
     def __str__(self):
-        return self.name
+        return f'At {self.event_time}'
 
 
 class EventEveryDT(Event):
     event_delta_t = models.DurationField(default=timedelta)
 
-    # def get_name(self):
-    #     return f'EventEveryDT_{str(self.event_delta_t)}'
-    # name = property(get_name)
-
     def __str__(self):
-        return self.name
+        return f'Every {self.event_delta_t}'
 
 
 class Condition(PolymorphicModel):
     """
     base class for conditions models
     """
-    name = models.CharField(
-        max_length=100,
-    )
-
-    def __str__(self):
-        return self.name
+    pass
 
 
 class Action(PolymorphicModel):
     """
     base class for Actions models
     """
-    name = models.CharField(
-        max_length=100,
-    )
-
-    def __str__(self):
-        return self.name
+    pass
 
 
 class ActionSaveSensorValToDB(Action):
     sensor = models.ForeignKey(ControllerObject, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.name
+        return f'Save sensor value of {self.sensor} to the database'
 
 
 class ActionSetRelayState(Action):
@@ -327,7 +292,7 @@ class ActionSetRelayState(Action):
     state = models.BooleanField(default=False, help_text='Should relay be turned ON or OFF')
 
     def __str__(self):
-        return self.name
+        return f'Set the relay state of {self.relay} to {self.state}'
 
 
 class ActionSendEmail(Action):
@@ -336,7 +301,7 @@ class ActionSendEmail(Action):
     message = models.CharField(max_length=256, default='')
 
     def __str__(self):
-        return self.name
+        return f'Send an email from {self.address} with subject "{self.subject}" and message "{self.message}"'
 
 
 class Flow(models.Model):
