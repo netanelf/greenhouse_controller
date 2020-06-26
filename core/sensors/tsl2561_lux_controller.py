@@ -3,7 +3,7 @@
 
 import random
 from django.utils import timezone
-from sensor_controller import SensorController, Measurement, history_appender_decorator
+from .sensor_controller import SensorController, Measurement, history_appender_decorator
 
 
 class TSL2561LuxController(SensorController):
@@ -25,11 +25,8 @@ class TSL2561LuxController(SensorController):
             self.conn = Adafruit_TSL2561.Adafruit_TSL2561(address=address, debug=debug)
             self.conn.begin()
 
-        self.last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=None)
-
     @history_appender_decorator
     def read(self):
-        super(TSL2561LuxController, self).read()
         if self.simulate:
             l = self.simulate_data()
         else:
@@ -38,8 +35,8 @@ class TSL2561LuxController(SensorController):
             #if l is None:
             #    self._logger.error('could not read data from sensor: {},'.format(self._name))
             #    l = 0
-        self.last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=l)
-        return self.last_read
+        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=l)
+        return self._last_read
 
     def simulate_data(self):
         return random.randrange(0, 17000)

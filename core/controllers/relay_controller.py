@@ -40,8 +40,6 @@ class RelayController(object):
             GPIO.setup(self.pin, GPIO.OUT)
             GPIO.output(self.pin, state)
 
-
-
         self.change_state(new_state=state)
         self.state = state
 

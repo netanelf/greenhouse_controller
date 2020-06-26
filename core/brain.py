@@ -6,27 +6,32 @@ import time
 import threading
 import os
 import sys
+from typing import List
 
 import cfg
-import utils
-from core.utils import init_logging
-from db_backup import DbBackupper
-from image_capture import ImageCapture
-from failurs_manager import FailureManager
-from sensors.sensor_controller import Measurement
-from sensors.dht22_temp_controller import DHT22TempController
-from sensors.dht22_humidity_controller import DHT22HumidityController
-from sensors.ds18b20_temp_controller import DS18B20TempController
-from sensors.tsl2561_lux_controller import TSL2561LuxController
-from sensors.digital_input_sensor import DigitalInputSensor
-from controllers.relay_controller import RelayController
-from drivers import sr_driver, dht22_driver, pcf8574_driver
+from core.utils import init_logging, get_root_path, update_keep_alive, register_keep_alive
+from core.db_backup import DbBackupper
+from core.image_capture import ImageCapture
+from core.failurs_manager import FailureManager
+from core.sensors.sensor_controller import Measurement
+from core.sensors.dht22_temp_controller import DHT22TempController
+from core.sensors.dht22_humidity_controller import DHT22HumidityController
+from core.sensors.ds18b20_temp_controller import DS18B20TempController
+from core.sensors.tsl2561_lux_controller import TSL2561LuxController
+from core.sensors.digital_input_controller import DigitalInputController
+from core.sensors.sensor_controller import SensorController
+from core.controllers.relay_controller import RelayController
+from core.drivers import sr_driver, dht22_driver, pcf8574_driver
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
 from django.utils import timezone
 from django.db.utils import OperationalError
-from greenhouse_app.models import Sensor, Measure, Relay, Configuration, ControllerOBject, KeepAlive
+from greenhouse_app.models import *
+from core.flows.actions import ActionO, ActionSaveSensorValToDBO, ActionSetRelayStateO, ActionSendEmailO
+from core.flows.events import EventO, EventAtTimeTO, EventEveryDTO
+from core.flows.flow_manager import FlowManager
+from core.db_interface import DbInterface
 
 
 class Brain(threading.Thread):
@@ -44,10 +49,11 @@ class Brain(threading.Thread):
         self._logger.info('simulation_mode: {}'.format(simulation_mode))
 
         self._simulate_hw = simulation_mode
+        self._db_interface = DbInterface()
 
         # all sensors
         self._dht_22_drivers = []
-        self._sensors = []
+        self._sensors: List[SensorController] = []
         self.create_sensor_controllers()
 
         # all relays
@@ -58,11 +64,15 @@ class Brain(threading.Thread):
         # lcd controller
         if not self._simulate_hw:
             try:
-                from drivers import lcd2004_driver
+                from .drivers import lcd2004_driver
                 self.lcd = lcd2004_driver.Lcd()
                 self.lcd_alive = 'x'
             except Exception as ex:
                 self._logger.exception('could not initialize lcd, ex: {}'.format(ex))
+
+        # flows
+        self._flow_managers: List[FlowManager] = []
+        self._create_flow_managers()
 
         self._last_read_time = timezone.now()
         self._last_relay_set_time = timezone.now()
@@ -73,11 +83,12 @@ class Brain(threading.Thread):
         self._killed = False
 
         # configurations, updated from db
-        self._manual_mode = 0
+        self._configuration = {}
 
         self.helper_threads = {}
         self.start_helper_threads()
-        utils.register_keep_alive(name=self.__class__.__name__)
+        register_keep_alive(name=self.__class__.__name__)
+        self._register_sensors()
         self._logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
@@ -97,7 +108,7 @@ class Brain(threading.Thread):
         self.helper_threads['backuper'] = backuper
 
         if cfg.CAPTURE_IMAGES:
-            save_path = os.path.join(utils.get_root_path(), 'logs', 'images')
+            save_path = os.path.join(get_root_path(), 'logs', 'images')
             time_between_captures = cfg.IMAGE_FREQUENCY
             capturer = ImageCapture(save_path=save_path,
                                     time_between_captures=time_between_captures,
@@ -110,6 +121,10 @@ class Brain(threading.Thread):
     def run(self):
         while not self._killed:
             try:
+                if timezone.now() - self._last_read_time > timedelta(seconds=cfg.FLOW_MANAGERS_RESOLUTION):
+                    for f in self._flow_managers:
+                        f.run_flow()
+
                 if timezone.now() - self._last_read_time > timedelta(seconds=cfg.SENSOR_READING_RESOLUTION):
                     self._logger.info('brain sensors read cycle')
                     self._last_read_time = timezone.now()
@@ -117,19 +132,19 @@ class Brain(threading.Thread):
                     self.write_data_to_db()
                     self._logger.info('brain sensors read cycle end')
 
-                if timezone.now() - self._last_relay_set_time > timedelta(seconds=cfg.RELAY_STATE_WRITING_RESOLUTION):
-                    self._logger.info('brain relay set cycle')
-                    self._last_relay_set_time = timezone.now()
-                    if not self._manual_mode:
-                        self.issue_governors_relay_set()
-                    self.issue_relay_set()
-                    self.write_data_to_db()
-                    self._logger.info('brain relay set cycle end')
+                # if timezone.now() - self._last_relay_set_time > timedelta(seconds=cfg.RELAY_STATE_WRITING_RESOLUTION):
+                #     self._logger.info('brain relay set cycle')
+                #     self._last_relay_set_time = timezone.now()
+                #     if not self._manual_mode:
+                #         self.issue_governors_relay_set()
+                #     self.issue_relay_set()
+                #     #self.write_data_to_db()
+                #     self._logger.info('brain relay set cycle end')
 
                 if timezone.now() - self._last_keepalive_time > timedelta(seconds=cfg.KEEP_ALIVE_RESOLUTION):
                     self._logger.info('brain keepalive cycle')
                     self._last_keepalive_time = timezone.now()
-                    utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.helper_threads['failure_manager'])
+                    update_keep_alive(name=self.__class__.__name__, failure_manager=self.helper_threads['failure_manager'])
                     self._logger.info('brain keepalive cycle end')
 
                 if timezone.now() - self._last_configuration_time > timedelta(seconds=cfg.CONFIGURATION_RESOLUTION):
@@ -161,27 +176,27 @@ class Brain(threading.Thread):
         for s in Sensor.objects.order_by():
             self._logger.debug('found sensor: ({}), creating controller'.format(s))
 
-            if s.kind.kind == 'dht22temp':
+            if isinstance(s, Dht22TempSensor):
                 dht_22_driver = self.get_dht22_controller(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22temp, creating controller'.format(s))
                 self._sensors.append(DHT22TempController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
-            elif s.kind.kind == 'dht22humidity':
+            elif isinstance(s, Dht22HumiditySensor):
                 dht_22_driver = self.get_dht22_controller(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22humidity, creating controller'.format(s))
                 self._sensors.append(DHT22HumidityController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
-            elif s.kind.kind == 'ds18b20':
+            elif isinstance(s, Ds18b20Sensor):
                 self._logger.debug('sensor: ({}) is ds18b20, creating controller'.format(s))
                 self._sensors.append(DS18B20TempController(name=s.name, device_id=s.device_id, simulate=s.simulate))
 
-            elif s.kind.kind == 'tsl2561':
+            elif isinstance(s, Tsl2561Sensor):
                 self._logger.debug('sensor: ({}) is tsl2561, creating controller'.format(s))
                 self._sensors.append(TSL2561LuxController(name=s.name, address=int(s.device_id, 16), debug=False, simulate=s.simulate))
 
-            elif s.kind.kind == 'digitalInput':
+            elif isinstance(s, DigitalInputSensor):
                 self._logger.debug('sensor: ({}) is digitalInput, creating controller'.format(s))
-                self._sensors.append(DigitalInputSensor(name=s.name, pin=s.pin, simulate=s.simulate))
+                self._sensors.append(DigitalInputController(name=s.name, pin=s.pin, simulate=s.simulate))
 
     def create_relay_controllers(self):
         """
@@ -194,6 +209,14 @@ class Brain(threading.Thread):
             self._logger.debug('found relay: ({}), creating controller'.format(r))
             self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.state, invert_polarity=r.inverted))
 
+    def _register_sensors(self):
+        self._logger.info('registering sensors')
+        for s in self._sensors:
+            self._db_interface.register_sensor(sensor_name=s.get_name())
+
+        for r in self._relays:
+            self._db_interface.register_sensor(sensor_name=r.get_name())
+
     def get_relay_by_name(self, name):
         """
         find the relay controller object for the given name
@@ -205,6 +228,58 @@ class Brain(threading.Thread):
                 return r
         logging.info('searched for relay named: {}, not found'.format(name))
         return False
+
+    def _create_flow_managers(self):
+        self._logger.debug('creating flow managers')
+        for f in Flow.objects.all():
+            self._logger.debug(f'found flow in db: {f.name}')
+            event = f.event
+            #conditions = f.conditions
+            actions = f.actions
+            action_list = self._create_action_objects(actions)
+            event_object = self._create_event_object(event)
+            flow_object = FlowManager(flow_name=f.name, event=event_object, conditions=None, actions=action_list)
+            self._flow_managers.append(flow_object)
+
+    def _create_event_object(self, event: Event):
+        if isinstance(event, EventAtTimeT):
+            return EventAtTimeTO(name=str(event), t=event.event_time)
+        elif isinstance(event, EventEveryDT):
+            return EventEveryDTO(name=str(event), dt=event.event_delta_t)
+        else:
+            self._logger.error(f'could not find object for event: {event}')
+
+    def _create_action_objects(self, actions):
+        action_object_list = []
+        for a in actions.all():
+            if isinstance(a, ActionSaveSensorValToDB):
+                sensor_name = a.sensor.name
+                action_object_list.append(
+                    ActionSaveSensorValToDBO(name=str(a),
+                                             sensor=next((x for x in self._sensors if x.get_name() == sensor_name), None),
+                                             db_interface=self._db_interface)
+                )
+            elif isinstance(a, ActionSetRelayState):
+                relay_name = a.relay.name
+                action_object_list.append(
+                    ActionSetRelayStateO(
+                        name=str(a),
+                        relay=next((x for x in self._relays if x.get_name() == relay_name), None)
+                    )
+                )
+            elif isinstance(a, ActionSendEmail):
+                action_object_list.append(
+                    ActionSendEmailO(
+                        name=a.name,
+                        brain=self,
+                        address=a.address,
+                        subject=a.subject,
+                        message=a.message
+                    )
+                )
+            else:
+                self._logger.error(f'could not find object for action: {a}')
+        return action_object_list
 
     def issue_sensor_reading(self):
         self._logger.debug('issuing a read for all sensors')
@@ -269,20 +344,20 @@ class Brain(threading.Thread):
         self._dht_22_drivers.append(d)
         return d
 
-    def issue_governors_relay_set(self):
-        """
-        read current governor state and set wanted states for relays according to governor
-        """
-        for r in Relay.objects.order_by():
-            governor = r.time_governor
-            if governor is not None:
-                self._logger.debug('relay: {}, has governor: {}'.format(r.name, governor))
-                governor_state = governor.state
-
-                if governor_state != r.state:
-                    self._logger.debug('relay: {}, was changed by governor: {} to state: {}'.format(r.name, governor, governor_state))
-                    r.wanted_state = governor_state
-                    r.save()
+    # def issue_governors_relay_set(self):
+    #     """
+    #     read current governor state and set wanted states for relays according to governor
+    #     """
+    #     for r in Relay.objects.order_by():
+    #         governor = r.time_governor
+    #         if governor is not None:
+    #             self._logger.debug('relay: {}, has governor: {}'.format(r.name, governor))
+    #             governor_state = governor.state
+    #
+    #             if governor_state != r.state:
+    #                 self._logger.debug('relay: {}, was changed by governor: {} to state: {}'.format(r.name, governor, governor_state))
+    #                 r.wanted_state = governor_state
+    #                 r.save()
 
     def issue_relay_set(self):
         """
@@ -310,21 +385,22 @@ class Brain(threading.Thread):
 
     def write_data_to_db(self):
         self._logger.debug('in _write_data_to_db')
-        with self._data_lock:
-            for d in self._data:
-                if d is not None:
-                    t = 0
-                    while t in range(cfg.DB_RETRIES):
-                        try:
-                            self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
-                            controller = ControllerOBject.objects.get(name=d.sensor_name)
-                            Measure.objects.create(sensor=controller, measure_time=d.time, val=d.value)
-                            break
-                        except OperationalError as ex:
-                            self._logger.error('while writing to DB got exception, try: {}'.format(t))
-                            self._logger.exception(ex)
-                            self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
-                            t += 1
+        self._db_interface.update_sensors_value_current_db(self._data)
+        # with self._data_lock:
+        #     for d in self._data:
+        #         if d is not None:
+        #             t = 0
+        #             while t in range(cfg.DB_RETRIES):
+        #                 try:
+        #                     self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
+        #                     controller = ControllerOBject.objects.get(name=d.sensor_name)
+        #                     Measure.objects.create(sensor=controller, measure_time=d.time, val=d.value)
+        #                     break
+        #                 except OperationalError as ex:
+        #                     self._logger.error('while writing to DB got exception, try: {}'.format(t))
+        #                     self._logger.exception(ex)
+        #                     self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
+        #                     t += 1
 
     def update_configurations(self):
         """
@@ -333,8 +409,7 @@ class Brain(threading.Thread):
         """
         self._logger.debug('in update_configurations')
         for c in Configuration.objects.all():
-            if c.name == 'manual_mode':
-                self._manual_mode = c.value
+            self._configuration[c.name] = c.value
 
     def kill_brain(self):
         self._logger.info('killing helper_threads')
@@ -351,16 +426,16 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         if str(sys.argv[1]) == 'simulate':
-            print 'running in simulate HW mode'
+            print('running in simulate HW mode')
             b = Brain(simulation_mode=True)
     else:
-        print 'running in real HW mode'
+        print('running in real HW mode')
         b = Brain(simulation_mode=False)
     b.setDaemon(True)
     b.start()
 
-    name = raw_input("Do you want to exit? (Y)")
-    print 'user entered {}'.format(name)
+    name = input("Do you want to exit? (Y)")
+    print('user entered {}'.format(name))
     if name == 'Y':
         b.kill_brain()
         time.sleep(1)

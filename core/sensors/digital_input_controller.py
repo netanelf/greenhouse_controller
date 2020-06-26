@@ -1,13 +1,13 @@
-from sensor_controller import SensorController, Measurement
+from .sensor_controller import SensorController, Measurement
 from random import Random
 
 from django.utils import timezone
 
 
-class DigitalInputSensor(SensorController):
+class DigitalInputController(SensorController):
 
     def __init__(self, name, pin, simulate=True):
-        super(DigitalInputSensor, self).__init__(name)
+        super(DigitalInputController, self).__init__(name)
         self._logger.info('initializing DigitalInputSensor')
         self._logger.info('name: {}'.format(name))
         self._logger.info('pin: {}'.format(pin))
@@ -25,13 +25,13 @@ class DigitalInputSensor(SensorController):
             #GPIO.setup(self._pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.setup(self._pin, GPIO.IN)
 
-    def read(self):
-        super(DigitalInputSensor, self).read()
+    def read(self) -> Measurement:
         if self._simulate:
             self._logger.debug('in simulation mode, random value')
             v = self._randomizer.randint(0, 1)
         else:
             v = GPIO.input(self._pin)
 
-        return Measurement(sensor_name=self._name, time=timezone.now(), value=v)
+        self._last_read = Measurement(sensor_name=self._name, time=timezone.now(), value=v)
+        return self._last_read
 

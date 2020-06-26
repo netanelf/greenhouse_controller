@@ -1,10 +1,11 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Measure, Relay, TimeGovernor, Configuration, ControllerOBject, KeepAlive
+from greenhouse_app.models import Sensor, Relay, Configuration, ControllerObject, KeepAlive, CurrentValue, HistoryValue
 import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
 import csv
-import cStringIO as StringIO
+#import cStringIO as StringIO
+from io import StringIO
 import time
 from datetime import datetime
 import logging
@@ -33,11 +34,11 @@ def index(request):
 
     sensor_list = Sensor.objects.order_by()
     relay_list = Relay.objects.order_by()
-    time_governors_list = TimeGovernor.objects.order_by()
+    #time_governors_list = TimeGovernor.objects.order_by()
     keep_alive_list = KeepAlive.objects.order_by()
     context_dict = {'sensors': sensor_list,
                     'relays': relay_list,
-                    'governors': time_governors_list,
+                    #'governors': time_governors_list,
                     'keepalives': keep_alive_list}
     # Render the response and send it back!
     return render(request, 'greenhouse_app/index.html', context_dict)
@@ -52,8 +53,8 @@ def downloadMeasurements(request):
     send all measurements as .csv file
     """
     CHUNK = 128
-    measures = Measure.objects.all()
-    fields = Measure._meta.fields
+    measures = HistoryValue.objects.all()
+    fields = HistoryValue._meta.fields
     field_names = [f.name for f in fields]
 
     csvfile = StringIO.StringIO()
@@ -92,7 +93,7 @@ def downloadMeasurements(request):
 
 @timing_decorator
 def getSensorsData(request):
-    measurement_list = Measure.objects.order_by('-measure_time')[:20]
+    measurement_list = HistoryValue.objects.order_by('-measure_time')[:20]
     context_dict = {'measurements': measurement_list}
     # Render the response and send it back!
     return render(request, 'greenhouse_app/sensorsData.html', context_dict)
@@ -105,7 +106,8 @@ def getLastSensorValues(request):
     for s in sensor_list:
         name = s.name
         try:
-            measure = Measure.objects.filter(sensor=s).latest('measure_time')
+            #measure = Measure.objects.filter(sensor=s).latest('measure_time')
+            measure = CurrentValue.objects.filter(sensor=s)[0]
             val = measure.val
             val = '{:.2f}'.format(val)
             t = measure.measure_time
@@ -170,7 +172,7 @@ def relays(request):
 @timing_decorator
 def graphs(request):
     #sensors = Sensor.objects.all()
-    sensors = ControllerOBject.objects.all()
+    sensors = ControllerObject.objects.all()
     sensors_names = []
     for s in sensors:
         sensors_names.append(s.name)
@@ -188,11 +190,11 @@ def setConfiguration(request):
 
     for k in a:
         data = json.loads(k)
-        print 'data: {}'.format(data)
+        print('data: {}'.format(data))
         val = int(data['value'])
-        print 'val: {}'.format(val)
+        print('val: {}'.format(val))
         r = Configuration.objects.get(name=data['name'])
-        print r
+        print(r)
         r.value = val
         r.save()
 
@@ -211,14 +213,14 @@ def getGraphData(request):
     """
     logger.debug('in getGraphData')
     t0 = time.time()
-    k = list(request.GET.viewkeys())
+    k = list(request.GET.keys())
     data = json.loads(k[0])
     wanted_sensor = data[0]
     start_time = data[1]  # "2016-01-17 00:00:01"
     end_time = data[2]
 
-    print 'string start_time: {}'.format(start_time)
-    print 'string end_time: {}'.format(end_time)
+    print('string start_time: {}'.format(start_time))
+    print('string end_time: {}'.format(end_time))
     d_start = datetime(year=int(start_time[:4]), month=int(start_time[5:7]), day=int(start_time[8:10]),
                        hour=int(start_time[11:13]), minute=int(start_time[14:16]), second=int(start_time[17:19]),
                        microsecond=0)
@@ -229,13 +231,13 @@ def getGraphData(request):
                      microsecond=0)
     d_end = timezone.make_aware(value=d_end, timezone=timezone.get_current_timezone())
 
-    print 'wanted time between {} and {}'.format(d_start, d_end)
-    s = ControllerOBject.objects.get(name=wanted_sensor)
+    print('wanted time between {} and {}'.format(d_start, d_end))
+    s = ControllerObject.objects.get(name=wanted_sensor)
     t1 = time.time()
 
     data = []
     name = s.name
-    measures = Measure.objects.filter(sensor=s, measure_time__range=(d_start, d_end))
+    measures = HistoryValue.objects.filter(sensor=s, measure_time__range=(d_start, d_end))
     #measures = Measure.objects.all()
     t2 = time.time()
     logger.debug('data length: {}'.format(measures.count()))
@@ -252,9 +254,9 @@ def getGraphData(request):
     data.reverse()
     sensor_data = {'data': data, 'label': name}
     t4 = time.time()
-    print 'getting sensor from DB took {} [S]'.format(t1-t0)
-    print 'getting data from DB took {} [S]'.format(t2-t1)
-    print 'data formating took {} [S]'.format(t3-t2)
-    print 'data reversing took {} [S]'.format(t4-t3)
-    print 'all in all {} [S]'.format(t4-t0)
+    print('getting sensor from DB took {} [S]'.format(t1-t0))
+    print('getting data from DB took {} [S]'.format(t2-t1))
+    print('data formating took {} [S]'.format(t3-t2))
+    print('data reversing took {} [S]'.format(t4-t3))
+    print('all in all {} [S]'.format(t4-t0))
     return HttpResponse(json.dumps(sensor_data))

@@ -33,7 +33,7 @@ class SRDriver(object):
         self.simulate = simulate
 
         if not simulate:
-            print 'not simulate ****************************'
+            print('not simulate ****************************')
             global GPIO
             import RPi.GPIO as GPIO
             GPIO.setmode(GPIO.BOARD)
