@@ -12,4 +12,4 @@ python3 manage.py migrate --database='backup'
 python3 manage.py migrate --database='default'
 python3 populate_greenhouse_app.py
 
-echo "from django.contrib.auth.models import User; User.objects.create_superuser('netanel', 'admin@example.com', 'netanel')" | python3 manage.py shell
+echo "from django.contrib.auth.models import User; User.objects.create_superuser('user', 'admin@example.com', 'user')" | python3 manage.py shell
