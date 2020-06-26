@@ -22,7 +22,6 @@ class DigitalInputController(SensorController):
             global GPIO
             import RPi.GPIO as GPIO
             GPIO.setmode(GPIO.BOARD)
-            #GPIO.setup(self._pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.setup(self._pin, GPIO.IN)
 
     def read(self) -> Measurement:

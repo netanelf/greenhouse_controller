@@ -25,7 +25,7 @@ def populate_sensors(dbname):
 
     ds18b20 = Ds18b20Sensor.objects.using(dbname).get_or_create(
         device_id='28-011581dabaff',
-        simulate=True,
+        simulate=False,
         name='DS18B20_temp'
     )[0]
     ds18b20.save(using=dbname)
