@@ -160,7 +160,7 @@ def populate_flows(dbname):
     e = populate_event_at_t(dbname)
     a = populate_actions(dbname)
     f = Flow.objects.using(dbname).get_or_create(
-        name=f'save sensor data flow',
+        name=f'save sensor {a.sensor.name} data flow',
         event=e
     )[0]
     f.actions.set((a,))
@@ -173,14 +173,12 @@ def populate_flows(dbname):
     )[0]
     e.save(using=dbname)
     sensor = Sensor.objects.using(dbname).all()[1]
-    sensor_name = sensor.name
     a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
-        name=f'save {sensor_name} vals to db',
         sensor=sensor,
     )[0]
     a.save()
     f = Flow.objects.using(dbname).get_or_create(
-        name=f'save sensor data flow',
+        name=f'save sensor {sensor.name} data flow',
         event=e
     )[0]
     f.actions.set((a,))
@@ -199,7 +197,6 @@ def populate_actions(dbname):
     sensor = Sensor.objects.using(dbname).all()[0]
     sensor_name = sensor.name
     a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
-        name=f'save {sensor_name} vals to db',
         sensor=sensor,
     )[0]
     a.save()

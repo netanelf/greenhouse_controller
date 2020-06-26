@@ -243,9 +243,9 @@ class Brain(threading.Thread):
 
     def _create_event_object(self, event: Event):
         if isinstance(event, EventAtTimeT):
-            return EventAtTimeTO(name=event.name, t=event.event_time)
+            return EventAtTimeTO(name=str(event), t=event.event_time)
         elif isinstance(event, EventEveryDT):
-            return EventEveryDTO(name=event.name, dt=event.event_delta_t)
+            return EventEveryDTO(name=str(event), dt=event.event_delta_t)
         else:
             self._logger.error(f'could not find object for event: {event}')
 
@@ -255,7 +255,7 @@ class Brain(threading.Thread):
             if isinstance(a, ActionSaveSensorValToDB):
                 sensor_name = a.sensor.name
                 action_object_list.append(
-                    ActionSaveSensorValToDBO(name=a.name,
+                    ActionSaveSensorValToDBO(name=str(a),
                                              sensor=next((x for x in self._sensors if x.get_name() == sensor_name), None),
                                              db_interface=self._db_interface)
                 )
@@ -263,7 +263,7 @@ class Brain(threading.Thread):
                 relay_name = a.relay.name
                 action_object_list.append(
                     ActionSetRelayStateO(
-                        name=a.name,
+                        name=str(a),
                         relay=next((x for x in self._relays if x.get_name() == relay_name), None)
                     )
                 )

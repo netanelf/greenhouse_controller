@@ -213,7 +213,7 @@ def getGraphData(request):
     """
     logger.debug('in getGraphData')
     t0 = time.time()
-    k = list(request.GET.viewkeys())
+    k = list(request.GET.keys())
     data = json.loads(k[0])
     wanted_sensor = data[0]
     start_time = data[1]  # "2016-01-17 00:00:01"
