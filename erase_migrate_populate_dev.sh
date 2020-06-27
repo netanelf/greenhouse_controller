@@ -11,5 +11,6 @@ python3 manage.py makemigrations greenhouse_app
 python3 manage.py migrate --database='backup'
 python3 manage.py migrate --database='default'
 python3 populate_greenhouse_app.py
+python3 populate_configuration.py
 
 echo "from django.contrib.auth.models import User; User.objects.create_superuser('user', 'admin@example.com', 'user')" | python3 manage.py shell

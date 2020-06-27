@@ -6,7 +6,7 @@ import time
 import threading
 import os
 import sys
-from typing import List
+from typing import List, Set
 
 import cfg
 from core.utils import init_logging, get_root_path, update_keep_alive, register_keep_alive
@@ -71,10 +71,12 @@ class Brain(threading.Thread):
                 self._logger.exception('could not initialize lcd, ex: {}'.format(ex))
 
         # flows
+        self._actions: List[ActionO] = self._populate_actions()
         self._flow_managers: List[FlowManager] = []
         self._create_flow_managers()
 
         self._last_read_time = timezone.now()
+        self._last_flow_run_time = timezone.now()
         self._last_relay_set_time = timezone.now()
         self._last_keepalive_time = timezone.now()
         self._last_configuration_time = timezone.now()
@@ -89,6 +91,8 @@ class Brain(threading.Thread):
         self.start_helper_threads()
         register_keep_alive(name=self.__class__.__name__)
         self._register_sensors()
+
+        self.update_configurations()
         self._logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
@@ -121,9 +125,14 @@ class Brain(threading.Thread):
     def run(self):
         while not self._killed:
             try:
-                if timezone.now() - self._last_read_time > timedelta(seconds=cfg.FLOW_MANAGERS_RESOLUTION):
-                    for f in self._flow_managers:
-                        f.run_flow()
+                if timezone.now() - self._last_flow_run_time > timedelta(seconds=cfg.FLOW_MANAGERS_RESOLUTION):
+                    if self._configuration['manual_mode'] == 0:
+                        for f in self._flow_managers:
+                            f.run_flow()
+                    else:
+                        self._logger.debug('manual mode ON, avoiding flow run')
+                        self.run_actions_manually()
+                    self._last_flow_run_time = timezone.now()
 
                 if timezone.now() - self._last_read_time > timedelta(seconds=cfg.SENSOR_READING_RESOLUTION):
                     self._logger.info('brain sensors read cycle')
@@ -135,8 +144,6 @@ class Brain(threading.Thread):
                 # if timezone.now() - self._last_relay_set_time > timedelta(seconds=cfg.RELAY_STATE_WRITING_RESOLUTION):
                 #     self._logger.info('brain relay set cycle')
                 #     self._last_relay_set_time = timezone.now()
-                #     if not self._manual_mode:
-                #         self.issue_governors_relay_set()
                 #     self.issue_relay_set()
                 #     #self.write_data_to_db()
                 #     self._logger.info('brain relay set cycle end')
@@ -229,6 +236,13 @@ class Brain(threading.Thread):
         logging.info('searched for relay named: {}, not found'.format(name))
         return False
 
+    def _populate_actions(self):
+        action_objects_list = []
+        for a in Action.objects.all():
+            ao = self._create_action_objects(actions=[a])
+            action_objects_list.extend(ao)
+        return action_objects_list
+
     def _create_flow_managers(self):
         self._logger.debug('creating flow managers')
         for f in Flow.objects.all():
@@ -236,7 +250,9 @@ class Brain(threading.Thread):
             event = f.event
             #conditions = f.conditions
             actions = f.actions
-            action_list = self._create_action_objects(actions)
+            wanted_actions_names = [a.name for a in actions.all()]
+            #action_list = self._create_action_objects(actions)
+            action_list = [a for a in self._actions if a.get_name() in wanted_actions_names]
             event_object = self._create_event_object(event)
             flow_object = FlowManager(flow_name=f.name, event=event_object, conditions=None, actions=action_list)
             self._flow_managers.append(flow_object)
@@ -251,7 +267,7 @@ class Brain(threading.Thread):
 
     def _create_action_objects(self, actions):
         action_object_list = []
-        for a in actions.all():
+        for a in actions:
             if isinstance(a, ActionSaveSensorValToDB):
                 sensor_name = a.sensor.name
                 action_object_list.append(
@@ -264,7 +280,8 @@ class Brain(threading.Thread):
                 action_object_list.append(
                     ActionSetRelayStateO(
                         name=str(a),
-                        relay=next((x for x in self._relays if x.get_name() == relay_name), None)
+                        relay=next((x for x in self._relays if x.get_name() == relay_name), None),
+                        state=a.state
                     )
                 )
             elif isinstance(a, ActionSendEmail):
@@ -359,29 +376,29 @@ class Brain(threading.Thread):
     #                 r.wanted_state = governor_state
     #                 r.save()
 
-    def issue_relay_set(self):
-        """
-        read wanted state from DB for every relay, and if different from current state, change.
-        """
-        for r in Relay.objects.order_by():
-            if r.wanted_state != r.state:
-                old_state = r.state
-                new_state = r.wanted_state
-                controller = self.get_relay_by_name(name=r.name)
-                try:
-                    controller.change_state(new_state=r.wanted_state)
-                    self._logger.debug('relay: {} was set to state: {}'.format(controller.get_name(), r.wanted_state))
-                    r.state = r.wanted_state
-                    r.save()
-                    t = timezone.now()
-                    m0 = Measurement(sensor_name=r.name, time=t - timedelta(milliseconds=cfg.RELAY_DELTA_MEASURE_MS), value=old_state)
-                    self._data.append(m0)
-                    m1 = Measurement(sensor_name=r.name, time=t + timedelta(milliseconds=cfg.RELAY_DELTA_MEASURE_MS), value=new_state)
-                    self._data.append(m1)
-
-                except Exception as ex:
-                    self._logger.exception('some exception: {}'.format(ex))
-                    self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
+    # def issue_relay_set(self):
+    #     """
+    #     read wanted state from DB for every relay, and if different from current state, change.
+    #     """
+    #     for r in Relay.objects.order_by():
+    #         if r.wanted_state != r.state:
+    #             old_state = r.state
+    #             new_state = r.wanted_state
+    #             controller = self.get_relay_by_name(name=r.name)
+    #             try:
+    #                 controller.change_state(new_state=r.wanted_state)
+    #                 self._logger.debug('relay: {} was set to state: {}'.format(controller.get_name(), r.wanted_state))
+    #                 r.state = r.wanted_state
+    #                 r.save()
+    #                 t = timezone.now()
+    #                 m0 = Measurement(sensor_name=r.name, time=t - timedelta(milliseconds=cfg.RELAY_DELTA_MEASURE_MS), value=old_state)
+    #                 self._data.append(m0)
+    #                 m1 = Measurement(sensor_name=r.name, time=t + timedelta(milliseconds=cfg.RELAY_DELTA_MEASURE_MS), value=new_state)
+    #                 self._data.append(m1)
+    #
+    #             except Exception as ex:
+    #                 self._logger.exception('some exception: {}'.format(ex))
+    #                 self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
 
     def write_data_to_db(self):
         self._logger.debug('in _write_data_to_db')
@@ -410,6 +427,15 @@ class Brain(threading.Thread):
         self._logger.debug('in update_configurations')
         for c in Configuration.objects.all():
             self._configuration[c.name] = c.value
+
+    def run_actions_manually(self):
+        actions_to_run = ActionRunRequest.objects.all()
+        for action_to_run in actions_to_run:
+            self._logger.debug(f'trying to run {action_to_run} manually')
+            # TODO: we shold probably check something woth the Timestamp (not to old, not in future etc. )
+            action_o = [a for a in self._actions if a.get_name() == action_to_run.action_to_run.name][0]
+            action_o.perform_action()
+            action_to_run.delete()
 
     def kill_brain(self):
         self._logger.info('killing helper_threads')

@@ -23,7 +23,7 @@
           <ul class="nav navbar-nav">
             <li class="{% block index_active_class %}{% endblock %}"><a href="{% url 'index' %}">Home</a></li>
             <li class="{% block measurement_active_class %}{% endblock %}"><a href="{% url 'measurements' %}">Measurements</a></li>
-            <li class="{% block relays_active_class %}{% endblock %}"><a href="{% url 'relays' %}">Relays</a></li>
+            <li class="{% block mm_active_class %}{% endblock %}"><a href="{% url 'manualMode' %}">Manual Mode</a></li>
             <li class="{% block graphs_active_class %}{% endblock %}"><a href="{% url 'graphs' %}">Graphs</a></li>
             <li class=""><a href="{% url 'admin:index' %}">Admin</a></li>
           </ul>

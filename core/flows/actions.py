@@ -5,6 +5,7 @@ from django.utils import timezone
 import logging
 import requests
 
+
 class ActionO(object):
     def __init__(self, name):
         self._logger = logging.getLogger(f'{self.__class__.__name__}_{name}')
@@ -12,6 +13,9 @@ class ActionO(object):
 
     def perform_action(self):
         raise NotImplemented
+
+    def get_name(self):
+        return self._name
 
 
 class ActionSaveSensorValToDBO(ActionO):
@@ -95,5 +99,4 @@ class ActionSendEmailO(ActionO):
             self._logger.debug('something went wrong when sending the email, see the following message')
             self._logger.debug(r.text)
 
-#class ActionReadSensorValueO(ActionO):
 

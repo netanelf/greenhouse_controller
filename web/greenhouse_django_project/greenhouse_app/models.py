@@ -193,9 +193,7 @@ class Relay(ControllerObject):
     """
     pin = models.PositiveSmallIntegerField(null=True)
     state = models.BooleanField(default=False)
-    wanted_state = models.BooleanField(default=False)
     simulate = models.BooleanField(default=True)
-    #time_governor = models.ForeignKey(TimeGovernor, null=True, on_delete=models.CASCADE)
     inverted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -214,7 +212,7 @@ class ConfigurationInt(Configuration):
 
 
 class ConfigurationStr(Configuration):
-    value = models.CharField(max_length=256,default='')
+    value = models.CharField(max_length=256, default='')
 
     def __str__(self):
         return f'{self.name} = "{self.value}"'
@@ -277,7 +275,9 @@ class Action(PolymorphicModel):
     """
     base class for Actions models
     """
-    pass
+    def get_name(self):
+        return self.__str__()
+    name = property(get_name)
 
 
 class ActionSaveSensorValToDB(Action):
@@ -316,4 +316,8 @@ class Flow(models.Model):
     def __str__(self):
         return self.name
 
+
+class ActionRunRequest(models.Model):
+    action_to_run = models.OneToOneField(Action, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField()
 

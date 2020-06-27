@@ -1,0 +1,76 @@
+{% extends 'greenhouse_app/base.html' %}
+
+{% load static %}
+
+{% block title %}{{ 'Manual Mode page' }}{% endblock %}
+
+{% block mm_active_class %} active {% endblock %}
+
+{% block body_block %}
+
+    <h4>Manual Mode:</h4>
+    <input id="manual_override" type="checkbox" {% if manual_mode == 1 %}checked{% endif %} data-toggle="toggle" data-size="small" data-onstyle="danger">
+    <br>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Run Action</th>
+            </tr>
+        </thead>
+
+        <tbody id="actionsTableBody">
+            {% for action in actions_list %}
+            <tr>
+                <td id="{{action}}_name">{{action.name}}</td>
+                <td><button id="{{action.name}}" onclick=runAction(id)>run</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+
+{% endblock %}
+
+{% block script_block %}
+
+    function mycallbackfunc(response){
+    }
+
+    function runAction(action_id){
+        $.ajax({
+                url: 'runAction/',
+                type: 'GET',
+                data: action_id,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: true,
+                success: function(msg){}
+        });
+    }
+
+    function onload(e) {
+        //console.log(e.target.response);
+    }
+
+
+    $(function() {
+        $('#manual_override').change(function() {
+            console.log("manual override was changed to:" + $(this).prop('checked'));
+        var val = 0;
+        if ($(this).prop('checked')){
+            val = 1;
+        }
+        $.ajax({
+                url: '../setConfiguration/',
+                type: 'GET',
+                data: JSON.stringify({name: 'manual_mode', value: val}),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: true,
+                success: function(msg){}
+        });
+        })
+    })
+{% endblock %}

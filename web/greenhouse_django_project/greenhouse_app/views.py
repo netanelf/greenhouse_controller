@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Relay, Configuration, ControllerObject, KeepAlive, CurrentValue, HistoryValue
+from greenhouse_app.models import Sensor, Relay, Configuration, ControllerObject, KeepAlive, CurrentValue, HistoryValue, Action, ActionRunRequest
 import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
@@ -43,9 +43,11 @@ def index(request):
     # Render the response and send it back!
     return render(request, 'greenhouse_app/index.html', context_dict)
 
+
 @timing_decorator
 def measurements(request):
     return render(request, 'greenhouse_app/measurements.html')
+
 
 @timing_decorator
 def downloadMeasurements(request):
@@ -91,12 +93,14 @@ def downloadMeasurements(request):
     response['Content-Disposition'] = 'attachment; filename="measurements.csv"'
     return response
 
+
 @timing_decorator
 def getSensorsData(request):
     measurement_list = HistoryValue.objects.order_by('-measure_time')[:20]
     context_dict = {'measurements': measurement_list}
     # Render the response and send it back!
     return render(request, 'greenhouse_app/sensorsData.html', context_dict)
+
 
 @timing_decorator
 def getLastSensorValues(request):
@@ -148,7 +152,7 @@ def getRelaysState(request):
 # ajax callback
 @timing_decorator
 def setRelaysState(request):
-    a = request.GET.viewkeys()
+    a = request.GET.keys()
 
     for k in a:
         data = json.loads(k)
@@ -162,11 +166,24 @@ def setRelaysState(request):
 
 
 @timing_decorator
-def relays(request):
-    relay_list = Relay.objects.order_by()
+def runAction(request):
+    a = request.GET.keys()
+    k = list(a)[0]
+    for action in Action.objects.order_by():
+        if action.name == k:
+            rr = ActionRunRequest(action_to_run=action,
+                                  timestamp=timezone.now())
+            rr.save()
+
+    return HttpResponse(json.dumps({'NoData': None}))
+
+
+@timing_decorator
+def manualMode(request):
+    actions_list = Action.objects.order_by()
     manual_mode = Configuration.objects.get(name='manual_mode')
-    context_dict = {'relays': relay_list, 'manual_mode': manual_mode.value}
-    return render(request, 'greenhouse_app/relays.html', context_dict)
+    context_dict = {'actions_list': actions_list, 'manual_mode': manual_mode.value}
+    return render(request, 'greenhouse_app/manualMode.html', context_dict)
 
 
 @timing_decorator
@@ -186,7 +203,7 @@ def setConfiguration(request):
     """
     change some configuration in models.Configurations
     """
-    a = request.GET.viewkeys()
+    a = request.GET.keys()
 
     for k in a:
         data = json.loads(k)

@@ -8,7 +8,7 @@ from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModel
 
 @admin.register(Relay)
 class RelayAdmin(admin.ModelAdmin):
-    list_display = ('name', 'pin', 'state', 'wanted_state', 'simulate',)
+    list_display = ('name', 'pin', 'state', 'simulate',)
 
 
 @admin.register(Sensor)

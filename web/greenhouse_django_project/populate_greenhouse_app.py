@@ -52,48 +52,27 @@ def populate_relays(dbname):
     r = Relay.objects.using(dbname).get_or_create(name='light1')[0]
     r.pin = 0
     r.state = 1
-    r.wanted_state = 1
     r.save(using=dbname)
 
     print('creating relay: (name=light2, pin=13, state=1, wanted_state=1)')
     r = Relay.objects.using(dbname).get_or_create(name='light2')[0]
     r.pin = 1
     r.state = 1
-    r.wanted_state = 1
     r.save(using=dbname)
 
     print('creating relay: (name=fan, pin=15, state=1, wanted_state=1)')
     r = Relay.objects.using(dbname).get_or_create(name='fan')[0]
     r.pin = 2
     r.state = 1
-    r.wanted_state = 1
     r.save(using=dbname)
 
     print('creating relay: (name=pump, pin=5, state=1, wanted_state=1)')
     r = Relay.objects.using(dbname).get_or_create(name='fan')[0]
     r.pin = 4
     r.state = 1
-    r.wanted_state = 1
     r.simulate = 1
     r.inverted = 1
     r.save(using=dbname)
-
-
-def populate_configurations(dbname):
-    c = ConfigurationInt.objects.using(dbname).get_or_create(name='manual_mode')[0]
-    c.value = 0
-    c.explanation = 'if set to 1, governors do not change relay states, only manual user changes'
-    c.save(using=dbname)
-
-    c = ConfigurationStr.objects.using(dbname).get_or_create(name='sendgrid_api_key')[0]
-    c.value = ''
-    c.explanation = 'Your SendGrid API key, to be used with Email actions'
-    c.save(using=dbname)
-
-    c = ConfigurationStr.objects.using(dbname).get_or_create(name='sendgrid_sender_address')[0]
-    c.value = ''
-    c.explanation = 'The SendGrid sender you want to be used (configured in SendGrid)'
-    c.save(using=dbname)
 
 
 def populate_flows(dbname):
@@ -135,6 +114,19 @@ def populate_event_at_t(dbname):
 
 
 def populate_actions(dbname):
+    r = Relay.objects.using(dbname).all()[0]
+    a = ActionSetRelayState.objects.using(dbname).get_or_create(
+        relay=r,
+        state=0
+    )[0]
+    a.save()
+
+    a = ActionSetRelayState.objects.using(dbname).get_or_create(
+        relay=r,
+        state=1
+    )[0]
+    a.save()
+
     sensor = Sensor.objects.using(dbname).all()[0]
     sensor_name = sensor.name
     a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
@@ -151,5 +143,4 @@ if __name__ == '__main__':
         print('starting DB: {}'.format(db))
         populate_sensors(db)
         populate_relays(db)
-        populate_configurations(db)
         populate_flows(db)

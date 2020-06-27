@@ -46,7 +46,6 @@ def populate_relays(dbname):
     r = Relay.objects.using(dbname).get_or_create(name='pump1')[0]
     r.pin = 4
     r.state = 1
-    r.wanted_state = 1
     r.inverted = 1
     r.save(using=dbname)
 
