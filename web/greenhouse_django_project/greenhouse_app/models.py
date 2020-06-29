@@ -192,7 +192,7 @@ class Relay(ControllerObject):
     represent one relay, its name, state and wanted state
     """
     pin = models.PositiveSmallIntegerField(null=True)
-    state = models.BooleanField(default=False)
+    initial_state = models.BooleanField(default=False)
     simulate = models.BooleanField(default=True)
     inverted = models.BooleanField(default=False)
 

@@ -51,25 +51,25 @@ def populate_relays(dbname):
     print('creating relay: (name=light1, pin=11, state=1, wanted_state=1)')
     r = Relay.objects.using(dbname).get_or_create(name='light1')[0]
     r.pin = 0
-    r.state = 1
+    r.initial_state = 1
     r.save(using=dbname)
 
     print('creating relay: (name=light2, pin=13, state=1, wanted_state=1)')
     r = Relay.objects.using(dbname).get_or_create(name='light2')[0]
     r.pin = 1
-    r.state = 1
+    r.initial_state = 1
     r.save(using=dbname)
 
     print('creating relay: (name=fan, pin=15, state=1, wanted_state=1)')
     r = Relay.objects.using(dbname).get_or_create(name='fan')[0]
     r.pin = 2
-    r.state = 1
+    r.initial_state = 1
     r.save(using=dbname)
 
     print('creating relay: (name=pump, pin=5, state=1, wanted_state=1)')
     r = Relay.objects.using(dbname).get_or_create(name='fan')[0]
     r.pin = 4
-    r.state = 1
+    r.initial_state = 1
     r.simulate = 1
     r.inverted = 1
     r.save(using=dbname)

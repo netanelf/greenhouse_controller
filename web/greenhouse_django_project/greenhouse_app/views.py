@@ -141,10 +141,20 @@ def getKeepAliveValues(request):
 @timing_decorator
 def getRelaysState(request):
     relay_list = Relay.objects.order_by()
-
     relay_data = []
     for r in relay_list:
-        relay_data.append({'name': r.name, 'state': r.state})
+        name = r.name
+        try:
+            measure = CurrentValue.objects.filter(sensor=r)[0]
+            val = measure.val
+            val = '{:.2f}'.format(val)
+            t = measure.measure_time
+            t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
+            t = t.strftime('%d/%m/%Y %H:%M:%S')
+        except Exception:
+            val = 'unknown'
+            t = 'unknown'
+        relay_data.append({'name': name, 'val': val, 'time': t})
 
     return HttpResponse(json.dumps(relay_data))
 

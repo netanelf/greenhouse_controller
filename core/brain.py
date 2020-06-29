@@ -58,7 +58,7 @@ class Brain(threading.Thread):
 
         # all relays
         self._sr = None
-        self._relays = []
+        self._relays: List[RelayController] = []
         self.create_relay_controllers()
 
         # lcd controller
@@ -138,6 +138,7 @@ class Brain(threading.Thread):
                     self._logger.info('brain sensors read cycle')
                     self._last_read_time = timezone.now()
                     self.issue_sensor_reading()
+                    self.issue_relay_state_reading()
                     self.write_data_to_db()
                     self._logger.info('brain sensors read cycle end')
 
@@ -214,7 +215,7 @@ class Brain(threading.Thread):
         #self._sr = pcf8574_driver.PCF8574Driver(address=0x20, simulate=self._simulate_hw)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
-            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.state, invert_polarity=r.inverted))
+            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.initial_state, invert_polarity=r.inverted))
 
     def _register_sensors(self):
         self._logger.info('registering sensors')
@@ -304,6 +305,15 @@ class Brain(threading.Thread):
             self._data = []
             for s in self._sensors:
                 self._data.append(s.read())
+
+    def issue_relay_state_reading(self):
+        """
+        read current state of all relays and write measurement
+        :return:
+        """
+        for r in self._relays:
+            m = Measurement(sensor_name=r.name, time=timezone.now(), value=r.get_state())
+            self._data.append(m)
 
     def lcd_update(self):
         """
