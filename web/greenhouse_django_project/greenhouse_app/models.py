@@ -304,6 +304,12 @@ class ActionSendEmail(Action):
         return f'Send an email from {self.address} with subject "{self.subject}" and message "{self.message}"'
 
 
+class ActionCaptureImageAndSave(Action):
+
+    def __str__(self):
+        return f'Capture image and save'
+
+
 class Flow(models.Model):
     name = models.CharField(
         max_length=100,
@@ -320,4 +326,5 @@ class Flow(models.Model):
 class ActionRunRequest(models.Model):
     action_to_run = models.OneToOneField(Action, on_delete=models.CASCADE)
     timestamp = models.DateTimeField()
+
 

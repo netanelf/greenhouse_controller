@@ -28,7 +28,7 @@ django.setup()
 from django.utils import timezone
 from django.db.utils import OperationalError
 from greenhouse_app.models import *
-from core.flows.actions import ActionO, ActionSaveSensorValToDBO, ActionSetRelayStateO, ActionSendEmailO
+from core.flows.actions import *
 from core.flows.events import EventO, EventAtTimeTO, EventEveryDTO
 from core.flows.flow_manager import FlowManager
 from core.db_interface import DbInterface
@@ -70,11 +70,6 @@ class Brain(threading.Thread):
             except Exception as ex:
                 self._logger.exception('could not initialize lcd, ex: {}'.format(ex))
 
-        # flows
-        self._actions: List[ActionO] = self._populate_actions()
-        self._flow_managers: List[FlowManager] = []
-        self._create_flow_managers()
-
         self._last_read_time = timezone.now()
         self._last_flow_run_time = timezone.now()
         self._last_relay_set_time = timezone.now()
@@ -93,6 +88,12 @@ class Brain(threading.Thread):
         self._register_sensors()
 
         self.update_configurations()
+        self._crate_image_capturing_object()
+
+        # flows
+        self._actions: List[ActionO] = self._populate_actions()
+        self._flow_managers: List[FlowManager] = []
+        self._create_flow_managers()
         self._logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
@@ -111,16 +112,14 @@ class Brain(threading.Thread):
         backuper.start()
         self.helper_threads['backuper'] = backuper
 
+    def _crate_image_capturing_object(self):
         if cfg.CAPTURE_IMAGES:
             save_path = os.path.join(get_root_path(), 'logs', 'images')
             time_between_captures = cfg.IMAGE_FREQUENCY
-            capturer = ImageCapture(save_path=save_path,
-                                    time_between_captures=time_between_captures,
-                                    failure_manager=self.helper_threads['failure_manager'],
-                                    args_for_raspistill=cfg.RASPISTILL_ARGS)
-            capturer.setDaemon(True)
-            capturer.start()
-            self.helper_threads['capturer'] = capturer
+            self._capturer = ImageCapture(
+                save_path=save_path,
+                failure_manager=self.helper_threads['failure_manager'],
+                args_for_raspistill=cfg.RASPISTILL_ARGS)
 
     def run(self):
         while not self._killed:
@@ -159,7 +158,6 @@ class Brain(threading.Thread):
                     self._logger.info('brain configuration cycle')
                     self._last_configuration_time = timezone.now()
                     self.update_configurations()
-                    self.camera_on_off_set()
                     self.lcd_update()  # TODO: if LCD is actually used - it can have its own update cycle
                     self._logger.info('brain configuration cycle end')
 
@@ -295,6 +293,13 @@ class Brain(threading.Thread):
                         message=a.message
                     )
                 )
+            elif isinstance(a, ActionCaptureImageAndSave):
+                action_object_list.append(
+                    ActionCaptureImageAndSaveO(
+                        name=a.name,
+                        image_capturer=self._capturer
+                    )
+                )
             else:
                 self._logger.error(f'could not find object for action: {a}')
         return action_object_list
@@ -339,24 +344,6 @@ class Brain(threading.Thread):
             except Exception as ex:
                 self._logger.exception('could not write to lcd, ex: {}'.format(ex))
                 self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
-
-    def camera_on_off_set(self):
-        """
-        update camera state according to lux reading, if below threshold, do not take pictures
-        :return:
-        """
-        self._logger.debug('in camera_on_off_set')
-        for sensor_reading in self._data:
-            try:
-                if 'lux' in sensor_reading.sensor_name:
-                    val = sensor_reading.value
-                    capturer = self.helper_threads['capturer']
-                    if val >= cfg.IMAGE_LUX_THRESHOLD:
-                        capturer.change_controller_capture_switch(new_state=True)
-                    else:
-                        capturer.change_controller_capture_switch(new_state=False)
-            except Exception as ex:
-                self._logger.exception('in camera_on_off_set, got exception: {}'.format(ex))
 
     def get_dht22_controller(self, pin):
         """

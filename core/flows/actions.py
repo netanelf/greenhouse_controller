@@ -1,5 +1,6 @@
 from core.sensors.sensor_controller import SensorController
 from core.controllers.relay_controller import RelayController
+from core.image_capture import ImageCapture
 from core.db_interface import DbInterface
 from django.utils import timezone
 import logging
@@ -100,3 +101,10 @@ class ActionSendEmailO(ActionO):
             self._logger.debug(r.text)
 
 
+class ActionCaptureImageAndSaveO(ActionO):
+    def __init__(self, name, image_capturer: ImageCapture):
+        super(ActionCaptureImageAndSaveO, self).__init__(name)
+        self._capturer = image_capturer
+
+    def perform_action(self):
+        self._capturer.capture_image_and_save()

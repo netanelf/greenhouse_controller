@@ -57,6 +57,25 @@ def populate_configurations(dbname):
     c.save(using=dbname)
 
 
+def populate_actions(dbname):
+    r = Relay.objects.using(dbname).get(name='pump1')
+    a = ActionSetRelayState.objects.using(dbname).get_or_create(
+        relay=r,
+        state=0
+    )[0]
+    a.save()
+
+    a = ActionSetRelayState.objects.using(dbname).get_or_create(
+        relay=r,
+        state=1
+    )[0]
+    a.save()
+
+    a = ActionCaptureImageAndSave.objects.using(dbname).get_or_create(
+    )[0]
+    a.save()
+
+
 if __name__ == '__main__':
     print("Starting population script...")
     dbs = ['default', 'backup']
@@ -65,3 +84,4 @@ if __name__ == '__main__':
         populate_sensors(db)
         populate_relays(db)
         populate_configurations(db)
+        populate_actions(db)

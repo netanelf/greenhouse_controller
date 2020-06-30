@@ -68,7 +68,7 @@ class ConfigurationStrAdmin(PolymorphicChildModelAdmin):
 class ActionsAdmin(PolymorphicParentModelAdmin):
     polymorphic_list = True
     list_display = ('__str__',)
-    child_models = (ActionSaveSensorValToDB, ActionSetRelayState, ActionSendEmail)
+    child_models = (ActionSaveSensorValToDB, ActionSetRelayState, ActionSendEmail, ActionCaptureImageAndSave)
 
 
 @admin.register(ActionSaveSensorValToDB)
@@ -84,6 +84,11 @@ class ActionSetRelayStateAdmin(PolymorphicChildModelAdmin):
 @admin.register(ActionSendEmail)
 class ActionSendEmailAdmin(PolymorphicChildModelAdmin):
     base_model = ActionSendEmail
+
+
+@admin.register(ActionCaptureImageAndSave)
+class ActionCaptureImageAndSaveAdmin(PolymorphicChildModelAdmin):
+    base_model = ActionCaptureImageAndSave
 
 
 @admin.register(Event)
