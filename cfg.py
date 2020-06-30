@@ -29,10 +29,6 @@ NUMBER_OF_ITEMS_IN_RPI_DB = 1000*32
 NUMBER_OF_ITEMS_TO_MOVE_ONCE = 100
 
 # image capture configurations
-CAPTURE_IMAGES = True
-IMAGE_CAPTURE_WAIT_TIME = 10  # thread cycle time
-IMAGE_FREQUENCY = timedelta(hours=4)
-IMAGE_LUX_THRESHOLD = 25  # if lux reading is below threshold disallow image captures
 RASPISTILL_ARGS = ['-ae', '64,0x00,0x8080FF', '-a', '12'] # ['-vf', '-hf'], flip, etc.
 
 # failures manager configurations

@@ -72,6 +72,7 @@ def populate_actions(dbname):
     a.save()
 
     a = ActionCaptureImageAndSave.objects.using(dbname).get_or_create(
+        simulate=False
     )[0]
     a.save()
 
@@ -83,5 +84,4 @@ if __name__ == '__main__':
         print("Starting db: {} ".format(db))
         populate_sensors(db)
         populate_relays(db)
-        populate_configurations(db)
         populate_actions(db)

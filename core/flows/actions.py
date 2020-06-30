@@ -102,9 +102,10 @@ class ActionSendEmailO(ActionO):
 
 
 class ActionCaptureImageAndSaveO(ActionO):
-    def __init__(self, name, image_capturer: ImageCapture):
+    def __init__(self, name, image_capturer: ImageCapture, simulate):
         super(ActionCaptureImageAndSaveO, self).__init__(name)
         self._capturer = image_capturer
+        self._simulate = simulate
 
     def perform_action(self):
-        self._capturer.capture_image_and_save()
+        self._capturer.capture_image_and_save(simulate=self._simulate)

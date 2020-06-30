@@ -121,6 +121,11 @@ def populate_actions(dbname):
     )[0]
     a.save()
 
+    a = ActionCaptureImageAndSave.objects.using(dbname).get_or_create(
+        simulate=True
+    )[0]
+    a.save()
+
     a = ActionSetRelayState.objects.using(dbname).get_or_create(
         relay=r,
         state=1

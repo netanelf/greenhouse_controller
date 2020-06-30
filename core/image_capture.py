@@ -1,9 +1,6 @@
 import logging
-import threading
 from datetime import datetime, timedelta
 from django.utils import timezone
-from time import sleep
-import cfg
 import core.utils as utils
 import os
 import subprocess
@@ -24,49 +21,29 @@ class ImageCapture(object):
         self._failure_manager = failure_manager
         self._logger.info('ImageCapture Finished Init')
 
-    # def run(self):
-    #     self.should_run = True
-    #     while self.should_run:
-    #         try:
-    #             self.logger.info('image capture thread {}'.format(datetime.now()))
-    #             if self._check_if_should_capture():
-    #                 self._capture()
-    #             utils.update_keep_alive(name=self.__class__.__name__, failure_manager=self.failure_manager)
-    #             sleep(cfg.IMAGE_CAPTURE_WAIT_TIME)
-    #         except Exception as ex:
-    #             self.logger.exception(ex)
-
-    # def change_controller_capture_switch(self, new_state):
-    #     self.logger.debug('in change_controller_capture_switch, new_state: {}'.format(new_state))
-    #     self.controller_capture_switch = new_state
-    #
-    # def _check_if_should_capture(self):
-    #     current_time = datetime.now()
-    #     self.logger.debug('in _check_if_should_capture, current_time: {}, self.last_capture_time: {}, self.time_between_captures: {}'
-    #                       .format(current_time, self.last_capture_time, self.time_between_captures))
-    #     if (current_time - self.last_capture_time > self.time_between_captures) and (self.controller_capture_switch is True):
-    #         return True
-    #     else:
-    #         return False
-
-    def capture_image_and_save(self):
+    def capture_image_and_save(self, simulate=False):
         self._logger.info('in _capture')
+
+        if simulate:
+            filename = 'cap_{}.txt'.format((timezone.make_naive(value=timezone.now(),
+                                                                timezone=timezone.get_current_timezone()).strftime(
+                '%d-%m-%y_%H-%M-%S')))
+            file_name = os.path.join(utils.get_root_path(), 'logs', 'pics', filename)
+            with open(file_name, 'w') as f:
+                f.write('just a simulated image')
         try:
-            filename = 'cap_{}.jpg'.format((timezone.make_naive(value=timezone.now(), timezone=timezone.get_current_timezone()).strftime('%d-%m-%y_%H-%M-%S')))
+            filename = 'cap_{}.jpg'.format((timezone.make_naive(value=timezone.now(),
+                                                                timezone=timezone.get_current_timezone()).strftime(
+                '%d-%m-%y_%H-%M-%S')))
             file_name = os.path.join(utils.get_root_path(), 'logs', 'pics', filename)
             command = ['raspistill']
             command.extend(self._args_for_raspistill)
             command.extend(['-o', file_name])
             self._logger.debug('built command for subprocess: {}'.format(command))
-            #subprocess.call(command)
             subprocess.Popen(command)
         except Exception as ex:
             self._logger.exception('got exception in capture: {}'.format(ex))
-        self.last_capture_time = datetime.now()
 
-    # def stop_thread(self):
-    #     self.logger.info('in stop_thread')
-    #     self.should_run = False
 
 
 if __name__ == '__main__':

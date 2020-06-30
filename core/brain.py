@@ -113,13 +113,11 @@ class Brain(threading.Thread):
         self.helper_threads['backuper'] = backuper
 
     def _crate_image_capturing_object(self):
-        if cfg.CAPTURE_IMAGES:
-            save_path = os.path.join(get_root_path(), 'logs', 'images')
-            time_between_captures = cfg.IMAGE_FREQUENCY
-            self._capturer = ImageCapture(
-                save_path=save_path,
-                failure_manager=self.helper_threads['failure_manager'],
-                args_for_raspistill=cfg.RASPISTILL_ARGS)
+        save_path = os.path.join(get_root_path(), 'logs', 'images')
+        self._capturer = ImageCapture(
+            save_path=save_path,
+            failure_manager=self.helper_threads['failure_manager'],
+            args_for_raspistill=cfg.RASPISTILL_ARGS)
 
     def run(self):
         while not self._killed:
@@ -297,7 +295,8 @@ class Brain(threading.Thread):
                 action_object_list.append(
                     ActionCaptureImageAndSaveO(
                         name=a.name,
-                        image_capturer=self._capturer
+                        image_capturer=self._capturer,
+                        simulate=a.simulate
                     )
                 )
             else:
