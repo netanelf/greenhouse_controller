@@ -13,7 +13,7 @@ class EventO(object):
 
 class EventAtTimeTO(EventO):
     def __init__(self, name: str, t: time):
-        super(EventAtTimeTO, self).__init__(name)
+        super().__init__(name)
         self._event_firing_time: time = t
         self._last_firing_time: datetime = datetime.min
 
@@ -27,7 +27,7 @@ class EventAtTimeTO(EventO):
 
 class EventEveryDTO(EventO):
     def __init__(self, name, dt: timedelta):
-        super(EventEveryDTO, self).__init__(name)
+        super().__init__(name)
         self._event_firing_dt = dt
         self._last_event_firing_time = datetime.min
 
@@ -37,3 +37,17 @@ class EventEveryDTO(EventO):
             self._last_event_firing_time = now
             return True
         return False
+
+
+class EventAtTimeTDaysO(EventAtTimeTO):
+    def __init__(self, name: str, t: time, days):
+        super().__init__(name, t)
+        self._event_days = days
+
+    def check_should_fire(self) -> bool:
+        now = datetime.now()
+        day_int = now.weekday()
+        if str(day_int) in self._event_days and super().check_should_fire():
+            return True
+        return False
+

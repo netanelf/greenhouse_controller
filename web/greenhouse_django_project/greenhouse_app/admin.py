@@ -95,7 +95,7 @@ class ActionCaptureImageAndSaveAdmin(PolymorphicChildModelAdmin):
 class EventAdmin(PolymorphicParentModelAdmin):
     polymorphic_list = True
     list_display = ('__str__',)
-    child_models = (EventAtTimeT, EventEveryDT)
+    child_models = (EventAtTimeT, EventEveryDT, EventAtTimeTDays)
     list_filter = (PolymorphicChildModelFilter,)
 
 
@@ -107,6 +107,11 @@ class EventAtTimeTAdmin(PolymorphicChildModelAdmin):
 @admin.register(EventEveryDT)
 class EventEveryDTAdmin(PolymorphicChildModelAdmin):
     base_model = EventEveryDT
+
+
+@admin.register(EventAtTimeTDays)
+class EventAtTimeTDaysAdmin(PolymorphicChildModelAdmin):
+    base_model = EventAtTimeTDays
 
 
 @admin.register(Flow)

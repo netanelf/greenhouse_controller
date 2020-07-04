@@ -2,7 +2,7 @@ __author__ = 'netanel'
 
 import logging
 from datetime import timedelta
-import time
+from time import sleep
 import threading
 import os
 import sys
@@ -29,7 +29,7 @@ from django.utils import timezone
 from django.db.utils import OperationalError
 from greenhouse_app.models import *
 from core.flows.actions import *
-from core.flows.events import EventO, EventAtTimeTO, EventEveryDTO
+from core.flows.events import *
 from core.flows.flow_manager import FlowManager
 from core.db_interface import DbInterface
 
@@ -163,7 +163,7 @@ class Brain(threading.Thread):
                 self._logger.error('in main brain cycle, got exception:')
                 self._logger.exception(ex)
 
-            time.sleep(0.1)
+            sleep(0.1)
         self._logger.info('brain killed')
 
     def get_current_data(self):
@@ -255,7 +255,9 @@ class Brain(threading.Thread):
             self._flow_managers.append(flow_object)
 
     def _create_event_object(self, event: Event):
-        if isinstance(event, EventAtTimeT):
+        if isinstance(event, EventAtTimeTDays):
+            return EventAtTimeTDaysO(name=str(event), t=event.event_time, days=event.event_days)
+        elif isinstance(event, EventAtTimeT):
             return EventAtTimeTO(name=str(event), t=event.event_time)
         elif isinstance(event, EventEveryDT):
             return EventEveryDTO(name=str(event), dt=event.event_delta_t)
@@ -357,63 +359,9 @@ class Brain(threading.Thread):
         self._dht_22_drivers.append(d)
         return d
 
-    # def issue_governors_relay_set(self):
-    #     """
-    #     read current governor state and set wanted states for relays according to governor
-    #     """
-    #     for r in Relay.objects.order_by():
-    #         governor = r.time_governor
-    #         if governor is not None:
-    #             self._logger.debug('relay: {}, has governor: {}'.format(r.name, governor))
-    #             governor_state = governor.state
-    #
-    #             if governor_state != r.state:
-    #                 self._logger.debug('relay: {}, was changed by governor: {} to state: {}'.format(r.name, governor, governor_state))
-    #                 r.wanted_state = governor_state
-    #                 r.save()
-
-    # def issue_relay_set(self):
-    #     """
-    #     read wanted state from DB for every relay, and if different from current state, change.
-    #     """
-    #     for r in Relay.objects.order_by():
-    #         if r.wanted_state != r.state:
-    #             old_state = r.state
-    #             new_state = r.wanted_state
-    #             controller = self.get_relay_by_name(name=r.name)
-    #             try:
-    #                 controller.change_state(new_state=r.wanted_state)
-    #                 self._logger.debug('relay: {} was set to state: {}'.format(controller.get_name(), r.wanted_state))
-    #                 r.state = r.wanted_state
-    #                 r.save()
-    #                 t = timezone.now()
-    #                 m0 = Measurement(sensor_name=r.name, time=t - timedelta(milliseconds=cfg.RELAY_DELTA_MEASURE_MS), value=old_state)
-    #                 self._data.append(m0)
-    #                 m1 = Measurement(sensor_name=r.name, time=t + timedelta(milliseconds=cfg.RELAY_DELTA_MEASURE_MS), value=new_state)
-    #                 self._data.append(m1)
-    #
-    #             except Exception as ex:
-    #                 self._logger.exception('some exception: {}'.format(ex))
-    #                 self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
-
     def write_data_to_db(self):
         self._logger.debug('in _write_data_to_db')
         self._db_interface.update_sensors_value_current_db(self._data)
-        # with self._data_lock:
-        #     for d in self._data:
-        #         if d is not None:
-        #             t = 0
-        #             while t in range(cfg.DB_RETRIES):
-        #                 try:
-        #                     self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
-        #                     controller = ControllerOBject.objects.get(name=d.sensor_name)
-        #                     Measure.objects.create(sensor=controller, measure_time=d.time, val=d.value)
-        #                     break
-        #                 except OperationalError as ex:
-        #                     self._logger.error('while writing to DB got exception, try: {}'.format(t))
-        #                     self._logger.exception(ex)
-        #                     self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
-        #                     t += 1
 
     def update_configurations(self):
         """

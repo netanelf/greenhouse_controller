@@ -77,7 +77,7 @@ def populate_relays(dbname):
 
 def populate_flows(dbname):
     # populate flow at time T
-    e = populate_event_at_t(dbname)
+    e = populate_events(dbname)
     a = populate_actions(dbname)
     f = Flow.objects.using(dbname).get_or_create(
         name=f'save sensor {a.sensor.name} data flow',
@@ -105,7 +105,10 @@ def populate_flows(dbname):
     f.save()
 
 
-def populate_event_at_t(dbname):
+    # populate flow recurring pump + write to db relay value on change
+
+def populate_events(dbname):
+
     t = '13:00:00'
     e = EventAtTimeT.objects.using(dbname).get_or_create(
         event_time=t)[0]

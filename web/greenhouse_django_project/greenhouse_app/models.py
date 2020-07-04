@@ -2,24 +2,9 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta, datetime
 from polymorphic.models import PolymorphicModel
+from multiselectfield import MultiSelectField
 import time
 import logging
-
-'''
-class SensorKind(models.Model):
-    SENSOR_KINDS = (
-                    ('dht22temp', 'dht22temp'),
-                    ('dht22humidity', 'dht22humidity'),
-                    ('ds18b20', 'ds18b20'),
-                    ('tsl2561', 'tsl2561'),
-                    ('digitalInput', 'digitalInput'),
-                    ('other', 'other')
-    )
-    kind = models.CharField(max_length=128, choices=SENSOR_KINDS, unique=True, default='other')
-
-    def __str__(self):
-        return self.kind
-'''
 
 
 class ControllerObject(PolymorphicModel):
@@ -37,11 +22,7 @@ class Sensor(ControllerObject):
     """
     represent one sensor
     """
-    #kind = models.ForeignKey(SensorKind, blank=True, null=True, on_delete=models.CASCADE)
     simulate = models.BooleanField(default=True)
-    #pin = models.PositiveSmallIntegerField(default=99)
-    #i2c = models.BooleanField(default=False)
-    #device_id = models.CharField(max_length=32, default='')
     
     def __str__(self):
         return self.name
@@ -105,86 +86,6 @@ class HistoryValue(models.Model):
     def __str__(self):
         return 'sensor: {}, measure time: {}, value: {}, time stamp: {}'.format(self.sensor, self.measure_time,
                                                                                 self.val, self.ts)
-
-'''
-class TimeGovernor(models.Model):
-    """
-    """
-    logger = logging.getLogger(__name__)
-
-    GOVERNOR_KINDS = (
-        ('R', 'recurring'),
-        ('O', 'on off'),
-    )
-
-    name = models.CharField(max_length=128, unique=True)
-    kind = models.CharField(max_length=1, choices=GOVERNOR_KINDS)
-
-    on_start_time = models.TimeField(help_text='used only in "on off" governor')
-    on_end_time = models.TimeField(help_text='used only in "on off" governor')
-
-    recurring_on_start_time = models.DateTimeField(help_text='used only in "on off" governor')
-    recurring_on_period = models.DurationField(help_text='timedelta "DD HH:MM:SS", used only in "recurring" governor')  # seconds
-    recurring_off_period = models.DurationField(help_text='timedelta "DD HH:MM:SS", used only in "recurring" governor')  # seconds
-
-    def on_off_status(self):
-        """
-        return the output of this governor (should the relay be in ON or OFF state)
-        """
-        self.logger.debug('kind: {}'.format(self.kind))
-        if self.kind == 'R':
-            t = timezone.now()
-            t_delta = t - self.recurring_on_start_time
-            delta_seconds = t_delta.total_seconds()
-            period_sec = (self.recurring_on_period + self.recurring_off_period).total_seconds()
-            a, b = divmod(delta_seconds, period_sec)
-            shifted_t = t - timedelta(seconds=a * period_sec)
-            # print('comparing {} with float: {}'.format(self.recurring_on_period, float(self.recurring_on_period)))
-            if self.recurring_on_start_time <= shifted_t < self.recurring_on_start_time + self.recurring_on_period:
-                return 1
-            else:
-                return 0
-
-        elif self.kind == 'O':
-
-            t = timezone.now()
-            t = timezone.make_naive(t, timezone=timezone.get_current_timezone())
-
-            on_time_this_date = timezone.make_naive(timezone.now(), timezone=timezone.get_current_timezone())\
-                .replace(hour=self.on_start_time.hour,
-                         minute=self.on_start_time.minute,
-                         second=self.on_start_time.second,
-                         microsecond=0)
-
-            off_time_this_date = timezone.make_naive(timezone.now(), timezone=timezone.get_current_timezone())\
-                .replace(hour=self.on_end_time.hour,
-                         minute=self.on_end_time.minute,
-                         second=self.on_end_time.second,
-                         microsecond=0)
-
-            if self.on_end_time < self.on_start_time:
-                if t.hour < 12:
-                    on_time_this_date = on_time_this_date - timedelta(days=1)  # yesterday
-                else:
-                    off_time_this_date = off_time_this_date + timedelta(days=1) # tomorrow
-
-            if on_time_this_date < t < off_time_this_date:
-                return 1
-            else:
-                return 0
-
-    def get_nice_kind(self):
-        for k, v in self.GOVERNOR_KINDS:
-            if k == self.kind:
-                return v
-        return 'UNKNOWN'
-
-    state = property(on_off_status)
-    nice_kind = property(get_nice_kind)
-
-    def __str__(self):
-        return self.name
-'''
 
 
 class Relay(ControllerObject):
@@ -262,6 +163,23 @@ class EventEveryDT(Event):
 
     def __str__(self):
         return f'Every {self.event_delta_t}'
+
+
+class EventAtTimeTDays(EventAtTimeT):
+    DAYS_OF_WEEK = (
+        (0, 'Monday'),
+        (1, 'Tuesday'),
+        (2, 'Wednesday'),
+        (3, 'Thursday'),
+        (4, 'Friday'),
+        (5, 'Saturday'),
+        (6, 'Sunday'),
+    )
+
+    event_days = MultiSelectField(choices=DAYS_OF_WEEK)
+
+    def __str__(self):
+        return f'EventAtTimeTDays {self.event_time} Days {self.event_days}'
 
 
 class Condition(PolymorphicModel):
