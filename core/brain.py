@@ -11,7 +11,6 @@ from typing import List, Set
 import cfg
 from core.utils import init_logging, get_root_path, update_keep_alive, register_keep_alive
 from core.db_backup import DbBackupper
-from core.image_capture import ImageCapture
 from core.failurs_manager import FailureManager
 from core.sensors.sensor_controller import Measurement
 from core.sensors.dht22_temp_controller import DHT22TempController
@@ -19,8 +18,7 @@ from core.sensors.dht22_humidity_controller import DHT22HumidityController
 from core.sensors.ds18b20_temp_controller import DS18B20TempController
 from core.sensors.tsl2561_lux_controller import TSL2561LuxController
 from core.sensors.digital_input_controller import DigitalInputController
-from core.sensors.sensor_controller import SensorController
-from core.controllers.relay_controller import RelayController
+from core.drivers.dht22_driver import DHT22Driver
 from core.drivers import sr_driver, dht22_driver, pcf8574_driver
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
@@ -52,7 +50,7 @@ class Brain(threading.Thread):
         self._db_interface = DbInterface()
 
         # all sensors
-        self._dht_22_drivers = []
+        self._dht_22_drivers: List[DHT22Driver] = []
         self._sensors: List[SensorController] = []
         self.create_sensor_controllers()
 
@@ -139,13 +137,6 @@ class Brain(threading.Thread):
                     self.write_data_to_db()
                     self._logger.info('brain sensors read cycle end')
 
-                # if timezone.now() - self._last_relay_set_time > timedelta(seconds=cfg.RELAY_STATE_WRITING_RESOLUTION):
-                #     self._logger.info('brain relay set cycle')
-                #     self._last_relay_set_time = timezone.now()
-                #     self.issue_relay_set()
-                #     #self.write_data_to_db()
-                #     self._logger.info('brain relay set cycle end')
-
                 if timezone.now() - self._last_keepalive_time > timedelta(seconds=cfg.KEEP_ALIVE_RESOLUTION):
                     self._logger.info('brain keepalive cycle')
                     self._last_keepalive_time = timezone.now()
@@ -211,7 +202,7 @@ class Brain(threading.Thread):
         #self._sr = pcf8574_driver.PCF8574Driver(address=0x20, simulate=self._simulate_hw)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
-            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.initial_state, invert_polarity=r.inverted))
+            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.default_state, invert_polarity=r.inverted))
 
     def _register_sensors(self):
         self._logger.info('registering sensors')
@@ -353,7 +344,7 @@ class Brain(threading.Thread):
         :return:
         """
         for d in self._dht_22_drivers:
-            if d.pin == pin:
+            if d.get_pin() == pin:
                 return d
         d = dht22_driver.DHT22Driver(pin=pin)
         self._dht_22_drivers.append(d)

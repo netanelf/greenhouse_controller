@@ -8,7 +8,6 @@ LOG_LEVEL = logging.DEBUG
 DB_RETRIES = 5
 
 SENSOR_READING_RESOLUTION = 10  # [S] gather sensors reading every READING_RESOLUTION time
-RELAY_STATE_WRITING_RESOLUTION = 10  # [S] check if wanted state changed, write wanted state to relays
 KEEP_ALIVE_RESOLUTION = 10  # [S] send brain keepalive
 CONFIGURATION_RESOLUTION = 10  # [S] all other things to do in brain cycle
 FLOW_MANAGERS_RESOLUTION = 1  #[S]
@@ -22,6 +21,9 @@ RCLK = 13
 SRCLK = 15
 ENABLE = 11
 REGISTER_SIZE = 8
+
+# individual sensors configurations
+DHT22_MINIMAL_READ_DELTA_SEC = 30  # do not read sensors in smaller intervals than this value (to not influence reading temp)
 
 # DB backupper configurations
 DB_BACKUPPER_WAIT_TIME = 10

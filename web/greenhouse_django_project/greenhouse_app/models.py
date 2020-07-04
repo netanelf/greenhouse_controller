@@ -93,7 +93,10 @@ class Relay(ControllerObject):
     represent one relay, its name, state and wanted state
     """
     pin = models.PositiveSmallIntegerField(null=True)
-    initial_state = models.BooleanField(default=False)
+    default_state = models.BooleanField(default=False, help_text=
+        'whenever greenhouse_controller is started, this is ' \
+        'the value that will be set to the relay, untill some ' \
+        'controller will change this according to events or manual controll')
     simulate = models.BooleanField(default=True)
     inverted = models.BooleanField(default=False)
 

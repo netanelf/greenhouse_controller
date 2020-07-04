@@ -1,10 +1,13 @@
 __author__ = 'netanel'
 import logging
+from datetime import datetime
 from core.sensors.sensor_controller import GPIO_TO_PIN_TABLE
 try:
     import Adafruit_DHT as dht
 except Exception:
     pass
+
+import cfg
 
 
 '''
@@ -22,39 +25,38 @@ def read_retry(sensor, pin, retries=15, delay_seconds=2, platform=None):
 
 class DHT22Driver(object):
     def __init__(self, pin):
-        self.logger = logging.getLogger('dht22driver_pin_{}'.format(pin))
-        self.logger.info('initializing DHT22Driver')
-        self.logger.info('pin: {}'.format(pin))
+        self._logger = logging.getLogger('dht22driver_pin_{}'.format(pin))
+        self._logger.info('initializing DHT22Driver')
+        self._logger.info('pin: {}'.format(pin))
 
-        self.pin = pin
+        self._pin = pin
         try:
-            self.gpio = GPIO_TO_PIN_TABLE[self.pin]
+            self._gpio = GPIO_TO_PIN_TABLE[self._pin]
         except Exception as ex:
-            self.logger.info('got ex: {}'.format(ex))
-            self.logger.error('pin {} is not in GPIO table'.format(pin))
+            self._logger.info('got ex: {}'.format(ex))
+            self._logger.error('pin {} is not in GPIO table'.format(pin))
             raise ex
 
-        self.temp = None
-        self.humidity = None
+        self._temp = None
+        self._humidity = None
+        self._last_read_time = datetime.min
 
     def read_sensor_data(self):
-        h, t = dht.read_retry(sensor=dht.DHT22, pin=self.gpio, retries=5, delay_seconds=0.5)
-        self.logger.debug('read dht22, pin: {}, gpio: {}, t: {}, h: {}'.format(self.pin, self.gpio, t, h))
-        self.temp = t
-        self.humidity = h
+        h, t = dht.read_retry(sensor=dht.DHT22, pin=self._gpio, retries=5, delay_seconds=0.5)
+        self._logger.debug('read dht22, pin: {}, gpio: {}, t: {}, h: {}'.format(self._pin, self._gpio, t, h))
+        self._temp = t
+        self._humidity = h
+        self._last_read_time = datetime.now()
 
     def get_temp(self):
-        if self.temp is None:
+        if (datetime.now() - self._last_read_time).seconds > cfg.DHT22_MINIMAL_READ_DELTA_SEC:
             self.read_sensor_data()
-        # explanation: read temp + humidity to avoide communication with sensor twice
-        t = self.temp
-        self.temp = None
-        return t
+        return self._temp
 
     def get_humidity(self):
-        if self.humidity is None:
+        if (datetime.now() - self._last_read_time).seconds > cfg.DHT22_MINIMAL_READ_DELTA_SEC:
             self.read_sensor_data()
-        # explanation: read temp + humidity to avoide communication with sensor twice
-        h = self.humidity
-        self.humidity = None
-        return h
+        return self._humidity
+
+    def get_pin(self):
+        return self._pin
