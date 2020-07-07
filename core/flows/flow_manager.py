@@ -2,6 +2,7 @@ import logging
 from typing import List
 from .actions import ActionO
 from.events import EventO
+import threading
 
 
 class FlowManager(object):
@@ -11,6 +12,7 @@ class FlowManager(object):
         self._event: EventO = event
         self._conditions = conditions
         self._actions: List[ActionO] = actions
+        self._action_t = None
 
     def run_flow(self):
         if self._check_event():
@@ -26,5 +28,13 @@ class FlowManager(object):
             return True
 
     def _perform_actions(self):
+        # TODO: maybe better to implement with ThreadPoolExecutor, and ensure not to many threads are running/ close nicely etc.
+        self._action_t = threading.Thread(target=self._thread_func)
+        self._logger.info('starting actions thread')
+        self._action_t.start()
+
+    def _thread_func(self):
         for a in self._actions:
             a.perform_action()
+        self._logger.info('actions thread ended')
+

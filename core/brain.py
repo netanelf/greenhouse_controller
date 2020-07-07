@@ -59,6 +59,8 @@ class Brain(threading.Thread):
         self._relays: List[RelayController] = []
         self.create_relay_controllers()
 
+        self._controller_objects: List = self._sensors + self._relays
+
         # lcd controller
         if not self._simulate_hw:
             try:
@@ -239,11 +241,27 @@ class Brain(threading.Thread):
             #conditions = f.conditions
             actions = f.actions
             wanted_actions_names = [a.name for a in actions.all()]
-            #action_list = self._create_action_objects(actions)
-            action_list = [a for a in self._actions if a.get_name() in wanted_actions_names]
             event_object = self._create_event_object(event)
-            flow_object = FlowManager(flow_name=f.name, event=event_object, conditions=None, actions=action_list)
+            actions_objects_list = self._get_actions_from_actions_names(wanted_actions_names)
+            flow_object = FlowManager(flow_name=f.name,
+                                      event=event_object,
+                                      conditions=None,
+                                      actions=actions_objects_list)
             self._flow_managers.append(flow_object)
+
+    def _get_actions_from_actions_names(self, actions_names: List[str]) -> List[ActionO]:
+        """
+        iterate over names to ensure objects are in the order of the name list
+        :param actions_names:
+        :return:
+        """
+        actions = []
+        for action_name in actions_names:
+            for a in self._actions:
+                if a.get_name() == action_name:
+                    actions.append(a)
+        assert len(actions) == len(actions_names)
+        return actions
 
     def _create_event_object(self, event: Event):
         if isinstance(event, EventAtTimeTDays):
@@ -262,7 +280,8 @@ class Brain(threading.Thread):
                 sensor_name = a.sensor.name
                 action_object_list.append(
                     ActionSaveSensorValToDBO(name=str(a),
-                                             sensor=next((x for x in self._sensors if x.get_name() == sensor_name), None),
+                                             #sensor=next((x for x in self._sensors if x.get_name() == sensor_name), None),
+                                             sensor=next((x for x in self._controller_objects if x.get_name() == sensor_name), None),
                                              db_interface=self._db_interface)
                 )
             elif isinstance(a, ActionSetRelayState):
@@ -290,6 +309,13 @@ class Brain(threading.Thread):
                         name=a.name,
                         image_capturer=self._capturer,
                         simulate=a.simulate
+                    )
+                )
+            elif isinstance(a, ActionWait):
+                action_object_list.append(
+                    ActionWaitO(
+                        name=a.name,
+                        wait_time=a.wait_time
                     )
                 )
             else:

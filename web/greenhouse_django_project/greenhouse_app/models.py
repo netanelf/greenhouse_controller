@@ -232,6 +232,13 @@ class ActionCaptureImageAndSave(Action):
         return f'Capture image and save'
 
 
+class ActionWait(Action):
+    wait_time = models.DurationField(default=timedelta)
+
+    def __str__(self):
+        return f'wait for {self.wait_time}'
+
+
 class Flow(models.Model):
     name = models.CharField(
         max_length=100,
@@ -239,10 +246,17 @@ class Flow(models.Model):
 
     event = models.ForeignKey(Event, null=True, on_delete=models.CASCADE)
     conditions = models.ManyToManyField(Condition, blank=True)
-    actions = models.ManyToManyField(Action)
+    actions = models.ManyToManyField(Action, through='FlowActionsDefinition')
 
     def __str__(self):
         return self.name
+
+
+class FlowActionsDefinition(models.Model):
+    action = models.ForeignKey(Action, on_delete=models.CASCADE)
+    flow = models.ForeignKey(Flow, on_delete=models.CASCADE)
+    #order = models.SmallIntegerField()
+    auto_increment_id = models.AutoField(primary_key=True)
 
 
 class ActionRunRequest(models.Model):

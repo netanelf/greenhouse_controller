@@ -76,44 +76,59 @@ def populate_relays(dbname):
 
 
 def populate_flows(dbname):
-    # populate flow at time T
-    e = populate_events(dbname)
-    a = populate_actions(dbname)
-    f = Flow.objects.using(dbname).get_or_create(
-        name=f'save sensor {a.sensor.name} data flow',
-        event=e
-    )[0]
-    f.actions.set((a,))
-    f.save()
+    populate_events(dbname)
+    populate_actions(dbname)
 
-    # populate flow every DT
-    dt = timedelta(seconds=35)
-    e = EventEveryDT.objects.using(dbname).get_or_create(
-        event_delta_t=dt
-    )[0]
-    e.save(using=dbname)
-    sensor = Sensor.objects.using(dbname).all()[1]
-    a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
-        sensor=sensor,
-    )[0]
-    a.save()
-    f = Flow.objects.using(dbname).get_or_create(
-        name=f'save sensor {sensor.name} data flow',
-        event=e
-    )[0]
-    f.actions.set((a,))
-    f.save()
+    # populate flow at time T
+    # f = Flow.objects.using(dbname).get_or_create(
+    #     name=f'save sensor {a.sensor.name} data flow',
+    #     event=e
+    # )[0]
+    # f.actions.set((a,))
+    # f.save()
+    #
+    # # populate flow every DT
+    # dt = timedelta(seconds=35)
+    # e = EventEveryDT.objects.using(dbname).get_or_create(
+    #     event_delta_t=dt
+    # )[0]
+    # e.save(using=dbname)
+    # sensor = Sensor.objects.using(dbname).all()[1]
+    # a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
+    #     sensor=sensor,
+    # )[0]
+    # a.save()
+    # f = Flow.objects.using(dbname).get_or_create(
+    #     name=f'save sensor {sensor.name} data flow',
+    #     event=e
+    # )[0]
+    # f.actions.set((a,))
+    # f.save()
 
 
     # populate flow recurring pump + write to db relay value on change
 
 def populate_events(dbname):
+    # event every dt
+    dt = timedelta(seconds=60)
+    e = EventEveryDT.objects.using(dbname).get_or_create(
+        event_delta_t=dt
+    )[0]
+    e.save(using=dbname)
 
+    # event at time t
     t = '13:00:00'
     e = EventAtTimeT.objects.using(dbname).get_or_create(
         event_time=t)[0]
     e.save(using=dbname)
-    return e
+
+    # event at time t days
+    t = '18:00:00'
+    e = EventAtTimeTDays.objects.using(dbname).get_or_create(
+        event_days=[0, 1, 2],
+        event_time=t
+    )[0]
+    e.save(using=dbname)
 
 
 def populate_actions(dbname):
@@ -135,13 +150,16 @@ def populate_actions(dbname):
     )[0]
     a.save()
 
+    a = ActionWait.objects.using(dbname).get_or_create(
+        wait_time=timedelta(seconds=10)
+    )[0]
+    a.save()
+
     sensor = Sensor.objects.using(dbname).all()[0]
-    sensor_name = sensor.name
     a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
         sensor=sensor,
     )[0]
     a.save()
-    return a
 
 
 if __name__ == '__main__':

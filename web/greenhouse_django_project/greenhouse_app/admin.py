@@ -6,6 +6,10 @@ from polymorphic.admin import PolymorphicParentModelAdmin, PolymorphicChildModel
 # Register your models here.
 
 
+class FlowActionsDefinitionInline(admin.TabularInline):
+    model = Flow.actions.through
+
+
 @admin.register(Relay)
 class RelayAdmin(admin.ModelAdmin):
     list_display = ('name', 'pin', 'simulate',)
@@ -68,7 +72,10 @@ class ConfigurationStrAdmin(PolymorphicChildModelAdmin):
 class ActionsAdmin(PolymorphicParentModelAdmin):
     polymorphic_list = True
     list_display = ('__str__',)
-    child_models = (ActionSaveSensorValToDB, ActionSetRelayState, ActionSendEmail, ActionCaptureImageAndSave)
+    child_models = (ActionSaveSensorValToDB, ActionSetRelayState, ActionSendEmail, ActionCaptureImageAndSave, ActionWait)
+    inlines = [
+        FlowActionsDefinitionInline,
+    ]
 
 
 @admin.register(ActionSaveSensorValToDB)
@@ -89,6 +96,11 @@ class ActionSendEmailAdmin(PolymorphicChildModelAdmin):
 @admin.register(ActionCaptureImageAndSave)
 class ActionCaptureImageAndSaveAdmin(PolymorphicChildModelAdmin):
     base_model = ActionCaptureImageAndSave
+
+
+@admin.register(ActionWait)
+class ActionWaitAdmin(PolymorphicChildModelAdmin):
+    base_model = ActionWait
 
 
 @admin.register(Event)
@@ -117,4 +129,16 @@ class EventAtTimeTDaysAdmin(PolymorphicChildModelAdmin):
 @admin.register(Flow)
 class FlowAdmin(admin.ModelAdmin):
     list_display = ('name',)
+    inlines = [
+        FlowActionsDefinitionInline,
+    ]
+    exclude = ('actions',)
+
+
+@admin.register(FlowActionsDefinition)
+class FlowActionsDefinitionAdmin(admin.ModelAdmin):
+    list_display = ('action', 'flow', 'auto_increment_id')
+
+
+
 

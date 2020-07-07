@@ -1,5 +1,7 @@
 __author__ = 'netanel'
 import logging
+from core.sensors.sensor_controller import Measurement
+from django.utils import timezone
 
 
 class RelayController(object):
@@ -75,6 +77,9 @@ class RelayController(object):
 
     def get_name(self):
         return self.name
+
+    def get_last_value(self) -> Measurement:
+        return Measurement(sensor_name=self.name, time=timezone.now(), value=self.state)
 
     @staticmethod
     def check_state(state):

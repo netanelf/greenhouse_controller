@@ -3,6 +3,8 @@ from core.controllers.relay_controller import RelayController
 from core.image_capture import ImageCapture
 from core.db_interface import DbInterface
 from django.utils import timezone
+from datetime import timedelta
+from time import sleep
 import logging
 import requests
 
@@ -27,7 +29,7 @@ class ActionSaveSensorValToDBO(ActionO):
 
     def perform_action(self):
         self._logger.debug('perform action called')
-        measurement = self._sensor_controller.get_last_read()
+        measurement = self._sensor_controller.get_last_value()
         if (timezone.now() - measurement.time).seconds > 10:
             self._logger.info(f'sensor last data is old ({measurement.time}), initiating a read')
             measurement = self._sensor_controller.read()
@@ -108,4 +110,15 @@ class ActionCaptureImageAndSaveO(ActionO):
         self._simulate = simulate
 
     def perform_action(self):
+        self._logger.debug('perform action called')
         self._capturer.capture_image_and_save(simulate=self._simulate)
+
+
+class ActionWaitO(ActionO):
+    def __init__(self, name, wait_time):
+        super(ActionWaitO, self).__init__(name)
+        self._wait_time: timedelta = wait_time
+
+    def perform_action(self):
+        self._logger.debug('perform action called')
+        sleep(self._wait_time.seconds)

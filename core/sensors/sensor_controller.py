@@ -34,7 +34,7 @@ class SensorController(object):
     def get_name(self) -> str:
         return self._name
 
-    def get_last_read(self) -> Measurement:
+    def get_last_value(self) -> Measurement:
         return self._last_read
 
     def read(self):
