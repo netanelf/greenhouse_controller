@@ -137,7 +137,7 @@ class FlowAdmin(admin.ModelAdmin):
 
 @admin.register(FlowActionsDefinition)
 class FlowActionsDefinitionAdmin(admin.ModelAdmin):
-    list_display = ('action', 'flow', 'auto_increment_id')
+    list_display = ('action', 'flow', )
 
 
 

@@ -10,6 +10,7 @@ DB_RETRIES = 5
 SENSOR_READING_RESOLUTION = 10  # [S] gather sensors reading every READING_RESOLUTION time
 KEEP_ALIVE_RESOLUTION = 10  # [S] send brain keepalive
 CONFIGURATION_RESOLUTION = 10  # [S] all other things to do in brain cycle
+CAMERA_REFRESH_RESOLUTION = 60
 FLOW_MANAGERS_RESOLUTION = 1  #[S]
 
 RELAY_DELTA_MEASURE_MS = 10  # [mS] when arelay changes we want to "measure" two points before and after change so we get binary graphs

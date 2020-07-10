@@ -67,7 +67,7 @@ def populate_relays(dbname):
     r.save(using=dbname)
 
     print('creating relay: (name=pump, pin=5, state=1, wanted_state=1)')
-    r = Relay.objects.using(dbname).get_or_create(name='fan')[0]
+    r = Relay.objects.using(dbname).get_or_create(name='pump')[0]
     r.pin = 4
     r.default_state = 1
     r.simulate = 1
@@ -76,8 +76,7 @@ def populate_relays(dbname):
 
 
 def populate_flows(dbname):
-    populate_events(dbname)
-    populate_actions(dbname)
+
 
     # populate flow at time T
     # f = Flow.objects.using(dbname).get_or_create(
@@ -87,26 +86,49 @@ def populate_flows(dbname):
     # f.actions.set((a,))
     # f.save()
     #
-    # # populate flow every DT
-    # dt = timedelta(seconds=35)
-    # e = EventEveryDT.objects.using(dbname).get_or_create(
-    #     event_delta_t=dt
-    # )[0]
-    # e.save(using=dbname)
-    # sensor = Sensor.objects.using(dbname).all()[1]
-    # a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
-    #     sensor=sensor,
-    # )[0]
-    # a.save()
-    # f = Flow.objects.using(dbname).get_or_create(
-    #     name=f'save sensor {sensor.name} data flow',
-    #     event=e
-    # )[0]
-    # f.actions.set((a,))
-    # f.save()
+    # populate flow every DT
 
+    e = EventEveryDT.objects.using(dbname).get(event_delta_t=timedelta(seconds=60))
+    a = ActionSaveSensorValToDB.objects.using(dbname).get(sensor=Sensor.objects.using(dbname).get(name='DS18B20_water'))
+    f = Flow.objects.using(dbname).get_or_create(
+        name=f'save sensor DS18B20_water data flow',
+        event=e,
+    )[0]
+    f.actions.add(a)
+    f.save(using=dbname)
 
-    # populate flow recurring pump + write to db relay value on change
+    print('populating watering flow')
+    e = EventAtTimeTDays.objects.using(dbname).get(event_time='08:00:00', event_days=[1, 3, 6])
+    r = Relay.objects.using(dbname).get(name='pump')
+    a_pump_on = ActionSetRelayState.objects.using(dbname).get(relay=r, state=1)
+    a_pump_off = ActionSetRelayState.objects.using(dbname).get(relay=r, state=0)
+    a_wait_for_relay_state_change = ActionWait.objects.using(dbname).get(wait_time=timedelta(seconds=10))
+    a_wait_for_watering = ActionWait.objects.using(dbname).get(wait_time=timedelta(minutes=10))
+    a_save_pump_relay_state_to_db = ActionSaveSensorValToDB.objects.using(dbname).get(sensor=r)
+
+    f = Flow.objects.using(dbname).get_or_create(
+        name=f'watering flow',
+        event=e,
+    )[0]
+    f.actions.add(a_pump_on, through_defaults={})
+    f.actions.add(a_wait_for_relay_state_change)
+    f.actions.add(a_save_pump_relay_state_to_db)
+    f.actions.add(a_wait_for_watering)
+    f.actions.add(a_pump_off)
+    # In order to add the same action twice, managed only by explicitly creating the FlowActionsDefinition connection
+    fad = FlowActionsDefinition.objects.using(dbname).create(
+        action=a_wait_for_relay_state_change,
+        flow=f
+    )
+    fad.save(using=dbname)
+    f.actions.add(a_save_pump_relay_state_to_db, through_defaults={})
+    fad = FlowActionsDefinition.objects.using(dbname).create(
+        action=a_save_pump_relay_state_to_db,
+        flow=f
+    )
+    fad.save(using=dbname)
+    f.save(using=dbname)
+
 
 def populate_events(dbname):
     # event every dt
@@ -123,43 +145,52 @@ def populate_events(dbname):
     e.save(using=dbname)
 
     # event at time t days
-    t = '18:00:00'
     e = EventAtTimeTDays.objects.using(dbname).get_or_create(
-        event_days=[0, 1, 2],
-        event_time=t
+        event_time='08:00:00',
+        event_days=[1, 3, 6]
     )[0]
     e.save(using=dbname)
 
 
 def populate_actions(dbname):
-    r = Relay.objects.using(dbname).all()[0]
+    r = Relay.objects.using(dbname).get(name='pump')
     a = ActionSetRelayState.objects.using(dbname).get_or_create(
         relay=r,
         state=0
     )[0]
-    a.save()
-
-    a = ActionCaptureImageAndSave.objects.using(dbname).get_or_create(
-        simulate=True
-    )[0]
-    a.save()
+    a.save(using=dbname)
 
     a = ActionSetRelayState.objects.using(dbname).get_or_create(
         relay=r,
         state=1
     )[0]
-    a.save()
+    a.save(using=dbname)
+
+    a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
+        sensor=r,
+    )[0]
+    a.save(using=dbname)
+
+    a = ActionCaptureImageAndSave.objects.using(dbname).get_or_create(
+        simulate=True
+    )[0]
+    a.save(using=dbname)
 
     a = ActionWait.objects.using(dbname).get_or_create(
         wait_time=timedelta(seconds=10)
     )[0]
-    a.save()
+    a.save(using=dbname)
 
-    sensor = Sensor.objects.using(dbname).all()[0]
-    a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
-        sensor=sensor,
+    a = ActionWait.objects.using(dbname).get_or_create(
+        wait_time=timedelta(minutes=10)
     )[0]
-    a.save()
+    a.save(using=dbname)
+
+    s = Sensor.objects.using(dbname).get(name='DS18B20_water')
+    a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(
+        sensor=s,
+    )[0]
+    a.save(using=dbname)
 
 
 if __name__ == '__main__':
@@ -169,4 +200,6 @@ if __name__ == '__main__':
         print('starting DB: {}'.format(db))
         populate_sensors(db)
         populate_relays(db)
+        populate_events(db)
+        populate_actions(db)
         populate_flows(db)

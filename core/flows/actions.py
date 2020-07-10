@@ -1,6 +1,6 @@
 from core.sensors.sensor_controller import SensorController
 from core.controllers.relay_controller import RelayController
-from core.image_capture import ImageCapture
+from core.controllers.camera_controller import ImageCapture
 from core.db_interface import DbInterface
 from django.utils import timezone
 from datetime import timedelta
@@ -111,7 +111,7 @@ class ActionCaptureImageAndSaveO(ActionO):
 
     def perform_action(self):
         self._logger.debug('perform action called')
-        self._capturer.capture_image_and_save(simulate=self._simulate)
+        self._capturer.capture_image_and_save()
 
 
 class ActionWaitO(ActionO):

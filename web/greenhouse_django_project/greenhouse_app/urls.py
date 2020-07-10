@@ -11,6 +11,7 @@ urlpatterns = [#url(''),
                url(r'^manualMode/', views.manualMode, name='manualMode'),
                url(r'^graphs/getGraphData', views.getGraphData, name='getGraphData'),
                url(r'^graphs/', views.graphs, name='graphs'),
+               url(r'^camera/', views.camera, name='camera'),
                url(r'^setConfiguration/', views.setConfiguration, name='setConfiguration'),
                url(r'^getKeepAlive/', views.getKeepAliveValues, name='getKeepAlive'),
                ]

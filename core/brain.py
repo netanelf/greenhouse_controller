@@ -71,6 +71,7 @@ class Brain(threading.Thread):
                 self._logger.exception('could not initialize lcd, ex: {}'.format(ex))
 
         self._last_read_time = timezone.now()
+        self._last_image_take_time = timezone.now()
         self._last_flow_run_time = timezone.now()
         self._last_relay_set_time = timezone.now()
         self._last_keepalive_time = timezone.now()
@@ -117,7 +118,8 @@ class Brain(threading.Thread):
         self._capturer = ImageCapture(
             save_path=save_path,
             failure_manager=self.helper_threads['failure_manager'],
-            args_for_raspistill=cfg.RASPISTILL_ARGS)
+            args_for_raspistill=cfg.RASPISTILL_ARGS,
+            simulate=self._simulate_hw)
 
     def run(self):
         while not self._killed:
@@ -138,6 +140,12 @@ class Brain(threading.Thread):
                     self.issue_relay_state_reading()
                     self.write_data_to_db()
                     self._logger.info('brain sensors read cycle end')
+
+                if timezone.now() - self._last_image_take_time > timedelta(seconds=cfg.CAMERA_REFRESH_RESOLUTION):
+                    self._logger.info('brain image capture cycle')
+                    self._last_image_take_time = timezone.now()
+                    self._capturer.update_static_image()
+                    self._logger.info('brain image capture cycle end')
 
                 if timezone.now() - self._last_keepalive_time > timedelta(seconds=cfg.KEEP_ALIVE_RESOLUTION):
                     self._logger.info('brain keepalive cycle')

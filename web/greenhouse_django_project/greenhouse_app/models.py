@@ -255,8 +255,6 @@ class Flow(models.Model):
 class FlowActionsDefinition(models.Model):
     action = models.ForeignKey(Action, on_delete=models.CASCADE)
     flow = models.ForeignKey(Flow, on_delete=models.CASCADE)
-    #order = models.SmallIntegerField()
-    auto_increment_id = models.AutoField(primary_key=True)
 
 
 class ActionRunRequest(models.Model):

@@ -1,0 +1,40 @@
+{% extends 'greenhouse_app/base.html' %}
+
+{% load static %}
+
+{% block title %}{{ 'camera page' }}{% endblock %}
+
+{% block camera_active_class %} active {% endblock %}
+
+{% block body_block %}
+    <link href="{% static 'css/graph.css' %}" rel="stylesheet" type="text/css">
+    <table>
+        <tr>
+            <td>
+                <div>
+                <img src="{% static "pics/cam_current.jpg" %}" alt="something" >
+                </div>
+            </td>
+        </tr>
+    </table>
+    <p>
+        <!--<button id="add_data" disabled="true" title="add previous day" ><</button> -->
+
+        <span></span>
+    </p>
+{% endblock %}
+
+
+{% block footer_block %}
+    <script src="{% static 'js/jquery.flot.js' %}"></script>
+    <script src="{% static 'js/jquery.flot.time.js' %}"></script>
+    <script src="{% static 'js/jquery.flot.symbol.js' %}"></script>
+    <script src="{% static 'js/jquery.flot.crosshair.js' %}"></script>
+    <script src="{% static 'js/jquery.flot.tooltip.js' %}"></script>
+    <!--<script src="{% static 'js/date.js' %}"></script> -->
+    <script src="{% static 'js/graphs.js' %}"></script>
+{% endblock %}
+
+
+{% block script_block %}
+{% endblock %}

@@ -209,6 +209,11 @@ def graphs(request):
 
 
 @timing_decorator
+def camera(request):
+    return render(request, 'greenhouse_app/camera.html')
+
+
+@timing_decorator
 def setConfiguration(request):
     """
     change some configuration in models.Configurations
