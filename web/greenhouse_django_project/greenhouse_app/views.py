@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from greenhouse_app.models import Sensor, Relay, Configuration, ControllerObject, KeepAlive, CurrentValue, HistoryValue, Action, ActionRunRequest
+from greenhouse_app.models import *
 import json
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
@@ -34,13 +34,14 @@ def index(request):
 
     sensor_list = Sensor.objects.order_by()
     relay_list = Relay.objects.order_by()
-    #time_governors_list = TimeGovernor.objects.order_by()
+    flows_list = Flow.objects.order_by()
     keep_alive_list = KeepAlive.objects.order_by()
     context_dict = {'sensors': sensor_list,
                     'relays': relay_list,
                     #'governors': time_governors_list,
-                    'keepalives': keep_alive_list}
-    # Render the response and send it back!
+                    'keepalives': keep_alive_list,
+                    'flows': flows_list}
+
     return render(request, 'greenhouse_app/index.html', context_dict)
 
 

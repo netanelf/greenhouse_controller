@@ -48,6 +48,11 @@ class DigitalInputSensor(Sensor):
     pin = models.PositiveSmallIntegerField()
 
 
+class FlowSensor(Sensor):
+    pin = models.PositiveSmallIntegerField()
+    mll_per_pulse = models.IntegerField(help_text='[mL] fluid per 1 edge of sensor')
+
+
 class CurrentValue(models.Model):
     """
     represent one value measurement
@@ -189,7 +194,35 @@ class Condition(PolymorphicModel):
     """
     base class for conditions models
     """
-    pass
+
+    def get_name(self):
+        return self.__str__()
+
+    name = property(get_name)
+
+
+class ConditionSensorValEq(Condition):
+    sensor = models.ForeignKey(ControllerObject, on_delete=models.CASCADE)
+    val = models.FloatField()
+
+    def __str__(self):
+        return f'Check if {self.sensor} value is {self.val}'
+
+
+class ConditionSensorValBigger(Condition):
+    sensor = models.ForeignKey(ControllerObject, on_delete=models.CASCADE)
+    val = models.FloatField()
+
+    def __str__(self):
+        return f'Check if {self.sensor} value is bigger than {self.val}'
+
+
+class ConditionSensorValSmaller(Condition):
+    sensor = models.ForeignKey(ControllerObject, on_delete=models.CASCADE)
+    val = models.FloatField()
+
+    def __str__(self):
+        return f'Check if {self.sensor} value is smaller than {self.val}'
 
 
 class Action(PolymorphicModel):
@@ -245,7 +278,7 @@ class Flow(models.Model):
     )
 
     event = models.ForeignKey(Event, null=True, on_delete=models.CASCADE)
-    conditions = models.ManyToManyField(Condition, blank=True)
+    conditions = models.ManyToManyField(Condition, through='FlowConditionsDefinition')
     actions = models.ManyToManyField(Action, through='FlowActionsDefinition')
 
     def __str__(self):
@@ -254,6 +287,11 @@ class Flow(models.Model):
 
 class FlowActionsDefinition(models.Model):
     action = models.ForeignKey(Action, on_delete=models.CASCADE)
+    flow = models.ForeignKey(Flow, on_delete=models.CASCADE)
+
+
+class FlowConditionsDefinition(models.Model):
+    condition = models.ForeignKey(Condition, on_delete=models.CASCADE)
     flow = models.ForeignKey(Flow, on_delete=models.CASCADE)
 
 

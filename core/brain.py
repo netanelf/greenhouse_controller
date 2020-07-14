@@ -18,6 +18,7 @@ from core.sensors.dht22_humidity_controller import DHT22HumidityController
 from core.sensors.ds18b20_temp_controller import DS18B20TempController
 from core.sensors.tsl2561_lux_controller import TSL2561LuxController
 from core.sensors.digital_input_controller import DigitalInputController
+from core.sensors.flow_sensor_controller import FlowSensorController
 from core.drivers.dht22_driver import DHT22Driver
 from core.drivers import sr_driver, dht22_driver, pcf8574_driver
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
@@ -28,6 +29,7 @@ from django.db.utils import OperationalError
 from greenhouse_app.models import *
 from core.flows.actions import *
 from core.flows.events import *
+from core.flows.conditions import *
 from core.flows.flow_manager import FlowManager
 from core.db_interface import DbInterface
 
@@ -93,6 +95,7 @@ class Brain(threading.Thread):
 
         # flows
         self._actions: List[ActionO] = self._populate_actions()
+        self._conditions: List[ConditionO] = self._populate_conditions()
         self._flow_managers: List[FlowManager] = []
         self._create_flow_managers()
         self._logger.info('Brain Finished Init')
@@ -203,6 +206,13 @@ class Brain(threading.Thread):
                 self._logger.debug('sensor: ({}) is digitalInput, creating controller'.format(s))
                 self._sensors.append(DigitalInputController(name=s.name, pin=s.pin, simulate=s.simulate))
 
+            elif isinstance(s, FlowSensor):
+                self._logger.debug('sensor: ({}) is FlowSensor, creating controller'.format(s))
+                self._sensors.append(FlowSensorController(name=s.name, pin=s.pin, simulate=s.simulate, mll_per_pulse=s.mll_per_pulse))
+
+            else:
+                self._logger.error(f'sensor {s} has no corresponding controller object')
+
     def create_relay_controllers(self):
         """
         build controllers for all relays in DB
@@ -241,19 +251,28 @@ class Brain(threading.Thread):
             action_objects_list.extend(ao)
         return action_objects_list
 
+    def _populate_conditions(self):
+        condition_objects_list = []
+        for c in Condition.objects.all():
+            co = self._create_condition_object(condition=c)
+            condition_objects_list.append(co)
+        return condition_objects_list
+
     def _create_flow_managers(self):
         self._logger.debug('creating flow managers')
         for f in Flow.objects.all():
             self._logger.debug(f'found flow in db: {f.name}')
             event = f.event
-            #conditions = f.conditions
+            conditions = f.conditions
             actions = f.actions
             wanted_actions_names = [a.name for a in actions.all()]
+            wanted_conditions_names = [c.name for c in conditions.all()]
             event_object = self._create_event_object(event)
             actions_objects_list = self._get_actions_from_actions_names(wanted_actions_names)
+            conditions_objects_list = self._get_conditions_from_aconditions_names(wanted_conditions_names)
             flow_object = FlowManager(flow_name=f.name,
                                       event=event_object,
-                                      conditions=None,
+                                      conditions=conditions_objects_list,
                                       actions=actions_objects_list)
             self._flow_managers.append(flow_object)
 
@@ -271,6 +290,15 @@ class Brain(threading.Thread):
         assert len(actions) == len(actions_names)
         return actions
 
+    def _get_conditions_from_aconditions_names(self, conditions_names: List[str]) -> List[ConditionO]:
+        conditions = []
+        for condition_name in conditions_names:
+            for c in self._conditions:
+                if c.get_name() == condition_name:
+                    conditions.append(c)
+        assert len(conditions) == len(conditions_names)
+        return conditions
+
     def _create_event_object(self, event: Event):
         if isinstance(event, EventAtTimeTDays):
             return EventAtTimeTDaysO(name=str(event), t=event.event_time, days=event.event_days)
@@ -281,6 +309,28 @@ class Brain(threading.Thread):
         else:
             self._logger.error(f'could not find object for event: {event}')
 
+    def _create_condition_object(self, condition: Condition):
+        if isinstance(condition, ConditionSensorValEq):
+            sensor_name = condition.sensor.name
+            sensor = next((x for x in self._controller_objects if x.get_name() == sensor_name), None)
+            return ConditionSensorValEqO(name=str(condition),
+                                         sensor=sensor,
+                                         value=condition.val)
+        elif isinstance(condition, ConditionSensorValBigger):
+            sensor_name = condition.sensor.name
+            sensor = next((x for x in self._controller_objects if x.get_name() == sensor_name), None)
+            return ConditionSensorValBiggerO(name=str(condition),
+                                             sensor=sensor,
+                                             value=condition.val)
+        elif isinstance(condition, ConditionSensorValSmaller):
+            sensor_name = condition.sensor.name
+            sensor = next((x for x in self._controller_objects if x.get_name() == sensor_name), None)
+            return ConditionSensorValSmallerO(name=str(condition),
+                                              sensor=sensor,
+                                              value=condition.val)
+        else:
+            self._logger.error(f'could not find object for condition: {condition}')
+
     def _create_action_objects(self, actions):
         action_object_list = []
         for a in actions:
@@ -288,7 +338,6 @@ class Brain(threading.Thread):
                 sensor_name = a.sensor.name
                 action_object_list.append(
                     ActionSaveSensorValToDBO(name=str(a),
-                                             #sensor=next((x for x in self._sensors if x.get_name() == sensor_name), None),
                                              sensor=next((x for x in self._controller_objects if x.get_name() == sensor_name), None),
                                              db_interface=self._db_interface)
                 )

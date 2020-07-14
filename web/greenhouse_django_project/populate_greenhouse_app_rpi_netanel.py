@@ -142,4 +142,5 @@ if __name__ == '__main__':
         populate_sensors(db)
         populate_relays(db)
         populate_actions(db)
+        populate_events(db)
         populate_flows(db)

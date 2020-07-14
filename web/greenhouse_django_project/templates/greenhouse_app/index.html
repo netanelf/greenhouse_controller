@@ -11,6 +11,7 @@
     <div class="container">
         <!-- Example row of columns -->
         <div class="row">
+
             <div class="col-md-4">
                 <h3 align="center">Sensors</h3>
                 <table align="center">
@@ -83,6 +84,26 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="col-md-4">
+                <h3 align="center">Flows</h3>
+                <table align="center">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="flowsTableBody">
+                        {% for f in flows %}
+                            <tr>
+                                <td>{{f.name}}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 

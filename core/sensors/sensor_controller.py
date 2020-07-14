@@ -37,9 +37,10 @@ class SensorController(object):
     def get_last_value(self) -> Measurement:
         return self._last_read
 
-    def read(self):
+    def read(self) -> Measurement:
         raise NotImplementedError
 
+    # TODO: what is get_value? what was i thinking?
     def get_value(self) -> Measurement:
         raise NotImplementedError
 

@@ -10,6 +10,10 @@ class FlowActionsDefinitionInline(admin.TabularInline):
     model = Flow.actions.through
 
 
+class FlowConditionsDefinitionInline(admin.TabularInline):
+    model = Flow.conditions.through
+
+
 @admin.register(Relay)
 class RelayAdmin(admin.ModelAdmin):
     list_display = ('name', 'pin', 'simulate',)
@@ -18,7 +22,7 @@ class RelayAdmin(admin.ModelAdmin):
 @admin.register(Sensor)
 class SensorAdmin(PolymorphicParentModelAdmin):
     polymorphic_list = True
-    child_models = (Dht22TempSensor, Dht22HumiditySensor, Ds18b20Sensor, Tsl2561Sensor, DigitalInputSensor)
+    child_models = (Dht22TempSensor, Dht22HumiditySensor, Ds18b20Sensor, Tsl2561Sensor, DigitalInputSensor, FlowSensor)
 
 
 @admin.register(Dht22TempSensor)
@@ -49,6 +53,12 @@ class Tsl2561SensorAdmin(PolymorphicChildModelAdmin):
 class DigitalInputSensorAdmin(PolymorphicChildModelAdmin):
     list_display = ('name', 'simulate', 'pin')
     base_model = DigitalInputSensor
+
+
+@admin.register(FlowSensor)
+class FlowSensorAdmin(PolymorphicChildModelAdmin):
+    list_display = ('name', 'simulate', 'pin', 'mll_per_pulse')
+    base_model = FlowSensor
 
 
 @admin.register(Configuration)
@@ -103,6 +113,31 @@ class ActionWaitAdmin(PolymorphicChildModelAdmin):
     base_model = ActionWait
 
 
+@admin.register(Condition)
+class ConditionAdmin(PolymorphicParentModelAdmin):
+    polymorphic_list = True
+    list_display = ('__str__',)
+    child_models = (ConditionSensorValEq, ConditionSensorValBigger, ConditionSensorValSmaller)
+    inlines = [
+        FlowConditionsDefinitionInline,
+    ]
+
+
+@admin.register(ConditionSensorValEq)
+class ConditionSensorValEqAdmin(PolymorphicChildModelAdmin):
+    base_model = ConditionSensorValEq
+
+
+@admin.register(ConditionSensorValBigger)
+class ConditionSensorValBiggerAdmin(PolymorphicChildModelAdmin):
+    base_model = ConditionSensorValBigger
+
+
+@admin.register(ConditionSensorValSmaller)
+class ConditionSensorValSmallerAdmin(PolymorphicChildModelAdmin):
+    base_model = ConditionSensorValSmaller
+
+
 @admin.register(Event)
 class EventAdmin(PolymorphicParentModelAdmin):
     polymorphic_list = True
@@ -130,14 +165,11 @@ class EventAtTimeTDaysAdmin(PolymorphicChildModelAdmin):
 class FlowAdmin(admin.ModelAdmin):
     list_display = ('name',)
     inlines = [
+        FlowConditionsDefinitionInline,
         FlowActionsDefinitionInline,
     ]
     exclude = ('actions',)
 
-
-@admin.register(FlowActionsDefinition)
-class FlowActionsDefinitionAdmin(admin.ModelAdmin):
-    list_display = ('action', 'flow', )
 
 
 

@@ -2,6 +2,7 @@ import logging
 from typing import List
 from .actions import ActionO
 from.events import EventO
+from .conditions import ConditionO
 import threading
 
 
@@ -10,9 +11,10 @@ class FlowManager(object):
         self._logger = logging.getLogger(f'{self.__class__.__name__}_{flow_name}')
         self._name = flow_name
         self._event: EventO = event
-        self._conditions = conditions
+        self._conditions: List[ConditionO] = conditions
         self._actions: List[ActionO] = actions
         self._action_t = None
+        self._logger.info(f'Created Flow: {self._name}, event: {self._event}, conditions: {self._conditions}, actions: {self._actions}')
 
     def run_flow(self):
         if self._check_event():
@@ -26,6 +28,11 @@ class FlowManager(object):
     def _check_conditions(self) -> bool:
         if self._conditions is None:
             return True
+        for c in self._conditions:
+            if not c.check_condition():
+                self._logger.info(f'condition {c} does not satisfy running flow')
+                return False
+        return True
 
     def _perform_actions(self):
         # TODO: maybe better to implement with ThreadPoolExecutor, and ensure not to many threads are running/ close nicely etc.
