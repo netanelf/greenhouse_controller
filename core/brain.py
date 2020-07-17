@@ -54,23 +54,14 @@ class Brain(threading.Thread):
         # all sensors
         self._dht_22_drivers: List[DHT22Driver] = []
         self._sensors: List[SensorController] = []
-        self.create_sensor_controllers()
+        self._create_sensor_controllers()
 
         # all relays
         self._sr = None
         self._relays: List[RelayController] = []
-        self.create_relay_controllers()
+        self._create_relay_controllers()
 
         self._controller_objects: List = self._sensors + self._relays
-
-        # lcd controller
-        if not self._simulate_hw:
-            try:
-                from .drivers import lcd2004_driver
-                self.lcd = lcd2004_driver.Lcd()
-                self.lcd_alive = 'x'
-            except Exception as ex:
-                self._logger.exception('could not initialize lcd, ex: {}'.format(ex))
 
         self._last_read_time = timezone.now()
         self._last_image_take_time = timezone.now()
@@ -78,7 +69,7 @@ class Brain(threading.Thread):
         self._last_relay_set_time = timezone.now()
         self._last_keepalive_time = timezone.now()
         self._last_configuration_time = timezone.now()
-        self._data_lock = threading.RLock()
+
         self._data = []
         self._killed = False
 
@@ -88,9 +79,9 @@ class Brain(threading.Thread):
         self.helper_threads = {}
         self.start_helper_threads()
         register_keep_alive(name=self.__class__.__name__)
-        self._register_sensors()
+        self._register_sensors_and_relays()
 
-        self.update_configurations()
+        self._update_configurations()
         self._crate_image_capturing_object()
 
         # flows
@@ -134,15 +125,14 @@ class Brain(threading.Thread):
                             f.run_flow()
                     else:
                         self._logger.debug('manual mode ON, avoiding flow run')
-                        self.run_actions_manually()
+                        self._run_actions_manually()
                     self._last_flow_run_time = timezone.now()
 
                 if timezone.now() - self._last_read_time > timedelta(seconds=cfg.SENSOR_READING_RESOLUTION):
                     self._logger.info('brain sensors read cycle')
                     self._last_read_time = timezone.now()
-                    self.issue_sensor_reading()
-                    self.issue_relay_state_reading()
-                    self.write_data_to_db()
+                    self._issue_sensors_and_relays_read()
+                    self._write_data_to_db()
                     self._logger.info('brain sensors read cycle end')
 
                 if timezone.now() - self._last_image_take_time > timedelta(seconds=cfg.CAMERA_REFRESH_RESOLUTION):
@@ -160,8 +150,7 @@ class Brain(threading.Thread):
                 if timezone.now() - self._last_configuration_time > timedelta(seconds=cfg.CONFIGURATION_RESOLUTION):
                     self._logger.info('brain configuration cycle')
                     self._last_configuration_time = timezone.now()
-                    self.update_configurations()
-                    self.lcd_update()  # TODO: if LCD is actually used - it can have its own update cycle
+                    self._update_configurations()
                     self._logger.info('brain configuration cycle end')
 
             except Exception as ex:
@@ -171,11 +160,7 @@ class Brain(threading.Thread):
             sleep(0.1)
         self._logger.info('brain killed')
 
-    def get_current_data(self):
-        with self._data_lock:
-            return self._data
-
-    def create_sensor_controllers(self):
+    def _create_sensor_controllers(self):
         """
         build controllers for all sensors
         - DHT22 (temp + humidity) sensors
@@ -186,12 +171,12 @@ class Brain(threading.Thread):
             self._logger.debug('found sensor: ({}), creating controller'.format(s))
 
             if isinstance(s, Dht22TempSensor):
-                dht_22_driver = self.get_dht22_controller(pin=s.pin)
+                dht_22_driver = self._get_dht22_controller(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22temp, creating controller'.format(s))
                 self._sensors.append(DHT22TempController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
             elif isinstance(s, Dht22HumiditySensor):
-                dht_22_driver = self.get_dht22_controller(pin=s.pin)
+                dht_22_driver = self._get_dht22_controller(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22humidity, creating controller'.format(s))
                 self._sensors.append(DHT22HumidityController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
@@ -214,7 +199,7 @@ class Brain(threading.Thread):
             else:
                 self._logger.error(f'sensor {s} has no corresponding controller object')
 
-    def create_relay_controllers(self):
+    def _create_relay_controllers(self):
         """
         build controllers for all relays in DB
         """
@@ -225,25 +210,10 @@ class Brain(threading.Thread):
             self._logger.debug('found relay: ({}), creating controller'.format(r))
             self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.default_state, invert_polarity=r.inverted, simulate=r.simulate))
 
-    def _register_sensors(self):
+    def _register_sensors_and_relays(self):
         self._logger.info('registering sensors')
-        for s in self._sensors:
-            self._db_interface.register_sensor(sensor_name=s.get_name())
-
-        for r in self._relays:
-            self._db_interface.register_sensor(sensor_name=r.get_name())
-
-    def get_relay_by_name(self, name):
-        """
-        find the relay controller object for the given name
-        :param name: wanted relay
-        :return: controller object
-        """
-        for r in self._relays:
-            if r.get_name() == name:
-                return r
-        logging.info('searched for relay named: {}, not found'.format(name))
-        return False
+        for c in self._controller_objects:
+            self._db_interface.register_sensor(sensor_name=c.get_name())
 
     def _populate_actions(self):
         action_objects_list = []
@@ -381,48 +351,14 @@ class Brain(threading.Thread):
                 self._logger.error(f'could not find object for action: {a}')
         return action_object_list
 
-    def issue_sensor_reading(self):
-        self._logger.debug('issuing a read for all sensors')
-        with self._data_lock:
-            self._data = []
-            for s in self._sensors:
-                self._data.append(s.read())
+    def _issue_sensors_and_relays_read(self):
+        self._logger.debug('issuing a read for all sensors and relays')
 
-    def issue_relay_state_reading(self):
-        """
-        read current state of all relays and write measurement
-        :return:
-        """
-        for r in self._relays:
-            m = Measurement(sensor_name=r.name, time=timezone.now(), value=r.get_state())
+        for c in self._controller_objects:
+            m = c.read()
             self._data.append(m)
 
-    def lcd_update(self):
-        """
-        write some data to LCD
-        :return:
-        """
-        if not self._simulate_hw:
-            try:
-                for i, d in enumerate(self._data):
-                    if i < 4:  # write only first four readings
-                        name = str(d.sensor_name).replace('humidity', 'H')
-                        name = name.replace('temp', 'T')
-                        lcd_sensor_string = '{}, {:.1f}'.format(name, d.value)
-                        if i == 0:
-                            lcd_sensor_string = lcd_sensor_string.ljust(20)
-                            if self.lcd_alive == 'x':
-                                lcd_sensor_string = lcd_sensor_string[:19] + '+'
-                                self.lcd_alive = '+'
-                            else:
-                                lcd_sensor_string = lcd_sensor_string[:19] + 'x'
-                                self.lcd_alive = 'x'
-                        self.lcd.lcd_display_string(string=lcd_sensor_string, line=i+1)
-            except Exception as ex:
-                self._logger.exception('could not write to lcd, ex: {}'.format(ex))
-                self.helper_threads['failure_manager'].add_failure(ex=ex, caller=self.__class__.__name__)
-
-    def get_dht22_controller(self, pin):
+    def _get_dht22_controller(self, pin):
         """
         ensure one driver is created for temp + humidity sensor in the same pin
         :param pin:
@@ -435,11 +371,11 @@ class Brain(threading.Thread):
         self._dht_22_drivers.append(d)
         return d
 
-    def write_data_to_db(self):
+    def _write_data_to_db(self):
         self._logger.debug('in _write_data_to_db')
         self._db_interface.update_sensors_value_current_db(self._data)
 
-    def update_configurations(self):
+    def _update_configurations(self):
         """
         read Configuration table from db, set local values to db values
         :return:
@@ -448,13 +384,16 @@ class Brain(threading.Thread):
         for c in Configuration.objects.all():
             self._configuration[c.name] = c.value
 
-    def run_actions_manually(self):
+    def _run_actions_manually(self):
         actions_to_run = ActionRunRequest.objects.all()
         for action_to_run in actions_to_run:
-            self._logger.debug(f'trying to run {action_to_run} manually')
-            # TODO: we shold probably check something woth the Timestamp (not to old, not in future etc. )
-            action_o = [a for a in self._actions if a.get_name() == action_to_run.action_to_run.name][0]
-            action_o.perform_action()
+            self._logger.debug(f'trying to run {action_to_run.action_to_run.name} manually')
+            # ensure request is from ~= now
+            if (timezone.now() - action_to_run.timestamp) < timedelta(seconds=20):
+                action_o = [a for a in self._actions if a.get_name() == action_to_run.action_to_run.name][0]
+                action_o.perform_action()
+            else:
+                self._logger.error(f'action {action_to_run.action_to_run.name} is out of time tolerance for executing, deleting request')
             action_to_run.delete()
 
     def kill_brain(self):

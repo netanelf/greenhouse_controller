@@ -34,7 +34,6 @@ class DbInterface(object):
                     t = 0
                     while t in range(DB_RETRIES):
                         try:
-                            self._logger.debug('looking for controller: {} in Sensors Table'.format(d.sensor_name))
                             controller = ControllerObject.objects.get(name=d.sensor_name)
                             cv = CurrentValue.objects.get(sensor=controller)
                             cv.measure_time = d.time

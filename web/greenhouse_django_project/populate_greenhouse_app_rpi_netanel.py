@@ -97,6 +97,11 @@ def populate_actions(dbname):
     )[0]
     a.save(using=dbname)
 
+    a = ActionWait.objects.using(dbname).get_or_create(
+        wait_time=timedelta(hours=5)
+    )[0]
+    a.save(using=dbname)
+
 
 def populate_events(dbname):
     e = EventAtTimeTDays.objects.using(dbname).get_or_create(
@@ -105,8 +110,49 @@ def populate_events(dbname):
     )[0]
     e.save(using=dbname)
 
+    e = EventAtTimeTDays.objects.using(dbname).get_or_create(
+        event_time='07:00:00',
+        event_days=[0, 1, 2, 3, 4, 5, 6]
+    )[0]
+    e.save(using=dbname)
+
 
 def populate_flows(dbname):
+    populate_watering_flow(dbname)
+    populate_camera_flow(dbname)
+
+
+def populate_camera_flow(dbname):
+    print('populating camera flow')
+    e = EventAtTimeTDays.objects.using(dbname).get(event_time='07:00:00', event_days=[0, 1, 2, 3, 4, 5, 6])
+    a_take_picture = ActionCaptureImageAndSave.objects.using(dbname).get()
+    a_wait_5_hrs = ActionWait.objects.using(dbname).get(wait_time=timedelta(hours=5))
+    f = Flow.objects.using(dbname).get_or_create(
+        name=f'camera flow',
+        event=e,
+    )[0]
+    f.actions.add(a_take_picture)
+    f.actions.add(a_wait_5_hrs)
+    fad = FlowActionsDefinition.objects.using(dbname).create(
+        action=a_take_picture,
+        flow=f
+    )
+    fad.save(using=dbname)
+
+    fad = FlowActionsDefinition.objects.using(dbname).create(
+        action=a_wait_5_hrs,
+        flow=f
+    )
+    fad.save(using=dbname)
+
+    fad = FlowActionsDefinition.objects.using(dbname).create(
+        action=a_take_picture,
+        flow=f
+    )
+    fad.save(using=dbname)
+
+
+def populate_watering_flow(dbname):
     print('populating watering flow')
     e = EventAtTimeTDays.objects.using(dbname).get(event_time='08:00:00', event_days=[1, 3, 6])
     r = Relay.objects.using(dbname).get(name='pump')

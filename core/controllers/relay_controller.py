@@ -75,7 +75,7 @@ class RelayController(object):
     def get_state(self):
         return self.state
     
-    def read(self):
+    def read(self) -> Measurement:
         return Measurement(sensor_name=self.name, time=timezone.now(), value=self.state)
 
     def get_name(self):
