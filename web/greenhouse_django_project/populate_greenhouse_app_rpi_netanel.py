@@ -37,8 +37,13 @@ def populate_sensors(dbname):
     )[0]
     digital_input.save(using=dbname)
 
-    #print 'creating sensor: {}'.format('TSL2561_lux')
-    #Sensor.objects.using(dbname).get_or_create(name='lux', kind=tsl2561, simulate=False, pin=99, i2c=True, device_id='0x39')[0]
+    flow = FlowSensor.objects.using(dbname).get_or_create(
+        pin=18,
+        simulate=False,
+        name='water_low_level',
+        mll_per_pulse=2
+    )[0]
+    flow.save(using=dbname)
 
 
 def populate_relays(dbname):
