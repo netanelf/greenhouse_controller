@@ -98,6 +98,7 @@ class Brain(threading.Thread):
         self._conditions: List[ConditionO] = self._populate_conditions()
         self._flow_managers: List[FlowManager] = []
         self._create_flow_managers()
+        
         self._logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
@@ -222,7 +223,7 @@ class Brain(threading.Thread):
         #self._sr = pcf8574_driver.PCF8574Driver(address=0x20, simulate=self._simulate_hw)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
-            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.default_state, invert_polarity=r.inverted))
+            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.default_state, invert_polarity=r.inverted, simulate=r.simulate))
 
     def _register_sensors(self):
         self._logger.info('registering sensors')
@@ -343,10 +344,11 @@ class Brain(threading.Thread):
                 )
             elif isinstance(a, ActionSetRelayState):
                 relay_name = a.relay.name
+                relay_obj = next((x for x in self._relays if x.get_name() == relay_name), None)
                 action_object_list.append(
                     ActionSetRelayStateO(
                         name=str(a),
-                        relay=next((x for x in self._relays if x.get_name() == relay_name), None),
+                        relay=relay_obj,
                         state=a.state
                     )
                 )

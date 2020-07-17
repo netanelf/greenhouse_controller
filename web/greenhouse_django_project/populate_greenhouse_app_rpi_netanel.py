@@ -40,7 +40,7 @@ def populate_sensors(dbname):
     flow = FlowSensor.objects.using(dbname).get_or_create(
         pin=18,
         simulate=False,
-        name='water_low_level',
+        name='water_flow_sensor',
         mll_per_pulse=2
     )[0]
     flow.save(using=dbname)
@@ -52,6 +52,7 @@ def populate_relays(dbname):
     r.pin = 4
     r.state = 1
     r.inverted = 1
+    r.simulate = False
     r.save(using=dbname)
 
 

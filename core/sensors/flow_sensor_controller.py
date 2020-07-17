@@ -25,10 +25,11 @@ class FlowSensorController(SensorController):
             global GPIO
             import RPi.GPIO as GPIO
             GPIO.setmode(GPIO.BOARD)
-            GPIO.setup(self._pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.setup(self._pin, GPIO.IN)
             GPIO.add_event_detect(self._pin, GPIO.FALLING, callback=self._sensor_tic_cb)
 
-    def _sensor_tic_cb(self):
+    def _sensor_tic_cb(self, channel):
+        self._logger.debug(f'cb called, ch: {channel}')
         with self._tic_counter_lock:
             self._tic_counter += 1
 

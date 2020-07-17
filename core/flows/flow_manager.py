@@ -42,6 +42,9 @@ class FlowManager(object):
 
     def _thread_func(self):
         for a in self._actions:
-            a.perform_action()
+            try:
+                a.perform_action()
+            except Exception as ex:
+                self._logger.exception(ex)
         self._logger.info('actions thread ended')
 
