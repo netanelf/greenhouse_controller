@@ -374,6 +374,8 @@ class Brain(threading.Thread):
     def _write_data_to_db(self):
         self._logger.debug('in _write_data_to_db')
         self._db_interface.update_sensors_value_current_db(self._data)
+        self._data.clear()
+        self._logger.debug('_write_data_to_db ended')
 
     def _update_configurations(self):
         """
