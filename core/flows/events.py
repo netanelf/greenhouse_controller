@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, time, timedelta
+import cfg
 
 
 class EventO(object):
@@ -19,7 +20,9 @@ class EventAtTimeTO(EventO):
 
     def check_should_fire(self) -> bool:
         now = datetime.now()
-        if now.time() > self._event_firing_time and (now.date() > self._last_firing_time.date()):
+        if (now.time() > self._event_firing_time) and \
+                (now.time() < (datetime.combine(datetime.today(), self._event_firing_time) + timedelta(seconds=cfg.SECONDS_AFTER_ALLOW_EVENT_RUN)).time()) and \
+                (now.date() > self._last_firing_time.date()):
             self._last_firing_time = now
             return True
         return False

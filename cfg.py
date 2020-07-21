@@ -12,6 +12,9 @@ KEEP_ALIVE_RESOLUTION = 10  # [S] send brain keepalive
 CONFIGURATION_RESOLUTION = 10  # [S] all other things to do in brain cycle
 CAMERA_REFRESH_RESOLUTION = 60
 FLOW_MANAGERS_RESOLUTION = 1  #[S]
+SECONDS_AFTER_ALLOW_EVENT_RUN = 20  # if event should trigger at time t,
+    # it can be triggered also until t + SECONDS_AFTER_ALLOW_EVENT_RUN (for instance if brain was restarted),
+    # but not after
 
 RELAY_DELTA_MEASURE_MS = 10  # [mS] when arelay changes we want to "measure" two points before and after change so we get binary graphs
 NUM_HISTORY_MEASUREMENTS = 8  # save last x measurement - this can be used for rolling average outliers etc.

@@ -391,7 +391,7 @@ class Brain(threading.Thread):
         for action_to_run in actions_to_run:
             self._logger.debug(f'trying to run {action_to_run.action_to_run.name} manually')
             # ensure request is from ~= now
-            if (timezone.now() - action_to_run.timestamp) < timedelta(seconds=20):
+            if (timezone.now() - action_to_run.timestamp) < timedelta(seconds=cfg.SECONDS_AFTER_ALLOW_EVENT_RUN):
                 action_o = [a for a in self._actions if a.get_name() == action_to_run.action_to_run.name][0]
                 action_o.perform_action()
             else:
