@@ -300,3 +300,8 @@ class ActionRunRequest(models.Model):
     timestamp = models.DateTimeField()
 
 
+class Command(models.Model):
+    timestamp = models.DateTimeField()
+    command_data = models.TextField()
+
+

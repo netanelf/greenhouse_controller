@@ -8,6 +8,7 @@
 
 {% block body_block %}
 
+    <button id="reload_configuration" onclick=reloadConfiguration()>Reload Configuration</button>
     <h4>Manual Mode:</h4>
     <input id="manual_override" type="checkbox" {% if manual_mode == 1 %}checked{% endif %} data-toggle="toggle" data-size="small" data-onstyle="danger">
     <br>
@@ -43,6 +44,17 @@
                 url: 'runAction/',
                 type: 'GET',
                 data: action_id,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: true,
+                success: function(msg){}
+        });
+    }
+
+    function reloadConfiguration(){
+        $.ajax({
+                url: 'reloadConfiguration/',
+                type: 'GET',
                 contentType: 'application/json; charset=utf-8',
                 dataType: 'json',
                 async: true,

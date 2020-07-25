@@ -1,15 +1,14 @@
 from django.shortcuts import render
 from greenhouse_app.models import *
-import json
+from greenhouse_app.commands import *
 from django.http import HttpResponse, FileResponse
 from django.utils import timezone
 import csv
-#import cStringIO as StringIO
+import json
 from io import StringIO
 import time
 from datetime import datetime
 import logging
-from functools import wraps
 
 
 logger = logging.getLogger('django')
@@ -186,6 +185,16 @@ def runAction(request):
                                   timestamp=timezone.now())
             rr.save()
 
+    return HttpResponse(json.dumps({'NoData': None}))
+
+
+@timing_decorator
+def reloadConfiguration(request):
+    print(CommandReloadConfiguration(caller='ui').serialize())
+    cd = CommandReloadConfiguration(caller='ui').serialize()
+    r = Command(timestamp=timezone.now(),
+                command_data=cd)
+    r.save()
     return HttpResponse(json.dumps({'NoData': None}))
 
 

@@ -27,6 +27,7 @@ django.setup()
 from django.utils import timezone
 from django.db.utils import OperationalError
 from greenhouse_app.models import *
+from greenhouse_app.commands import *
 from core.flows.actions import *
 from core.flows.events import *
 from core.flows.conditions import *
@@ -50,18 +51,13 @@ class Brain(threading.Thread):
 
         self._simulate_hw = simulation_mode
         self._db_interface = DbInterface()
+        self.helper_threads = {}
+        self.start_helper_threads()
+        self._crate_image_capturing_object()
+        self._sr = sr_driver.SRDriver(SER=cfg.SER, RCLK=cfg.RCLK, SRCLK=cfg.SRCLK, ENABLE=cfg.ENABLE,
+                                      register_size=cfg.REGISTER_SIZE, simulate=self._simulate_hw)
 
-        # all sensors
-        self._dht_22_drivers: List[DHT22Driver] = []
-        self._sensors: List[SensorController] = []
-        self._create_sensor_controllers()
-
-        # all relays
-        self._sr = None
-        self._relays: List[RelayController] = []
-        self._create_relay_controllers()
-
-        self._controller_objects: List = self._sensors + self._relays
+        self._read_configuration_from_db()
 
         self._last_read_time = timezone.now()
         self._last_image_take_time = timezone.now()
@@ -73,24 +69,32 @@ class Brain(threading.Thread):
         self._data = []
         self._killed = False
 
-        # configurations, updated from db
-        self._configuration = {}
-
-        self.helper_threads = {}
-        self.start_helper_threads()
         register_keep_alive(name=self.__class__.__name__)
+
+        self._logger.info('Brain Finished Init')
+
+    def _read_configuration_from_db(self):
+        self._logger.info('reading configurations, sensors relays from db')
+        # all sensors
+        self._dht_22_drivers: List[DHT22Driver] = []
+        self._sensors: List[SensorController] = []
+        self._create_sensor_controllers()
+
+        # all relays
+        self._relays: List[RelayController] = []
+        self._create_relay_controllers()
+
+        self._controller_objects: List = self._sensors + self._relays
         self._register_sensors_and_relays()
 
+        self._configuration = {}
         self._update_configurations()
-        self._crate_image_capturing_object()
 
         # flows
         self._actions: List[ActionO] = self._populate_actions()
         self._conditions: List[ConditionO] = self._populate_conditions()
         self._flow_managers: List[FlowManager] = []
         self._create_flow_managers()
-        
-        self._logger.info('Brain Finished Init')
 
     def start_helper_threads(self):
         """
@@ -120,6 +124,7 @@ class Brain(threading.Thread):
         while not self._killed:
             try:
                 if timezone.now() - self._last_flow_run_time > timedelta(seconds=cfg.FLOW_MANAGERS_RESOLUTION):
+                    self._process_commands()
                     if self._configuration['manual_mode'] == 0:
                         for f in self._flow_managers:
                             f.run_flow()
@@ -204,7 +209,7 @@ class Brain(threading.Thread):
         build controllers for all relays in DB
         """
         self._logger.debug('creating a Shift Register controller to control all relays')
-        self._sr = sr_driver.SRDriver(SER=cfg.SER, RCLK=cfg.RCLK, SRCLK=cfg.SRCLK, ENABLE=cfg.ENABLE, register_size=cfg.REGISTER_SIZE, simulate=self._simulate_hw)
+
         #self._sr = pcf8574_driver.PCF8574Driver(address=0x20, simulate=self._simulate_hw)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
@@ -397,6 +402,23 @@ class Brain(threading.Thread):
             else:
                 self._logger.error(f'action {action_to_run.action_to_run.name} is out of time tolerance for executing, deleting request')
             action_to_run.delete()
+
+    def _process_commands(self):
+        commands = Command.objects.all()
+        for c in commands:
+            timestamp = c.timestamp
+            co = get_command_from_json(command_json=c.command_data)
+            self._logger.debug(f'got request to execute {co}, timestamp: {timestamp}')
+            if isinstance(co, CommandReloadConfiguration):
+                self._reload_configuration()
+            else:
+                self._logger.error(f'{co} not implemented')
+            c.delete()
+
+    def _reload_configuration(self):
+        self._logger.info('reloading configuration')
+        self._read_configuration_from_db()
+        self._logger.info('reloaded configuration')
 
     def kill_brain(self):
         self._logger.info('killing helper_threads')
