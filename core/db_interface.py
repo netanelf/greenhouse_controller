@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from cfg import DB_RETRIES
 
-from greenhouse_app.models import ControllerObject, HistoryValue, CurrentValue
+from greenhouse_app.models import ControllerObject, HistoryValue, CurrentValue, ConfigurationInt
 from django.db.utils import OperationalError
 
 
@@ -50,6 +50,15 @@ class DbInterface(object):
             try:
                 controller = ControllerObject.objects.get(name=sensor_name)
                 CurrentValue.objects.get_or_create(sensor=controller, measure_time=datetime(2000,1,1,0,0,0), val=0)
+            except Exception as ex:
+                self._logger.exception(ex)
+
+    def write_configuration_int(self, name, value):
+        with self._write_lock:
+            try:
+                conf = ConfigurationInt.objects.get_or_create(name=name)[0]
+                conf.value = value
+                conf.save()
             except Exception as ex:
                 self._logger.exception(ex)
 

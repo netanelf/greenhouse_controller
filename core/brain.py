@@ -128,9 +128,9 @@ class Brain(threading.Thread):
                     if self._configuration['manual_mode'] == 0:
                         for f in self._flow_managers:
                             f.run_flow()
-                    else:
-                        self._logger.debug('manual mode ON, avoiding flow run')
-                        self._run_actions_manually()
+                    # else:
+                    #     self._logger.debug('manual mode ON, avoiding flow run')
+                    #     self._run_actions_manually()
                     self._last_flow_run_time = timezone.now()
 
                 if timezone.now() - self._last_read_time > timedelta(seconds=cfg.SENSOR_READING_RESOLUTION):
@@ -391,17 +391,19 @@ class Brain(threading.Thread):
         for c in Configuration.objects.all():
             self._configuration[c.name] = c.value
 
-    def _run_actions_manually(self):
-        actions_to_run = ActionRunRequest.objects.all()
-        for action_to_run in actions_to_run:
-            self._logger.debug(f'trying to run {action_to_run.action_to_run.name} manually')
-            # ensure request is from ~= now
-            if (timezone.now() - action_to_run.timestamp) < timedelta(seconds=cfg.SECONDS_AFTER_ALLOW_EVENT_RUN):
-                action_o = [a for a in self._actions if a.get_name() == action_to_run.action_to_run.name][0]
-                action_o.perform_action()
-            else:
-                self._logger.error(f'action {action_to_run.action_to_run.name} is out of time tolerance for executing, deleting request')
-            action_to_run.delete()
+    def _run_action_manually(self, action_data):
+        self._logger.debug(f'got request to run action: {action_data}')
+        action_o = [a for a in self._actions if a.get_name() == action_data.get_name()][0]
+        action_o.perform_action()
+
+    def _set_manual_mode(self, data):
+        wanted_mode = data.get_on_off()
+        if self._configuration['manual_mode'] != wanted_mode:
+            self._logger.debug(f'setting manual mode to {wanted_mode}')
+            self._configuration['manual_mode'] = wanted_mode
+            self._db_interface.write_configuration_int(name='manual_mode', value=wanted_mode)
+        else:
+            self._logger.debug(f'manual mode is {self._configuration["manual_mode"]}, no need to change to: {wanted_mode}')
 
     def _process_commands(self):
         commands = Command.objects.all()
@@ -409,8 +411,18 @@ class Brain(threading.Thread):
             timestamp = c.timestamp
             co = get_command_from_json(command_json=c.command_data)
             self._logger.debug(f'got request to execute {co}, timestamp: {timestamp}')
+
+            if (timezone.now() - timestamp) > timedelta(seconds=cfg.SECONDS_AFTER_ALLOW_EVENT_RUN):
+                self._logger.error(f'command {co} was requested to run, but timestamp is to old, timestamp: {timestamp}')
+                c.delete()
+                return
+
             if isinstance(co, CommandReloadConfiguration):
                 self._reload_configuration()
+            elif isinstance(co, CommandRunAction):
+                self._run_action_manually(action_data=co)
+            elif isinstance(co, CommandSetManualMode):
+                self._set_manual_mode(data=co)
             else:
                 self._logger.error(f'{co} not implemented')
             c.delete()

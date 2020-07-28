@@ -179,18 +179,26 @@ def setRelaysState(request):
 def runAction(request):
     a = request.GET.keys()
     k = list(a)[0]
-    for action in Action.objects.order_by():
-        if action.name == k:
-            rr = ActionRunRequest(action_to_run=action,
-                                  timestamp=timezone.now())
-            rr.save()
+    cd = CommandRunAction(caller='ui', action_name=k).serialize()
+    r = Command(timestamp=timezone.now(),
+                command_data=cd)
+    r.save()
+    return HttpResponse(json.dumps({'NoData': None}))
 
+
+def setManualMode(request):
+    a = request.GET.keys()
+    k = list(a)[0]
+    data = json.loads(k)
+    cd = CommandSetManualMode(caller='ui', on_off=data['value']).serialize()
+    r = Command(timestamp=timezone.now(),
+                command_data=cd)
+    r.save()
     return HttpResponse(json.dumps({'NoData': None}))
 
 
 @timing_decorator
 def reloadConfiguration(request):
-    print(CommandReloadConfiguration(caller='ui').serialize())
     cd = CommandReloadConfiguration(caller='ui').serialize()
     r = Command(timestamp=timezone.now(),
                 command_data=cd)
@@ -208,7 +216,6 @@ def manualMode(request):
 
 @timing_decorator
 def graphs(request):
-    #sensors = Sensor.objects.all()
     sensors = ControllerObject.objects.all()
     sensors_names = []
     for s in sensors:
