@@ -23,7 +23,7 @@ class ConditionSensorValEqO(ConditionO):
         super(ConditionSensorValEqO, self).__init__(name)
         self._sensor = sensor
         self._value = value
-        self._epsilon = 10-6
+        self._epsilon = 10e-6
 
     def check_condition(self) -> bool:
         if abs(self._sensor.read().value - self._value) < self._epsilon:

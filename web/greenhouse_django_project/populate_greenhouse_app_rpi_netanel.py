@@ -120,6 +120,41 @@ def populate_events(dbname):
 def populate_flows(dbname):
     populate_watering_flow(dbname)
     populate_camera_flow(dbname)
+    populate_sensors_values_saving_to_db(dbname)
+
+
+def populate_sensors_values_saving_to_db(dbname):
+    print('populate_sensors_values_saving_to_db flow')
+    e = EventEveryDT.objects.using(dbname).get_or_create(
+        event_delta_t=timedelta(minutes=15)
+    )[0]
+    e.save(using=dbname)
+    dht_temp_sensor = Dht22TempSensor.objects.using(dbname).get(name='dht_temp')
+    dht_humid_sensor = Dht22HumiditySensor.objects.using(dbname).get(name='dht_humidity')
+    ds18b20_temp_sensor = Ds18b20Sensor.objects.using(dbname).get(name='DS18B20_temp')
+    flow_sensor = FlowSensor.objects.using(dbname).get(name='water_flow_sensor')
+
+    a_save_temp_dht_to_db = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(sensor=dht_temp_sensor)[0]
+    a_save_temp_dht_to_db.save(using=dbname)
+
+    a_save_humidity_dht_to_db = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(sensor=dht_humid_sensor)[0]
+    a_save_humidity_dht_to_db.save(using=dbname)
+
+    a_save_temp_ds18b20_to_db = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(sensor=ds18b20_temp_sensor)[0]
+    a_save_temp_ds18b20_to_db.save(using=dbname)
+
+    a_save_flow_to_db = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(sensor=flow_sensor)[0]
+    a_save_flow_to_db.save(using=dbname)
+
+    f = Flow.objects.using(dbname).get_or_create(
+        name=f'save_sensors_to_db',
+        event=e,
+    )[0]
+    f.actions.add(a_save_temp_dht_to_db)
+    f.actions.add(a_save_humidity_dht_to_db)
+    f.actions.add(a_save_temp_ds18b20_to_db)
+    f.actions.add(a_save_flow_to_db)
+    f.save(using=dbname)
 
 
 def populate_camera_flow(dbname):

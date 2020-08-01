@@ -213,7 +213,7 @@ class Brain(threading.Thread):
         #self._sr = pcf8574_driver.PCF8574Driver(address=0x20, simulate=self._simulate_hw)
         for r in Relay.objects.order_by():
             self._logger.debug('found relay: ({}), creating controller'.format(r))
-            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=r.default_state, invert_polarity=r.inverted, simulate=r.simulate))
+            self._relays.append(RelayController(name=r.name, pin=r.pin, shift_register=self._sr, state=int(r.default_state), invert_polarity=r.inverted, simulate=r.simulate))
 
     def _register_sensors_and_relays(self):
         self._logger.info('registering sensors')
