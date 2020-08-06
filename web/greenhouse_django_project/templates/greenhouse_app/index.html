@@ -85,19 +85,51 @@
                 </table>
             </div>
 
+            <script>
+                function showHideFlow(flow) {
+                    let style = flow.style;
+
+                    if (style.display === '') {
+                        style.display = 'none';
+                    } else {
+                        style.display = '';
+                    }
+                } 
+            </script>
+            
             <div class="col-md-4">
                 <h3 align="center">Flows</h3>
-                <table align="center">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                        </tr>
-                    </thead>
-
+                <table>
                     <tbody id="flowsTableBody">
                         {% for f in flows %}
                             <tr>
-                                <td>{{f.name}}</td>
+                                <td>
+                                    <button class="bold" onclick="showHideFlow(this.nextElementSibling)">{{f.name}}</button>
+
+                                    <div class="indent" style="display:none">
+                                        <span class="bold">Events</span>
+
+                                        <div class="indent">
+                                            {{f.event}}
+                                        </div>
+
+                                        <span class="bold">Conditions</span>
+
+                                        <div class="indent">
+                                            {% for c in f.conditions.order_by %}
+                                                <div>{{ c }}</div>
+                                            {% endfor %}
+                                        </div>
+
+                                        <span class="bold">Actions</span>
+
+                                        <div class="indent">
+                                            {% for a in f.actions.order_by %}
+                                                <div>{{ a }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
