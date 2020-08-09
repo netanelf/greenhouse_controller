@@ -43,10 +43,18 @@ class DHT22Driver(object):
 
     def read_sensor_data(self):
         h, t = dht.read_retry(sensor=dht.DHT22, pin=self._gpio, retries=5, delay_seconds=0.5)
+        if not self._check_values(h, t):
+            return
         self._logger.debug('read dht22, pin: {}, gpio: {}, t: {}, h: {}'.format(self._pin, self._gpio, t, h))
         self._temp = t
         self._humidity = h
         self._last_read_time = datetime.now()
+
+    def _check_values(self, h, t):
+        if h > 100 or h < 0 or t < -20 or t > 100:
+            self._logger.error(f'readings values seem to be bad, h: {h}, t: {t}')
+            return False
+        return True
 
     def get_temp(self):
         if (datetime.now() - self._last_read_time).seconds > cfg.DHT22_MINIMAL_READ_DELTA_SEC:
