@@ -218,9 +218,11 @@ def manualMode(request):
 def graphs(request):
     sensors = ControllerObject.objects.all()
     sensors_names = []
+    units_array = []
     for s in sensors:
         sensors_names.append(s.name)
-    context_dict = {'sensors': sensors_names}
+        units_array.append(s.unit.value)
+    context_dict = {'sensors': sensors_names, 'units': json.dumps(units_array)}
 
     return render(request, 'greenhouse_app/graphs.html', context_dict)
 

@@ -5,6 +5,17 @@ from polymorphic.models import PolymorphicModel
 from multiselectfield import MultiSelectField
 import time
 import logging
+from enum import Enum
+
+
+class Units(Enum):
+    NA = 'NA'
+    Temp = 'C'
+    Percent = '%'
+    Flow = 'mL/H'
+    Bool = 'Bool'
+    Luminance = 'Lux'
+    Acidity = 'Ph'
 
 
 class ControllerObject(PolymorphicModel):
@@ -23,7 +34,7 @@ class Sensor(ControllerObject):
     represent one sensor
     """
     simulate = models.BooleanField(default=True)
-    
+
     def __str__(self):
         return self.name
 
@@ -31,26 +42,66 @@ class Sensor(ControllerObject):
 class Dht22TempSensor(Sensor):
     pin = models.PositiveSmallIntegerField()
 
+    def get_unit(self):
+        return Units.Temp
+    unit = property(get_unit)
+
 
 class Dht22HumiditySensor(Sensor):
     pin = models.PositiveSmallIntegerField()
+
+    def get_unit(self):
+        return Units.Percent
+    unit = property(get_unit)
 
 
 class Ds18b20Sensor(Sensor):
     device_id = models.CharField(max_length=32, default='', help_text='Sensor unique ID')
 
+    def get_unit(self):
+        return Units.Temp
+    unit = property(get_unit)
+
 
 class Tsl2561Sensor(Sensor):
     device_id = models.CharField(max_length=32, default='', help_text='I2C address')
+
+    def get_unit(self):
+        return Units.Luminance
+    unit = property(get_unit)
 
 
 class DigitalInputSensor(Sensor):
     pin = models.PositiveSmallIntegerField()
 
+    def get_unit(self):
+        return Units.Bool
+    unit = property(get_unit)
+
 
 class FlowSensor(Sensor):
     pin = models.PositiveSmallIntegerField()
     mll_per_pulse = models.IntegerField(help_text='[mL] fluid per 1 edge of sensor')
+
+    def get_unit(self):
+        return Units.Flow
+    unit = property(get_unit)
+
+
+class ShtHumiditySensor(Sensor):
+    i2c_address = models.CharField(max_length=32, default='', help_text='I2C address')
+
+    def get_unit(self):
+        return Units.Percent
+    unit = property(get_unit)
+
+
+class ShtTempSensor(Sensor):
+    i2c_address = models.CharField(max_length=32, default='', help_text='I2C address')
+
+    def get_unit(self):
+        return Units.Temp
+    unit = property(get_unit)
 
 
 class CurrentValue(models.Model):
@@ -104,6 +155,10 @@ class Relay(ControllerObject):
         'controller will change this according to events or manual controll')
     simulate = models.BooleanField(default=True)
     inverted = models.BooleanField(default=False)
+
+    def get_unit(self):
+        return Units.Bool
+    unit = property(get_unit)
 
     def __str__(self):
         return f'{self.name} at pin {self.pin}'

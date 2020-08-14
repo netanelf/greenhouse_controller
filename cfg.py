@@ -28,6 +28,7 @@ REGISTER_SIZE = 8
 
 # individual sensors configurations
 DHT22_MINIMAL_READ_DELTA_SEC = 30  # do not read sensors in smaller intervals than this value (to not influence reading temp)
+SHT_MINIMAL_READ_DELTA_SEC = 30
 
 # DB backupper configurations
 DB_BACKUPPER_WAIT_TIME = 10

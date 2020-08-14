@@ -22,7 +22,7 @@ class RelayAdmin(admin.ModelAdmin):
 @admin.register(Sensor)
 class SensorAdmin(PolymorphicParentModelAdmin):
     polymorphic_list = True
-    child_models = (Dht22TempSensor, Dht22HumiditySensor, Ds18b20Sensor, Tsl2561Sensor, DigitalInputSensor, FlowSensor)
+    child_models = (Dht22TempSensor, Dht22HumiditySensor, Ds18b20Sensor, Tsl2561Sensor, DigitalInputSensor, FlowSensor, ShtTempSensor, ShtHumiditySensor)
 
 
 @admin.register(Dht22TempSensor)
@@ -59,6 +59,18 @@ class DigitalInputSensorAdmin(PolymorphicChildModelAdmin):
 class FlowSensorAdmin(PolymorphicChildModelAdmin):
     list_display = ('name', 'simulate', 'pin', 'mll_per_pulse')
     base_model = FlowSensor
+
+
+@admin.register(ShtHumiditySensor)
+class ShtHumiditySensorAdmin(PolymorphicChildModelAdmin):
+    list_display = ('name', 'simulate', 'i2c_address')
+    base_model = ShtHumiditySensor
+
+
+@admin.register(ShtTempSensor)
+class ShtTempSensorAdmin(PolymorphicChildModelAdmin):
+    list_display = ('name', 'simulate', 'i2c_address')
+    base_model = ShtTempSensor
 
 
 @admin.register(Configuration)

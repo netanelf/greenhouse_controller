@@ -21,6 +21,9 @@ from core.sensors.digital_input_controller import DigitalInputController
 from core.sensors.flow_sensor_controller import FlowSensorController
 from core.drivers.dht22_driver import DHT22Driver
 from core.drivers import sr_driver, dht22_driver, pcf8574_driver
+from core.drivers.sht_driver import ShtDriver
+from core.sensors.sht_humidity_controller import ShtHumidityController
+from core.sensors.sht_temp_controller import ShtTempController
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greenhouse_django_project.settings')
 import django
 django.setup()
@@ -77,6 +80,7 @@ class Brain(threading.Thread):
         self._logger.info('reading configurations, sensors relays from db')
         # all sensors
         self._dht_22_drivers: List[DHT22Driver] = []
+        self._sht_drivers: List[ShtDriver] = []
         self._sensors: List[SensorController] = []
         self._create_sensor_controllers()
 
@@ -176,12 +180,12 @@ class Brain(threading.Thread):
             self._logger.debug('found sensor: ({}), creating controller'.format(s))
 
             if isinstance(s, Dht22TempSensor):
-                dht_22_driver = self._get_dht22_controller(pin=s.pin)
+                dht_22_driver = self._get_dht22_driver(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22temp, creating controller'.format(s))
                 self._sensors.append(DHT22TempController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
             elif isinstance(s, Dht22HumiditySensor):
-                dht_22_driver = self._get_dht22_controller(pin=s.pin)
+                dht_22_driver = self._get_dht22_driver(pin=s.pin)
                 self._logger.debug('sensor: ({}) is dht22humidity, creating controller'.format(s))
                 self._sensors.append(DHT22HumidityController(name=s.name, dht22_driver=dht_22_driver, simulate=s.simulate))
 
@@ -201,6 +205,15 @@ class Brain(threading.Thread):
                 self._logger.debug('sensor: ({}) is FlowSensor, creating controller'.format(s))
                 self._sensors.append(FlowSensorController(name=s.name, pin=s.pin, simulate=s.simulate, mll_per_pulse=s.mll_per_pulse))
 
+            elif isinstance(s, ShtHumiditySensor):
+                sht_driver = self._get_sht_driver(address=s.i2c_address)
+                self._logger.debug('sensor: ({}) is ShtHumiditySensor, creating controller'.format(s))
+                self._sensors.append(ShtHumidityController(name=s.name, sht_driver=sht_driver, simulate=s.simulate))
+
+            elif isinstance(s, ShtTempSensor):
+                sht_driver = self._get_sht_driver(address=s.i2c_address)
+                self._logger.debug('sensor: ({}) is ShtTempSensor, creating controller'.format(s))
+                self._sensors.append(ShtTempController(name=s.name, sht_driver=sht_driver, simulate=s.simulate))
             else:
                 self._logger.error(f'sensor {s} has no corresponding controller object')
 
@@ -363,7 +376,7 @@ class Brain(threading.Thread):
             m = c.read()
             self._data.append(m)
 
-    def _get_dht22_controller(self, pin):
+    def _get_dht22_driver(self, pin):
         """
         ensure one driver is created for temp + humidity sensor in the same pin
         :param pin:
@@ -374,6 +387,19 @@ class Brain(threading.Thread):
                 return d
         d = dht22_driver.DHT22Driver(pin=pin)
         self._dht_22_drivers.append(d)
+        return d
+
+    def _get_sht_driver(self, address):
+        """
+        ensure one driver is created for temp + humidity sensor in the same address
+        :param pin:
+        :return:
+        """
+        for d in self._sht_drivers:
+            if d.get_address() == address:
+                return d
+        d = ShtDriver(i2c_address=address)
+        self._sht_drivers.append(d)
         return d
 
     def _write_data_to_db(self):

@@ -1,12 +1,17 @@
 # taken from: https://arduinogeek.wordpress.com/2014/04/23/raspberry-pi-with-i2c-2004-lcd/
-import smbus
+try:
+    import smbus
+except Exception:
+    print('could not import smbus')
+
 from time import sleep
 
 
 class I2CDevice:
-    def __init__(self, addr, port=1):
+    def __init__(self, addr, port=1, simulate=True):
         self.addr = addr
-        self.bus = smbus.SMBus(port)
+        if not simulate:
+            self.bus = smbus.SMBus(port)
 
     # Write a single command
     def write_cmd(self, cmd):

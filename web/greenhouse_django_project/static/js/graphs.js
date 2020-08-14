@@ -181,7 +181,13 @@ function updateOptions(options, shownGraphs){
         var minMax = findMinMax(serie);
         var y = {
             min: minMax.min,
-            max: minMax.max
+            max: minMax.max,
+            axisLabel: serie.unit,
+            axisLabelUseCanvas: true,
+            axisLabelFontSizePixels: 12,
+            axisLabelFontFamily: 'Verdana, Arial',
+            axisLabelPadding: 15,
+            position: "right",
         };
         yaxisOptions.push(y);
         serie.yaxis = i+1;
@@ -228,6 +234,7 @@ function createEmptySeriesData(){
         serie.data = [];
         serie.show = false;
         serie.color = graph_colors[i];
+        serie.unit = units[i]
         series_data.push(serie);
     }
 }

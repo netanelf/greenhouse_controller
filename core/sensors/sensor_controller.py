@@ -5,6 +5,7 @@ from collections import deque
 from django.utils import timezone
 from datetime import datetime
 import cfg
+from abc import abstractmethod, ABC
 
 
 class Measurement(object):
@@ -20,7 +21,7 @@ class Measurement(object):
         return 'sensor_name: {}, time: {}, value: {}'.format(self.sensor_name, self.time, self.value)
 
 
-class SensorController(object):
+class SensorController(ABC):
     """
     all sensor controllers should derive from this class.
     """
@@ -37,12 +38,14 @@ class SensorController(object):
     def get_last_value(self) -> Measurement:
         return self._last_read
 
+    @abstractmethod
     def read(self) -> Measurement:
-        raise NotImplementedError
+        pass
 
-    # TODO: what is get_value? what was i thinking?
-    def get_value(self) -> Measurement:
-        raise NotImplementedError
+    # # TODO: what is get_value? what was i thinking?
+    # @abstractmethod
+    # def get_value(self) -> Measurement:
+    #     pass
 
 
 def history_appender_decorator(func):
