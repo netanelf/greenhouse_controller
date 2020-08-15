@@ -174,35 +174,93 @@ function createFlot(){
 }
 
 function updateOptions(options, shownGraphs){
+    var byUnit = bunchSeriesByUnit(shownGraphs);
     var yaxisOptions = [];
     var colors = [];
-    for(var i=0; i<shownGraphs.length; i++){
-        var serie = shownGraphs[i];
-        var minMax = findMinMax(serie);
-        var y = {
-            min: minMax.min,
-            max: minMax.max,
-            axisLabel: serie.unit,
-            axisLabelUseCanvas: true,
-            axisLabelFontSizePixels: 12,
-            axisLabelFontFamily: 'Verdana, Arial',
-            axisLabelPadding: 15,
-            position: "right",
-        };
-        yaxisOptions.push(y);
-        serie.yaxis = i+1;
-        colors.push(serie.color);
-    }
+
+    var seriesCounter = 0;
+    for(var unit in byUnit) {
+        var sameUnitSeries = byUnit[unit];
+        var minMax = findMinMaxOfMultipleSeries(sameUnitSeries);
+
+        for(var i=0; i < sameUnitSeries.length; i++){
+            var serie = sameUnitSeries[i];
+
+            if (i === 0){
+                var y = {
+                    min: minMax.min,
+                    max: minMax.max,
+                    show: true,
+                    axisLabel: unit,
+                    axisLabelUseCanvas: false,
+                    axisLabelFontSizePixels: 12,
+                    axisLabelFontFamily: 'Verdana, Arial',
+                    axisLabelPadding: 15,
+                    position: "right",
+                };
+            }
+            else{
+                var y = {
+                    min: minMax.min,
+                    max: minMax.max,
+                    show: true,
+                    ticks: false,
+                };
+            }
+
+            yaxisOptions.push(y);
+            serie.yaxis = seriesCounter + 1;
+            colors.push(serie.color);
+            seriesCounter += 1;
+            }
+        }
     options.yaxes = yaxisOptions;
     options.colors = colors;
 }
 
-function findMinMax(serie){
+
+function bunchSeriesByUnit(multipleSeries){
+    var output = {};
+
+    for(var i=0; i < multipleSeries.length; i++){
+        var series = multipleSeries[i];
+        var unitName = series.unit;
+        if (typeof(output[unitName]) === "undefined") {
+            output[unitName] = [];
+        }
+        output[unitName].push(series)
+    }
+    return output;
+}
+
+
+function findMinMaxOfMultipleSeries(multipleSeries){
+    var globalMin = Number.MAX_VALUE;
+    var globalMax = Number.MIN_VALUE;
+    for(var i=0; i < multipleSeries.length; i++){
+        seriesMinMax = findMinMaxOfSeries(multipleSeries[i])
+        if (seriesMinMax.min < globalMin){
+            globalMin = seriesMinMax.min;
+        }
+        if (seriesMinMax.max > globalMax){
+            globalMax = seriesMinMax.max;
+        }
+        };
+
+    var minMax = {
+        min: globalMin,
+        max: globalMax
+    };
+    return minMax;
+}
+
+
+function findMinMaxOfSeries(Series){
     var minVal = Number.MAX_VALUE;
     var maxVal = Number.MIN_VALUE;
 
-    for(var i=0; i<serie.data.length; i++){
-        var v = parseFloat(serie.data[i][1]);
+    for(var i=0; i < Series.data.length; i++){
+        var v = parseFloat(Series.data[i][1]);
         if(v > maxVal){
             maxVal = v;
         }

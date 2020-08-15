@@ -75,27 +75,23 @@ def populate_relays(dbname):
     r.save(using=dbname)
 
 
-def populate_flows(dbname):
-
-
-    # populate flow at time T
-    # f = Flow.objects.using(dbname).get_or_create(
-    #     name=f'save sensor {a.sensor.name} data flow',
-    #     event=e
-    # )[0]
-    # f.actions.set((a,))
-    # f.save()
-    #
-    # populate flow every DT
-
-    e = EventEveryDT.objects.using(dbname).get(event_delta_t=timedelta(seconds=60))
-    a = ActionSaveSensorValToDB.objects.using(dbname).get(sensor=Sensor.objects.using(dbname).get(name='DS18B20_water'))
+def populate_save_sensor_flow(dbname, sensor, dt_sec):
+    sensor_name = sensor.name
+    e = EventEveryDT.objects.using(dbname).get(event_delta_t=timedelta(seconds=dt_sec))
+    a = ActionSaveSensorValToDB.objects.using(dbname).get_or_create(sensor=sensor)[0]
     f = Flow.objects.using(dbname).get_or_create(
-        name=f'save sensor DS18B20_water data flow',
+        name=f'save sensor {sensor_name} data flow',
         event=e,
     )[0]
     f.actions.add(a)
     f.save(using=dbname)
+
+
+def populate_flows(dbname):
+
+    for c in ControllerObject.objects.using(dbname).all():
+        print(c)
+        populate_save_sensor_flow(dbname, c, 60)
 
     print('populating watering flow')
     e = EventAtTimeTDays.objects.using(dbname).get(event_time='08:00:00', event_days=[1, 3, 6])
