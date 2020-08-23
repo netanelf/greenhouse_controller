@@ -51,6 +51,8 @@ class DHT22Driver(object):
         self._last_read_time = datetime.now()
 
     def _check_values(self, h, t):
+        if h is None or t is None:
+            return False
         if h > 100 or h < 0 or t < -20 or t > 100:
             self._logger.error(f'readings values seem to be bad, h: {h}, t: {t}')
             return False
