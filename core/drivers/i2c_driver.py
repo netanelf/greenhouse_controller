@@ -16,7 +16,9 @@ class I2CDevice:
         try:
             self.bus = smbus.SMBus(port)
         except Exception as ex:
-            print('could not open SMBus')
+            self._logger.error('could not open SMBus')
+        self._logger.info('initialized I2CDevice')
+
 
     # Write a single command
     def write_cmd(self, cmd):
@@ -45,12 +47,14 @@ class I2CDevice:
     def read_block_data(self, cmd):
         return self.bus.read_block_data(self.addr, cmd)
 
-    def write_i2c_block_data(cmd: int, data: List[int]):
+    def write_i2c_block_data(self, cmd: int, data: List[int]):
         self._logger.info('in write_i2c_block_data')
-        bus.write_i2c_block_data(self.addr, cmd, data)
+        self.bus.write_i2c_block_data(self.addr, cmd, data)
 
-    def read_i2c_block_data(reg: int, len: int):
+    def read_i2c_block_data(self, reg: int, len: int):
         self._logger.info('in read_i2c_block_data')
-        return(bus.read_i2c_block_data(self.addr, reg, len))
+        data = self.bus.read_i2c_block_data(self.addr, reg, len)
+        self._logger.debug(data)
+        return(data)
 
 

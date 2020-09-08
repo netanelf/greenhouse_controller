@@ -10,7 +10,7 @@ class ShtDriver(object):
     def __init__(self, i2c_address: int):
         self._logger = logging.getLogger(self.__class__.__name__)
         self._i2c_id = i2c_address
-        self._bus = I2CDevice(addr=self._i2c_id)
+        self._i2c_driver = I2CDevice(addr=self._i2c_id)
         self._temp = None
         self._humidity = None
         self._last_read_time = datetime.min
@@ -20,15 +20,15 @@ class ShtDriver(object):
         """
         :return: Temperature[C], Humidity[RH]
         """
-        self._bus.wwrite_i2c_block_data(0x2C, [0x06])
+        self._i2c_driver.write_i2c_block_data(0x2C, [0x06])
 
         time.sleep(0.1)
 
         # SHT30 address, 0x44(68)
         # Read data back from 0x00(00), 6 bytes
         # cTemp MSB, cTemp LSB, cTemp CRC, Humididty MSB, Humidity LSB, Humidity CRC
-        #data = self._bus.read_block_data(0x00)  #TODO, need do read 6 bytes
-        data = bus.read_i2c_block_data(0x44, 0x00, 6)
+        # data = self._bus.read_block_data(0x00)  #TODO, need do read 6 bytes
+        data = self._i2c_driver.read_i2c_block_data(0x00, 6)
 
         # Convert the data
         temp = ((((data[0] * 256.0) + data[1]) * 175) / 65535.0) - 45
@@ -41,18 +41,17 @@ class ShtDriver(object):
     def get_humidity(self) -> float:
         if (datetime.now() - self._last_read_time).seconds > cfg.SHT_MINIMAL_READ_DELTA_SEC:
             self.read_data()
-        return self._temp
+        return self._humidity
 
     def get_temp(self) -> float:
         if (datetime.now() - self._last_read_time).seconds > cfg.SHT_MINIMAL_READ_DELTA_SEC:
             self.read_data()
-        return self._humidity
+        return self._temp
 
     def get_address(self):
         return self._i2c_id
 
 if __name__ == '__main__':
-    print(1)
     logger = logging.getLogger()
     s_handler = logging.StreamHandler()
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -61,7 +60,9 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
 
     s = ShtDriver(0x44)
-    print(2)
+    s.read_data()
+    logger.info(f'humidity: {s.get_humidity()}')
+    logger.info(f'temp: {s.get_temp()}')
 
     
 
