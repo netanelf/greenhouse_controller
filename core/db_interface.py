@@ -40,7 +40,7 @@ class DbInterface(object):
                             cv.val = d.value
                             cv.save()
                             break
-                        except OperationalError as ex:
+                        except Exception as ex:
                             self._logger.error('while writing to DB got exception, try: {}'.format(t))
                             self._logger.exception(ex)
                             t += 1

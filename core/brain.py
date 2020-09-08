@@ -206,12 +206,12 @@ class Brain(threading.Thread):
                 self._sensors.append(FlowSensorController(name=s.name, pin=s.pin, simulate=s.simulate, mll_per_pulse=s.mll_per_pulse))
 
             elif isinstance(s, ShtHumiditySensor):
-                sht_driver = self._get_sht_driver(address=s.i2c_address)
+                sht_driver = self._get_sht_driver(address=int(s.i2c_address, 16))
                 self._logger.debug('sensor: ({}) is ShtHumiditySensor, creating controller'.format(s))
                 self._sensors.append(ShtHumidityController(name=s.name, sht_driver=sht_driver, simulate=s.simulate))
 
             elif isinstance(s, ShtTempSensor):
-                sht_driver = self._get_sht_driver(address=s.i2c_address)
+                sht_driver = self._get_sht_driver(address=int(s.i2c_address, 16))
                 self._logger.debug('sensor: ({}) is ShtTempSensor, creating controller'.format(s))
                 self._sensors.append(ShtTempController(name=s.name, sht_driver=sht_driver, simulate=s.simulate))
             else:
@@ -373,8 +373,11 @@ class Brain(threading.Thread):
         self._logger.debug('issuing a read for all sensors and relays')
 
         for c in self._controller_objects:
-            m = c.read()
-            self._data.append(m)
+            try:
+                m = c.read()
+                self._data.append(m)
+            except Exception as ex:
+                self._logger.exception(ex)
 
     def _get_dht22_driver(self, pin):
         """
