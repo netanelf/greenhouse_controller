@@ -14,6 +14,7 @@ class ShtDriver(object):
         self._temp = None
         self._humidity = None
         self._last_read_time = datetime.min
+        self._logger.info('initialized sht')
 
     def read_data(self) :
         """
@@ -51,9 +52,17 @@ class ShtDriver(object):
         return self._i2c_id
 
 if __name__ == '__main__':
-    logging.basicConfig()
-    
+    print(1)
+    logger = logging.getLogger()
+    s_handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    s_handler.setFormatter(formatter)
+    logger.addHandler(s_handler)
+    logger.setLevel(logging.DEBUG)
+
     s = ShtDriver(0x44)
+    print(2)
+
     
 
 
