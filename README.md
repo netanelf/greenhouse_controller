@@ -7,9 +7,7 @@
 4. git clone https://github.com/adafruit/Adafruit_Python_DHT.git, 
 	cd Adafruit_Python_DHT
 	sudo python setup.py install
-5. tightvnc apparently opens another session therefore when it starts - the script is ran again, do not use (x11vnc on session 0 should work)
-6. if you want controller automatic startup - add ```@lxterminal -e '/home/pi/workspace/greenhouse_controller/run_full_linux.sh'``` to ~/.config/lxsession/LXDE-pi/autostart
-7. if you want x11vnc automatic startup - add ```@x11vnc -bg -nevershared -forever -tightfilexfer -nopw -display :0``` to ~/.config/lxsession/LXDE-pi/autostart
+5. if you want controller automatic startup - add ```@lxterminal -e '/home/pi/workspace/greenhouse_controller/run_full_linux.sh'``` to /etc/xdg/lxsession/LXDE-pi/autostart
 
 web (new):
 1. delete db.sqlite3 (if exists)
