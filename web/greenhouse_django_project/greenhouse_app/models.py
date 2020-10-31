@@ -13,6 +13,7 @@ class Units(Enum):
     Temp = 'C'
     Percent = '%'
     Flow = 'mL/H'
+    LiquidVolume = 'mL'
     Bool = 'Bool'
     Luminance = 'Lux'
     Acidity = 'Ph'
@@ -84,7 +85,7 @@ class FlowSensor(Sensor):
     mll_per_pulse = models.IntegerField(help_text='[mL] fluid per 1 edge of sensor')
 
     def get_unit(self):
-        return Units.Flow
+        return Units.LiquidVolume
     unit = property(get_unit)
 
 

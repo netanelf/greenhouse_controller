@@ -27,7 +27,6 @@ class ShtDriver(object):
         # SHT30 address, 0x44(68)
         # Read data back from 0x00(00), 6 bytes
         # cTemp MSB, cTemp LSB, cTemp CRC, Humididty MSB, Humidity LSB, Humidity CRC
-        # data = self._bus.read_block_data(0x00)  #TODO, need do read 6 bytes
         data = self._i2c_driver.read_i2c_block_data(0x00, 6)
 
         # Convert the data
