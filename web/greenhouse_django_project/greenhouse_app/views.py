@@ -206,6 +206,14 @@ def reloadConfiguration(request):
     return HttpResponse(json.dumps({'NoData': None}))
 
 
+def savePicture(request):
+    cd = CommandSavePicture(caller='ui').serialize()
+    r = Command(timestamp=timezone.now(),
+                command_data=cd)
+    r.save()
+    return HttpResponse(json.dumps({'NoData': None}))
+
+
 @timing_decorator
 def manualMode(request):
     actions_list = Action.objects.order_by()

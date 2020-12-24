@@ -42,6 +42,19 @@ class CommandReloadConfiguration(CommandWithNoData):
         return CommandReloadConfiguration(caller=obj_json['caller'])
 
 
+class CommandSavePicture(CommandWithNoData):
+    def __init__(self, caller):
+        super(CommandSavePicture, self).__init__(caller)
+
+    def serialize(self):
+        return json.dumps({'caller': self._caller,
+                           'command': 'SAVE_PICTURE'})
+
+    @classmethod
+    def deserialize(cls, obj_json: Dict):
+        return CommandSavePicture(caller=obj_json['caller'])
+
+
 class CommandRunAction(CommandWithData):
     def __init__(self, caller, action_name):
         super(CommandRunAction, self).__init__(caller)
@@ -91,5 +104,6 @@ def get_command_from_json(command_json: str):
 COMMANDS_LIST = {
     'RELOAD_CONFIGURATION': CommandReloadConfiguration,
     'RUN_CATION': CommandRunAction,
-    'SET_MANUAL_MODE': CommandSetManualMode
+    'SET_MANUAL_MODE': CommandSetManualMode,
+    'SAVE_PICTURE': CommandSavePicture
 }

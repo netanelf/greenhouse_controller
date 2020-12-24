@@ -11,6 +11,11 @@
     <table>
         <tr>
             <td>
+                <button id="save_picture" onclick=savePicture()>Save Picture</button>
+            </td>
+        </tr>
+        <tr>
+            <td>
                 <div>
                 <img src="{% static "pics/cam_current.jpg" %}" alt="something" >
                 </div>
@@ -37,4 +42,14 @@
 
 
 {% block script_block %}
+    function savePicture(){
+        $.ajax({
+                url: 'savePicture/',
+                type: 'GET',
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: true,
+                success: function(msg){}
+        });
+    }
 {% endblock %}

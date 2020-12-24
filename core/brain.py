@@ -452,6 +452,8 @@ class Brain(threading.Thread):
                 self._run_action_manually(action_data=co)
             elif isinstance(co, CommandSetManualMode):
                 self._set_manual_mode(data=co)
+            elif isinstance(co, CommandSavePicture):
+                self._save_picture()
             else:
                 self._logger.error(f'{co} not implemented')
             c.delete()
@@ -460,6 +462,10 @@ class Brain(threading.Thread):
         self._logger.info('reloading configuration')
         self._read_configuration_from_db()
         self._logger.info('reloaded configuration')
+
+    def _save_picture(self):
+        self._logger.info('saving picture')
+        self._capturer.capture_image_and_save()
 
     def kill_brain(self):
         self._logger.info('killing helper_threads')
