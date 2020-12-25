@@ -63,7 +63,9 @@ class ImageCapture(object):
                 command.extend(added_commands)
             command.extend(['-o', file_name])
             self._logger.debug('built command for subprocess: {}'.format(command))
-            subprocess.Popen(command)
+            #subprocess.Popen(command)
+            with subprocess.Popen(command, stdout=subprocess.PIPE) as proc:
+                self._logger.info(proc.stdout.read())
         except Exception as ex:
             self._logger.exception('got exception in capture: {}'.format(ex))
 
