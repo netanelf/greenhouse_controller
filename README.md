@@ -1,5 +1,9 @@
 # greenhouse_controller
-
+## Introduction
+Greenhouse Controller is a self-contained monitoring and irrigation control system for long-term autonomous operation in a home environment.
+It includes a web interface for viewing state and setting up the system
+## Overview
+## deployment
 1. clone https://github.com/netanelf/greenhouse_controller.git
 2. clone https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code.git
 3. install: 
@@ -22,7 +26,8 @@ web (save db):
 2. manage.py migrate --database='backup'
 3. manage.py migrate --database='default'
 
-comments:
+## Lessons Learned
+### Database on a Raspberri Pi
 1. Because Rpi is slow (especially the flash memory) we keep db.sqlite3 small as possible
 2. All measurements from db.sqlite above some number (64K?) are moved to another db backup.sqlite3
 3. backup.sqlite3 can be copied regularly to a strong computer
