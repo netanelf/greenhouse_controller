@@ -5,7 +5,7 @@
 An edge-based IoT monitoring and irrigation control system designed for long-term autonomous operation. 
 The system integrates custom hardware (Raspberry Pi HAT), environmental sensors, actuator control (relays/SSR), event-driven automation logic, 
 and a web-based monitoring interface built with Django. 
-Deployed in real-world conditions and operated continuously for multiple years, supporting unattended autonomous operation.
+Deployed in real-world conditions and operated continuously for multiple years, enabling reliable unattended autonomous operation.
 
 ## Introduction
 
@@ -37,27 +37,27 @@ The system interfaces with temperature, humidity, light, and water flow sensors,
 
 The custom HAT board provides electrical interfacing, signal conditioning, and output expansion.
 
-The architecture was designed for running on a raspberry pi, using its IOs through a dedicated hat board that interfaces directly with sensors and relays.
-key points:
+The architecture was designed to run on a Raspberry Pi, using its IOs through a dedicated hat board that interfaces directly with sensors and relays.
+Key hardware features:
 1. A 74HC595A shift register was used to expand available digital outputs.
-3. the board includes:
-   1. connector for external 5V power that can run the board and/or the hat (controlled with a soldered jumper)
-   2. 4 outputs that can control a SSR/ Relay with connectors for an indicater LED (board includes a current limiting resistor)
+2. the board includes:
+   1. Connector for external 5V power capable of supplying the board and/or the HAT (selectable via solder jumper)
+   2. 4 outputs that can control a SSR/ Relay with connectors for an indicator LED (board includes a current limiting resistor)
    3. 4 outputs of raw digital pins from the shift register (no LED/ Driver/ protection)
-   4. 4 connectors for an I2C sensors, connectors include the communication pins (scl,sda) and a 3.3/4V supply selected with a soldered jumper
+   4. 4 connectors for I2C sensors, connectors include the communication pins (scl,sda) and a 3.3/4V supply selected with a soldered jumper
    5. 3 dedicated connectors for a "Maxim Integrated DS18B20" 1-wire thermometer
    6. 3 dedicated connectors for a "AM2302/DHT22" digital temperature and humidity sensor
    7. pins for interfacing with all the RPi GPIOs (40p connector)
    8. pads for the shift register, driving transistors, and passive components
 
 The project was built using the Django python library that implements the backend and frontend.
-Drivers for interacting with some sensors were implemented or if were already implemented, open source implementations were used.
+Custom drivers were implemented where required; existing open-source drivers were integrated where appropriate.
 for example:
 1. Maxim Integrated DS18B20 thermometer
 2. AM2302/DHT22 temperature and humidity sensor
 3. generic water flow sensor (pulse per known amount of flow)
 4. TSL2561 Lux sensor
-5. generic digital Input/ Output lines (can be used for level sensors etc.)
+5. generic digital input/output lines (can be used for level sensors etc.)
 6. a camera driver (uses the RPi camera interface)
    
 ## hat board schematic and layout
@@ -99,7 +99,7 @@ The Django admin interface is used for advanced configuration and rule managemen
 
 ### Edge System Constraints
 - SD-card wear and limited I/O throughput require careful database management.
-	- All measurements from db.sqlite above  a Configured retention threshold are moved to another db backup.sqlite3 to prevent excessive database growth
+	- Measurements exceeding a configured retention threshold are migrated from db.sqlite3 to backup.sqlite3 to limit database growth and reduce SD-card wear.
  	- backup.sqlite3 can be copied regularly to a strong computer
 - Power stability is critical when driving inductive loads.
 
