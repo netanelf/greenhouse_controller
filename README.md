@@ -6,6 +6,7 @@ It includes a web interface for viewing state and setting up the system
 ## Overview
 The project includes interfacing with temperature, homidity and light sensors.
 Controlling relays that can controll water flow or other outputs.
+Interfacing with a camera to save ongoing still images.
 
 The architecture was designed for running on a raspberry pi, using its IOs through a dedicated hat board that interfaces directrly with sensors and relays.
 key points:
@@ -28,12 +29,36 @@ for example:
 3. generic water flow sensor (pulse per known amount of flow)
 4. TSL2561 Lux sensor
 5. generic digital Input/ Output lines (can be used for level sensors etc.)
+6. a camera driver (uses the Rpi camera interface)
    
 ## hat board schematic and layout
 
 ![image of the board schematics file](greenhouse_controller_expansion_board/output/greenhouse_controller_schematic.png)
 
 ![image of the board layout file](greenhouse_controller_expansion_board/output/greenhouse_controller_layout.png)
+
+## Controll options
+The project implements an "Event -> Condition -> Action" Flow. 
+Events can be configured (for example and event when a certain time elapses), 
+conditions can be configures (only do X if ...) and actions can be configured (for example, change state of relay "Y").
+
+an example watering flow can be:
+- at 8:00 of days 1,3,5:
+	- turn ON relay A
+	- wait 10 minutes
+	- turn OFF relay A
+
+another flow can be to save sensor images to a DB:
+- avery 5 minutes:
+  - read sensor A, save value to DB
+  - read sensor B, save value to DB
+  - ...
+ 
+## web UI
+
+The django admin interface can be used to create new flows (events, actions and conditions) (or this can be done via a python script upon deploying
+The web interface includes views of current sensors values current relays states, last image from the camera and more.
+There also a manual operation page for manually controlling things (without using flows)
 
 ## deployment
 1. clone https://github.com/netanelf/greenhouse_controller.git
