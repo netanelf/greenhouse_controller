@@ -67,9 +67,9 @@ for example:
 ![image of the board layout file](greenhouse_controller_expansion_board/output/greenhouse_controller_layout.png)
 
 ## Control options
-The project implements an "Event -> Condition -> Action" Flow. 
-Events can be configured (for example and event when a certain time elapses), 
-conditions can be configured (only do X if ...) and actions can be configured (for example, change state of relay "Y").
+
+The system implements an event-condition-action automation model. 
+Users can define scheduled events, conditional logic, and associated control actions through the web interface.
 
 an example watering flow can be:
 - at 8:00 of days 1,3,5:
@@ -85,17 +85,26 @@ another flow can be to save sensor images to a DB:
  
 ## web UI
 
-The django admin interface can be used to create new flows (events, actions and conditions) (or this can be done via a python script upon deploying
-The web interface includes views of current sensors values current relays states, last image from the camera and more.
-There also a manual operation page for manually controlling things (without using flows)
+The Django-based web interface provides:
+
+- Configuration of automation flows
+- Real-time visualization of sensor data
+- Current relay states and actuator status
+- Latest captured camera image
+- Manual override controls for direct actuation
+
+The Django admin interface is used for advanced configuration and rule management.
 
 ## Lessons Learned
 
 ### Edge System Constraints
 - SD-card wear and limited I/O throughput require careful database management.
-	- All measurements from db.sqlite above some number (64K?) are moved to another db backup.sqlite3
+	- All measurements from db.sqlite above  a Configured retention threshold are moved to another db backup.sqlite3 to prevent excessive database growth
  	- backup.sqlite3 can be copied regularly to a strong computer
 - Power stability is critical when driving inductive loads.
+
+### System Design Insight
+- Designing for maintainability and observability from the beginning significantly simplifies long-term operation and troubleshooting.
 
 ### Reliability
 - Long-running systems require watchdog-like recovery strategies.
@@ -103,5 +112,12 @@ There also a manual operation page for manually controlling things (without usin
 
 ### Hardware–Software Integration
 - Clear abstraction layers between hardware drivers and application logic simplify long-term maintenance.
+
+
+## Potential Extensions
+- Cloud integration for remote monitoring
+- OTA update mechanism
+- Containerized deployment model
+- Centralized logging and metrics collection
   
 
