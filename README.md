@@ -5,12 +5,11 @@
 An edge-based IoT monitoring and irrigation control system designed for long-term autonomous operation. 
 The system integrates custom hardware (Raspberry Pi HAT), environmental sensors, actuator control (relays/SSR), event-driven automation logic, 
 and a web-based monitoring interface built with Django. 
-Deployed in real-world conditions and operated continuously for multiple years.
+Deployed in real-world conditions and operated continuously for multiple years, supporting unattended autonomous operation.
 
 ## Introduction
 
-Greenhouse Controller is a self-contained monitoring and irrigation control system for long-term autonomous operation in a home environment.
-It includes a web interface for viewing state and setting up the system
+This project was developed to explore the design of reliable edge-based automation systems combining custom hardware, embedded software, and a full-stack web interface. The system was deployed in a real greenhouse environment and operated continuously over multiple growing seasons.
 
 ## System Architecture
 
@@ -22,43 +21,44 @@ Sensors → Custom HAT Board → Raspberry Pi (Edge Controller) → Django Backe
 - Control logic executed locally (no cloud dependency).
 - Web interface for monitoring, configuration, and manual override.
 - SQLite-based data storage with lightweight retention strategy.
+- Event-driven automation engine enables flexible rule-based control without modifying core application code.
 
 ## Key Engineering Decisions
 
 - Used 74HC595 shift register to expand GPIO outputs efficiently.
 - Designed custom PCB HAT for reliable sensor and actuator interfacing.
-- Separated measurement database from backup storage to mitigate SD-card wear and performance limitations.
+- Implemented database separation strategy to mitigate SD-card wear and improve long-term reliability.
 - Implemented event-condition-action flow engine for flexible automation logic.
 - Ensured safe driving of relays via transistor stages and current-limited LED indicators.
 
-  
-## Overview
-The project includes interfacing with temperature, homidity and light sensors.
-Controlling relays that can controll water flow or other outputs.
-Interfacing with a camera to save ongoing still images.
+## Hardware & Sensor Integration Overview
 
-The architecture was designed for running on a raspberry pi, using its IOs through a dedicated hat board that interfaces directrly with sensors and relays.
+The system interfaces with temperature, humidity, light, and water flow sensors, as well as relay-controlled irrigation outputs and a camera module for periodic image capture.
+
+The custom HAT board provides electrical interfacing, signal conditioning, and output expansion.
+
+The architecture was designed for running on a raspberry pi, using its IOs through a dedicated hat board that interfaces directly with sensors and relays.
 key points:
-1. to expand the output amount of the digital IOs a 74HC595A shift register was used.
+1. A 74HC595A shift register was used to expand available digital outputs.
 3. the board includes:
    1. connector for external 5V power that can run the board and/or the hat (controlled with a soldered jumper)
-   2. 4 outputs that can controll a SSR/ Relay with connectors for an indicater LED (board includes a current limiting resistor)
+   2. 4 outputs that can control a SSR/ Relay with connectors for an indicater LED (board includes a current limiting resistor)
    3. 4 outputs of raw digital pins from the shift register (no LED/ Driver/ protection)
-   4. 4 connectors for an I2C sensors, conenctors include the communication pins (sca,sda) and a 3.3/4V supply selected with a soldered jumper
+   4. 4 connectors for an I2C sensors, connectors include the communication pins (scl,sda) and a 3.3/4V supply selected with a soldered jumper
    5. 3 dedicated connectors for a "Maxim Integrated DS18B20" 1-wire thermometer
    6. 3 dedicated connectors for a "AM2302/DHT22" digital temperature and humidity sensor
-   7. pins for interfacing with all the Rpi GPIOs (40p connector)
+   7. pins for interfacing with all the RPi GPIOs (40p connector)
    8. pads for the shift register, driving transistors, and passive components
 
-The project was built usind the Dgango python library that implements the backend and frontend.
+The project was built using the Django python library that implements the backend and frontend.
 Drivers for interacting with some sensors were implemented or if were already implemented, open source implementations were used.
 for example:
 1. Maxim Integrated DS18B20 thermometer
-2. AM2302/DHT22 tmperature and humidity sensor
+2. AM2302/DHT22 temperature and humidity sensor
 3. generic water flow sensor (pulse per known amount of flow)
 4. TSL2561 Lux sensor
 5. generic digital Input/ Output lines (can be used for level sensors etc.)
-6. a camera driver (uses the Rpi camera interface)
+6. a camera driver (uses the RPi camera interface)
    
 ## hat board schematic and layout
 
@@ -66,10 +66,10 @@ for example:
 
 ![image of the board layout file](greenhouse_controller_expansion_board/output/greenhouse_controller_layout.png)
 
-## Controll options
+## Control options
 The project implements an "Event -> Condition -> Action" Flow. 
 Events can be configured (for example and event when a certain time elapses), 
-conditions can be configures (only do X if ...) and actions can be configured (for example, change state of relay "Y").
+conditions can be configured (only do X if ...) and actions can be configured (for example, change state of relay "Y").
 
 an example watering flow can be:
 - at 8:00 of days 1,3,5:
@@ -78,7 +78,7 @@ an example watering flow can be:
 	- turn OFF relay A
 
 another flow can be to save sensor images to a DB:
-- avery 5 minutes:
+- every 5 minutes:
   - read sensor A, save value to DB
   - read sensor B, save value to DB
   - ...
