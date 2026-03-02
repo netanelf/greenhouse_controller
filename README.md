@@ -1,8 +1,37 @@
 # greenhouse_controller
+
+## Executive Summary
+
+An edge-based IoT monitoring and irrigation control system designed for long-term autonomous operation. 
+The system integrates custom hardware (Raspberry Pi HAT), environmental sensors, actuator control (relays/SSR), event-driven automation logic, 
+and a web-based monitoring interface built with Django. 
+Deployed in real-world conditions and operated continuously for multiple years.
+
 ## Introduction
+
 Greenhouse Controller is a self-contained monitoring and irrigation control system for long-term autonomous operation in a home environment.
 It includes a web interface for viewing state and setting up the system
 
+## System Architecture
+
+The system follows an edge-controller architecture:
+
+Sensors → Custom HAT Board → Raspberry Pi (Edge Controller) → Django Backend → Web Interface
+
+- Local sensing and actuation handled directly by the Raspberry Pi.
+- Control logic executed locally (no cloud dependency).
+- Web interface for monitoring, configuration, and manual override.
+- SQLite-based data storage with lightweight retention strategy.
+
+## Key Engineering Decisions
+
+- Used 74HC595 shift register to expand GPIO outputs efficiently.
+- Designed custom PCB HAT for reliable sensor and actuator interfacing.
+- Separated measurement database from backup storage to mitigate SD-card wear and performance limitations.
+- Implemented event-condition-action flow engine for flexible automation logic.
+- Ensured safe driving of relays via transistor stages and current-limited LED indicators.
+
+  
 ## Overview
 The project includes interfacing with temperature, homidity and light sensors.
 Controlling relays that can controll water flow or other outputs.
@@ -60,6 +89,21 @@ The django admin interface can be used to create new flows (events, actions and 
 The web interface includes views of current sensors values current relays states, last image from the camera and more.
 There also a manual operation page for manually controlling things (without using flows)
 
+## Lessons Learned
+
+### Edge System Constraints
+- SD-card wear and limited I/O throughput require careful database management.
+	- All measurements from db.sqlite above some number (64K?) are moved to another db backup.sqlite3
+ 	- backup.sqlite3 can be copied regularly to a strong computer
+- Power stability is critical when driving inductive loads.
+
+### Reliability
+- Long-running systems require watchdog-like recovery strategies.
+- Sensor drift and environmental exposure must be handled in software logic.
+
+### Hardware–Software Integration
+- Clear abstraction layers between hardware drivers and application logic simplify long-term maintenance.
+  
 ## deployment
 1. clone https://github.com/netanelf/greenhouse_controller.git
 2. clone https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code.git
@@ -82,10 +126,3 @@ web (save db):
 1. manage.py makemigrations
 2. manage.py migrate --database='backup'
 3. manage.py migrate --database='default'
-
-## Lessons Learned
-### Database on a Raspberri Pi
-1. Because Rpi is slow (especially the flash memory) we keep db.sqlite3 small as possible
-2. All measurements from db.sqlite above some number (64K?) are moved to another db backup.sqlite3
-3. backup.sqlite3 can be copied regularly to a strong computer
-
